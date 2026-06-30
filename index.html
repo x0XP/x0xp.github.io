@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>x0XP</title>
+    <title>x0XP - My Links</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* General Page Styles */
@@ -12,50 +12,56 @@
             padding: 0;
             height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden;
+            background-color: #0d1117;
         }
 
-        /* The Background Image with a Dark Wash AND Animated TV Static */
+        /* 1. Base Background Image Layer */
         body {
-            background-color: #0d1117; 
-            background-image: 
-                /* Layer 1: Animated micro-static lines overlay */
-                repeating-linear-gradient(
-                    0deg,
-                    rgba(255, 255, 255, 0.05) 0px,
-                    rgba(255, 255, 255, 0.05) 1px,
-                    transparent 1px,
-                    transparent 2px
-                ),
-                /* Layer 2: Dark Vignette / Tint overlay */
-                linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.75)), 
-                /* Layer 3: Your character image */
-                url('image0.jpg'); 
-            
-            /* Sizing for all 3 layers respectively */
-            background-size: 100% 4px, cover, cover;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('image0.jpg'); 
             background-position: center;
-            background-repeat: repeat, no-repeat, no-repeat;
-            
+            background-repeat: no-repeat;
+            background-size: cover;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #ffffff;
-
-            /* This triggers the static vibration animation */
-            animation: tv-static 0.2s infinite steps(4);
+            position: relative;
         }
 
-        /* 📺 The TV Static Animation Keyframes */
-        @keyframes tv-static {
-            0% { background-position: 0 0, center, center; }
-            25% { background-position: 0 1px, center, center; }
-            50% { background-position: 0 -1px, center, center; }
-            75% { background-position: 0 2px, center, center; }
-            100% { background-position: 0 -2px, center, center; }
+        /* 2. The Animated TV Static Layer (Sits on top of the background) */
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            right: -50px;
+            bottom: -50px;
+            /* Creates micro horizontal CRT/Static scanlines */
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.06) 0px,
+                rgba(255, 255, 255, 0.06) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            /* This forces the static to vibrate aggressively */
+            animation: glitch-static 0.15s infinite alternate steps(2);
+            pointer-events: none; /* Let clicks pass through to buttons */
+            z-index: 1;
         }
 
-        /* The Semi-Transparent Central Card */
+        /* 📺 Aggressive TV Static Keyframes */
+        @keyframes glitch-static {
+            0% { transform: translate(0, 0); opacity: 0.8; }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(1px, -1px); }
+            60% { transform: translate(-1px, 3px); opacity: 0.9; }
+            80% { transform: translate(2px, 1px); }
+            100% { transform: translate(-2px, -2px); opacity: 0.8; }
+        }
+
+        /* 3. The Semi-Transparent Central Card */
         .card {
             background-color: rgba(22, 27, 34, 0.85); 
             backdrop-filter: blur(10px); 
@@ -65,11 +71,11 @@
             max-width: 90%;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
-            z-index: 2; /* Ensures card stays sharply on top of the static */
+            z-index: 2; /* Keeps the card above the vibrating static */
         }
 
         /* The Circular Avatar */
@@ -158,14 +164,14 @@
         <img src="image0.jpg" alt="Avatar" class="avatar">
         
         <h1>x0XP</h1>
-        <p>bruhh</p>
+        <p>lolbruh</p>
         
         <div class="button-container">
             <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
                 <i class="fab fa-github"></i> GitHub Profile
             </a>
             
-            <a href="https://discord.com/" target="_blank" class="btn btn-discord">
+            <a href="YOUR_DISCORD_LINK_HERE" target="_blank" class="btn btn-discord">
                 <i class="fab fa-discord"></i> Discord
             </a>
         </div>
