@@ -3,133 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Links</title>
+    <title>x0XP - My Links</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
+        /* General Page Styles */
+        body, html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
+            height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-image: 
-                repeating-linear-gradient(
-                    to bottom,
-                    rgba(255, 255, 255, 0.04) 0px,
-                    rgba(255, 255, 255, 0.04) 1px,
-                    rgba(0, 0, 0, 0.04) 1px,
-                    rgba(0, 0, 0, 0.04) 2px
-                ),
-                rgba(0, 0, 0, 0.8),
-                url('image_0.png');
-            
-            background-size: cover, cover, cover;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        /* 1. The Background Image with a Dark Wash */
+        body {
+            background-color: #0d1117; /* Fallback color */
+            /* REPLACE 'background.png' with your actual background image filename */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('iamge0.jpg'); 
             background-position: center;
             background-repeat: no-repeat;
-            
-            height: 100vh;
+            background-size: cover;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #ffffff;
-            overflow: hidden;
-            
-            animation: staticNoise 0.1s infinite steps(4);
-        }
-        @keyframes staticNoise {
-            0% { background-position: center, center, center; }
-            50% { background-position: -5px -2px, center, center; }
-            100% { background-position: 5px 2px, center, center; }
         }
 
-        .container {
+        /* 2. The Semi-Transparent Central Card */
+        .card {
+            background-color: rgba(22, 27, 34, 0.85); /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Optional: Adds a "frosted glass" effect */
+            border: 1px solid rgba(48, 54, 61, 0.8);
+            border-radius: 12px;
+            width: 380px;
+            max-width: 90%;
+            padding: 40px;
             text-align: center;
-            padding: 2rem;
-            width: 100%;
-            max-width: 400px;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .profile-avatar {
-            width: 90px;
-            height: 90px;
+        /* 3. The Circular Avatar */
+        .avatar {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 1rem;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            /* Optional: Add a border around the avatar if you want */
+            /* border: 2px solid #ffffff; */
         }
 
+        /* 4. Text Styling */
         h1 {
-            font-size: 1.7rem;
-            margin-bottom: 0.5rem;
+            font-size: 28px;
+            margin: 0 0 8px 0;
             font-weight: 700;
-            letter-spacing: -0.05em;
+            letter-spacing: -0.5px;
         }
 
         p {
-            color: #94a3b8;
-            margin-bottom: 2.5rem;
-            font-size: 0.9rem;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0 25px 0;
+            font-weight: 400;
         }
 
-        .button-group {
+        /* 5. The Container for the Two Buttons */
+        .button-container {
             display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
+            gap: 12px; /* Space between the buttons */
+            width: 100%;
         }
+
+        /* 6. Base Styles for All Buttons */
         .btn {
+            flex: 1; /* Make both buttons the same size */
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 1rem;
-            padding: 1.1rem 2.2rem;
-            font-size: 1rem;
-            font-weight: 600;
+            align-items: center;
+            gap: 8px; /* Space between icon and text */
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
             text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            backdrop-filter: blur(2px);
-        }
-        .btn-github {
-            background-color: rgba(36, 41, 46, 0.9);
-            color: #ffffff;
-            border: 1px solid rgba(63, 68, 72, 0.5);
-        }
-
-        .btn-github:hover {
-            background-color: rgba(56, 61, 66, 1);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-        }
-        
-        .btn-discord {
-            background-color: rgba(88, 101, 242, 0.9);
-            color: #ffffff;
-            border: 1px solid rgba(88, 101, 242, 0.5);
-        }
-
-        .btn-discord:hover {
-            background-color: rgba(108, 118, 255, 1);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(88, 101, 242, 0.5);
+            border-radius: 6px;
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
+            border: 1px solid transparent;
         }
 
         .btn i {
-            font-size: 1.4rem;
+            font-size: 16px; /* Icon size */
         }
+
+        /* 7. Specific Button Colors (GitHub) */
+        .btn-github {
+            background-color: #24292e;
+            color: #ffffff;
+            border-color: rgba(240, 246, 252, 0.1);
+        }
+
+        .btn-github:hover {
+            background-color: #2f363d;
+        }
+
+        /* 8. Specific Button Colors (Discord) */
+        .btn-discord {
+            background-color: #5865F2;
+            color: #ffffff;
+        }
+
+        .btn-discord:hover {
+            background-color: #4e5aca;
+        }
+
+        /* Small interaction on click */
+        .btn:active {
+            transform: scale(0.98);
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="card">
+        <img src="image0.jpg" alt="Avatar" class="avatar">
         
-        <div class="button-group">
+        <h1>x0XP</h1>
+        <p>bruh</p>
+        
+        <div class="button-container">
             <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
-                <i class="fa-brands fa-github"></i> GitHub Profile
+                <i class="fab fa-github"></i> GitHub Profile
+            </a>
+            
+            <a href="https://discord.com/" target="_blank" class="btn btn-discord">
+                <i class="fab fa-discord"></i> Discord
             </a>
         </div>
     </div>
