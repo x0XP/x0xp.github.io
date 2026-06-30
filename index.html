@@ -15,24 +15,50 @@
             overflow: hidden; /* Prevent scrolling */
         }
 
-        /* 1. The Background Image with a Dark Wash */
+        /* The Background Image with a Dark Wash AND Animated TV Static */
         body {
-            background-color: #0d1117; /* Fallback color */
-            /* REPLACE 'background.png' with your actual background image filename */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('image0.jpg'); 
+            background-color: #0d1117; 
+            background-image: 
+                /* Layer 1: Animated micro-static lines overlay */
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(255, 255, 255, 0.05) 0px,
+                    rgba(255, 255, 255, 0.05) 1px,
+                    transparent 1px,
+                    transparent 2px
+                ),
+                /* Layer 2: Dark Vignette / Tint overlay */
+                linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.75)), 
+                /* Layer 3: Your character image */
+                url('image0.jpg'); 
+            
+            /* Sizing for all 3 layers respectively */
+            background-size: 100% 4px, cover, cover;
             background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
+            background-repeat: repeat, no-repeat, no-repeat;
+            
             display: flex;
             justify-content: center;
             align-items: center;
             color: #ffffff;
+
+            /* This triggers the static vibration animation */
+            animation: tv-static 0.2s infinite steps(4);
         }
 
-        /* 2. The Semi-Transparent Central Card */
+        /* 📺 The TV Static Animation Keyframes */
+        @keyframes tv-static {
+            0% { background-position: 0 0, center, center; }
+            25% { background-position: 0 1px, center, center; }
+            50% { background-position: 0 -1px, center, center; }
+            75% { background-position: 0 2px, center, center; }
+            100% { background-position: 0 -2px, center, center; }
+        }
+
+        /* The Semi-Transparent Central Card */
         .card {
-            background-color: rgba(22, 27, 34, 0.85); /* Semi-transparent background */
-            backdrop-filter: blur(10px); /* Optional: Adds a "frosted glass" effect */
+            background-color: rgba(22, 27, 34, 0.85); 
+            backdrop-filter: blur(10px); 
             border: 1px solid rgba(48, 54, 61, 0.8);
             border-radius: 12px;
             width: 380px;
@@ -43,9 +69,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            z-index: 2; /* Ensures card stays sharply on top of the static */
         }
 
-        /* 3. The Circular Avatar */
+        /* The Circular Avatar */
         .avatar {
             width: 80px;
             height: 80px;
@@ -53,11 +80,9 @@
             object-fit: cover;
             margin-bottom: 15px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            /* Optional: Add a border around the avatar if you want */
-            /* border: 2px solid #ffffff; */
         }
 
-        /* 4. Text Styling */
+        /* Text Styling */
         h1 {
             font-size: 28px;
             margin: 0 0 8px 0;
@@ -72,20 +97,20 @@
             font-weight: 400;
         }
 
-        /* 5. The Container for the Two Buttons */
+        /* The Container for the Two Buttons */
         .button-container {
             display: flex;
-            gap: 12px; /* Space between the buttons */
+            gap: 12px; 
             width: 100%;
         }
 
-        /* 6. Base Styles for All Buttons */
+        /* Base Styles for All Buttons */
         .btn {
-            flex: 1; /* Make both buttons the same size */
+            flex: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px; /* Space between icon and text */
+            gap: 8px; 
             padding: 10px 16px;
             font-size: 14px;
             font-weight: 500;
@@ -97,10 +122,10 @@
         }
 
         .btn i {
-            font-size: 16px; /* Icon size */
+            font-size: 16px; 
         }
 
-        /* 7. Specific Button Colors (GitHub) */
+        /* Specific Button Colors (GitHub) */
         .btn-github {
             background-color: #24292e;
             color: #ffffff;
@@ -111,7 +136,7 @@
             background-color: #2f363d;
         }
 
-        /* 8. Specific Button Colors (Discord) */
+        /* Specific Button Colors (Discord) */
         .btn-discord {
             background-color: #5865F2;
             color: #ffffff;
@@ -125,7 +150,6 @@
         .btn:active {
             transform: scale(0.98);
         }
-
     </style>
 </head>
 <body>
