@@ -11,16 +11,37 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            background-image: 
+                repeating-linear-gradient(
+                    to bottom,
+                    rgba(255, 255, 255, 0.04) 0px,
+                    rgba(255, 255, 255, 0.04) 1px,
+                    rgba(0, 0, 0, 0.04) 1px,
+                    rgba(0, 0, 0, 0.04) 2px
+                ),
+                rgba(0, 0, 0, 0.8),
+                url('image_0.png');
+            
+            background-size: cover, cover, cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #ffffff;
             overflow: hidden;
+            
+            animation: staticNoise 0.1s infinite steps(4);
+        }
+        @keyframes staticNoise {
+            0% { background-position: center, center, center; }
+            50% { background-position: -5px -2px, center, center; }
+            100% { background-position: 5px 2px, center, center; }
         }
 
         .container {
@@ -28,10 +49,21 @@
             padding: 2rem;
             width: 100%;
             max-width: 400px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.7rem;
             margin-bottom: 0.5rem;
             font-weight: 700;
             letter-spacing: -0.05em;
@@ -40,7 +72,7 @@
         p {
             color: #94a3b8;
             margin-bottom: 2.5rem;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .button-group {
@@ -48,42 +80,42 @@
             flex-direction: column;
             gap: 1.25rem;
         }
-
         .btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
+            gap: 1rem;
+            padding: 1.1rem 2.2rem;
+            font-size: 1rem;
             font-weight: 600;
             text-decoration: none;
             border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(2px);
         }
-
         .btn-github {
-            background-color: #24292e;
+            background-color: rgba(36, 41, 46, 0.9);
             color: #ffffff;
-            border: 1px solid #3f4448;
+            border: 1px solid rgba(63, 68, 72, 0.5);
         }
 
         .btn-github:hover {
-            background-color: #2f363d;
+            background-color: rgba(56, 61, 66, 1);
             transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(36, 41, 46, 0.4);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
         }
-
+        
         .btn-discord {
-            background-color: #5865F2;
+            background-color: rgba(88, 101, 242, 0.9);
             color: #ffffff;
+            border: 1px solid rgba(88, 101, 242, 0.5);
         }
 
         .btn-discord:hover {
-            background-color: #4752C4;
+            background-color: rgba(108, 118, 255, 1);
             transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(88, 101, 242, 0.4);
+            box-shadow: 0 10px 15px -3px rgba(88, 101, 242, 0.5);
         }
 
         .btn i {
@@ -97,7 +129,7 @@
         
         <div class="button-group">
             <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
-                <i class="fa-brands fa-github"></i> GitHub
+                <i class="fa-brands fa-github"></i> GitHub Profile
             </a>
         </div>
     </div>
