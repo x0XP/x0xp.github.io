@@ -52,7 +52,7 @@ body::after {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* Fix: Target the text block/subtitle right after your username ("nerdsss") */
+/* Target the subtitle text ("nerdsss") */
 .card #username + *,
 .card #username + div,
 .card #username + p,
@@ -68,12 +68,34 @@ body::after {
 .ge-tracker { margin-top: 20px; width: 100%; text-align: left; position: relative; }
 #itemSearch { width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 5px; z-index: 5; }
 
+/* Autocomplete Suggestion Results List Container */
 .results-list { 
     position: absolute; width: 100%; background: #1a1d26; border: 1px solid rgba(255,255,255,0.1); 
-    z-index: 999; display: none; max-height: 150px; overflow-y: auto; border-radius: 0 0 5px 5px; 
+    z-index: 999; display: none; max-height: 180px; overflow-y: auto; border-radius: 0 0 5px 5px; 
 }
-.results-list div { padding: 8px; cursor: pointer; color: #ddd; font-size: 12px; }
-.results-list div:hover { background: #2a2e3a; }
+
+/* Individual list item alignment with its icon */
+.suggested-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    cursor: pointer;
+    color: #ddd;
+    font-size: 12px;
+    transition: background-color 0.2s ease;
+}
+.suggested-item:hover { background: #2a2e3a; }
+
+/* 128px approximate scale downscaled preview layout icons */
+.suggest-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    background: transparent !important;
+    border: none !important;
+}
 
 /* --- Price Display Container Box --- */
 .price-box { 
@@ -82,12 +104,10 @@ body::after {
     width: 100%;
 }
 
-/* Flex layout containing text and image side-by-side */
 .price-container { 
     display: flex; justify-content: space-between; align-items: center; width: 100%; 
 }
 
-/* Prevents long text from breaking layout bounds */
 .price-text { 
     text-align: left; flex-grow: 1; min-width: 0; 
 }
@@ -96,7 +116,7 @@ body::after {
     display: block; margin-bottom: 5px; color: #fff; 
 }
 
-/* Enforces 48x48 bounds on the 500px high-res file */
+/* Enforces 48x48 bounds on the high-res 500px file */
 .item-icon { 
     width: 48px; height: 48px; margin-left: 15px; 
     background: transparent !important; border: none !important; 
@@ -105,7 +125,7 @@ body::after {
 
 .timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; text-align: left; }
 
-/* --- History List (Fixed Layout) --- */
+/* --- History List --- */
 .history-list { 
     display: flex; 
     gap: 5px; 
