@@ -124,6 +124,7 @@ body::after {
     margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); 
     border-radius: 5px; display: none; font-size: 13px; color: white; 
     width: 100%;
+    position: relative; /* Context positioning for absolute adjustments inside */
 }
 
 .price-container { 
@@ -146,6 +147,43 @@ body::after {
 }
 
 .timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; text-align: left; }
+
+/* Fixed Vector Wiki Button - Solid Across Mobile and Desktop */
+.wiki-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: #2a2e3a;
+    color: #a8c7fa;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    border: 1px solid #4a5050;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    height: 22px;
+    box-sizing: border-box;
+}
+
+.wiki-btn:hover {
+    background: #383f52;
+    color: #ffffff;
+    border-color: #626b7e;
+}
+
+/* Vector Arrow State Tracking Hover Inversions */
+.wiki-btn svg {
+    display: inline-block;
+    flex-shrink: 0;
+    transition: stroke 0.2s, transform 0.2s;
+}
+
+.wiki-btn:hover svg {
+    stroke: #ffffff;
+    transform: translate(0.5px, -0.5px);
+}
 
 /* --- History List --- */
 .history-list { 
