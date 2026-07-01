@@ -1,2 +1,2 @@
 # x0xp.github.io
-bruh
+made entirely with ai because im lazy
