@@ -40,6 +40,8 @@ body::after {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px; padding: 30px; text-align: center; z-index: 3;
     width: 320px; display: flex; flex-direction: column; align-items: center;
+
+    color: #ffffff !important;
 }
 
 .avatar { width: 150px; height: 150px; border-radius: 12px; object-fit: cover; margin-bottom: 15px; border: 2px solid rgba(255, 255, 255, 0.15); }
