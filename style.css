@@ -40,19 +40,28 @@ body::after {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px; padding: 30px; text-align: center; z-index: 3;
     width: 320px; display: flex; flex-direction: column; align-items: center;
-
-    color: #ffffff !important;
 }
 
 .avatar { width: 150px; height: 150px; border-radius: 12px; object-fit: cover; margin-bottom: 15px; border: 2px solid rgba(255, 255, 255, 0.15); }
 
-/* Fix: Explicitly color the header text white to prevent Font Awesome inheritance and visibility loss */
-#username, .username, h2 { 
-    margin: 0 0 8px 0; 
+#username, .username { 
+    margin: 0 0 4px 0; 
     font-size: 28px; 
     color: #ffffff !important; 
-    font-weight: 600;
+    font-weight: 700;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Fix: Target the text block/subtitle right after your username ("nerdsss") */
+.card #username + *,
+.card #username + div,
+.card #username + p,
+.card #username + span {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: block;
+    font-weight: normal;
 }
 
 /* --- GE Tracker --- */
