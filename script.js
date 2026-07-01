@@ -42,7 +42,7 @@ async function initTracker() {
         });
         loadHistory();
         
-        // IMPROVEMENT: Session Memory Restore on page load
+        // Session Memory Restore on page load
         const savedItem = sessionStorage.getItem('lastSearchedItem');
         if (savedItem) {
             getPrice(savedItem, true); // true skips saving to history duplicates
@@ -64,7 +64,7 @@ function loadHistory() {
     `).join('');
 }
 
-// Add Commas
+// Displays raw numbers with thousands separators
 function formatGP(num) {
     if (!num && num !== 0) return 'N/A';
     return num.toLocaleString();
@@ -90,7 +90,7 @@ function generateItemsHTML(itemsArray, query) {
     }).join('');
 }
 
-// Instant local item lookup handler with IMPROVEMENTS (Debounce & Empty State Warning)
+// Instant local item lookup handler with Debounce & Empty State Warning
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     
@@ -102,7 +102,7 @@ searchInput.addEventListener('input', () => {
         return; 
     }
     
-    // IMPROVEMENT: 150ms Debounce to keep interface fluid during rapid typing
+    // 150ms Debounce to keep interface fluid during rapid typing
     debounceTimer = setTimeout(() => {
         const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 10);
         
@@ -111,7 +111,7 @@ searchInput.addEventListener('input', () => {
             resultsDiv.innerHTML = generateItemsHTML(localItemsArray, val);
             resultsDiv.style.display = 'block';
         } else {
-            // IMPROVEMENT: Empty Search State visually feedback inside suggestions box
+            // Empty Search State visually feedback inside suggestions box
             resultsDiv.innerHTML = `
                 <div class="suggested-item" style="color: #666; cursor: default; justify-content: center;">
                     <span>No items found</span>
@@ -122,14 +122,14 @@ searchInput.addEventListener('input', () => {
     }, 150);
 });
 
-// Keyboard Arrow Key, Tab Key & Enter Navigation support with IMPROVEMENT (Loop-Around Focus)
+// Keyboard Arrow Key, Tab Key & Enter Navigation support with Loop-Around Focus
 searchInput.addEventListener('keydown', (e) => {
     const items = resultsDiv.getElementsByClassName('suggested-item');
     if (!items.length || items[0].innerText === "No items found") return;
 
     if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
-        // IMPROVEMENT: Loop around to top if pressing down at the end
+        // Loop around to top if pressing down at the end
         if (selectedIndex < items.length - 1) {
             selectedIndex++;
         } else {
@@ -138,7 +138,7 @@ searchInput.addEventListener('keydown', (e) => {
         updateVisualSelection(items);
     } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
         e.preventDefault();
-        // IMPROVEMENT: Loop around to bottom if pressing up at the beginning
+        // Loop around to bottom if pressing up at the beginning
         if (selectedIndex > 0) {
             selectedIndex--;
         } else {
@@ -167,6 +167,7 @@ function updateVisualSelection(elements) {
 }
 
 function formatTimeAgo(totalMinutes) {
+    if (isNaN(totalMinutes) || totalMinutes < 0) return "Just now";
     if (totalMinutes < 60) return `${totalMinutes} mins ago`;
     const totalHours = Math.round(totalMinutes / 60);
     if (totalHours < 24) return `${totalHours} hours ago`;
@@ -184,7 +185,7 @@ async function getPrice(name, skipHistory = false) {
         saveHistory(name);
     }
     
-    // IMPROVEMENT: Save current selection to Session Storage
+    // Save current selection to Session Storage
     sessionStorage.setItem('lastSearchedItem', name);
     
     priceBox.style.display = 'block';
@@ -205,7 +206,7 @@ async function getPrice(name, skipHistory = false) {
     
     const priceData = await priceRes.json();
     const wikiData = await wikiRes.json();
-    const p = priceData.data[id];
+    const p = priceData.data[id] || {}; // Safe fallback to object prevents property crashes
 
     let iconUrl = "";
     if (wikiData.query && wikiData.query.pages) {
@@ -216,7 +217,7 @@ async function getPrice(name, skipHistory = false) {
         }
     }
     
-    const rawMinutes = Math.round((Date.now()/1000 - p.highTime) / 60);
+    const rawMinutes = p.highTime ? Math.round((Date.now()/1000 - p.highTime) / 60) : NaN;
     const relativeTime = formatTimeAgo(rawMinutes);
     
     priceBox.classList.remove('fade-in');
@@ -227,4 +228,13 @@ async function getPrice(name, skipHistory = false) {
         <div class="price-container">
             <div class="price-text">
                 <strong class="item-name">${name.toUpperCase()}</strong>
-                Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${format
+                Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${formatGP(p.high)}</span> gp<br>
+                Sell: <span style="color:#ff0000" title="${p.low ? p.low.toLocaleString() : '0'} gp">${formatGP(p.low)}</span> gp
+            </div>
+            ${iconUrl ? `<img src="${iconUrl}" class="item-icon">` : ''}
+        </div>
+        <span class="timestamp">Updated: ${relativeTime}</span>
+    `;
+}
+
+initTracker();
