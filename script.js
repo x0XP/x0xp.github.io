@@ -1,23 +1,13 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-
-// Hardcoded popular boss drop tables so suggestions show up instantly while typing!
-const bossMap = {
-    "zulrah": [12924, 12934, 12922, 12932, 6571, 12919], // Blowpipe, Scales, Magic Fang, Serpentine, Onyx, Onyx muta
-    "vorkath": [22002, 22106, 21992, 11286, 11283, 19529], // Skeletal visage, Necklace, Dragonbone necklace, Draconic visage, D shield
-    "abyssal sire": [13265, 13274, 13275, 13276, 13263, 4151], // Dagger, Bludgeon claw, Spine, Axon, Head, Whip
-    "nex": [26382, 26384, 26374, 26372, 26233, 11785], // Torva full, Plate, Legs, Vambraces, Zaryte crossbow, Armadyl crossbow
-    "the whisperer": [28238, 28258, 28240, 28256, 28314], // Bellator vestige, Siren's vitriol, Quartz, Awakener's orb, Virtus mask
-    "duke sucellus": [28236, 28258, 28240, 28256, 28316], // Magus vestige, etc.
-    "vardorvis": [28232, 28258, 28240, 28256, 28318], // Ultor vestige, etc.
-    "the leviathan": [28234, 28258, 28240, 28256, 28320] // Venator vestige, etc.
-};
+let searchDebounceTimer; // Keeps typing perfectly smooth
 
 const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
 
+// Clear input on click
 searchInput.addEventListener('click', () => {
     searchInput.value = '';
     resultsDiv.style.display = 'none';
@@ -56,57 +46,85 @@ function loadHistory() {
     historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>`).join('');
 }
 
-// Intercepts input: checks if it matches a boss name first, then falls back to regular items
-searchInput.addEventListener('input', () => {
-    const val = searchInput.value.toLowerCase().trim();
-    if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
-    
-    // Check if what they typed matches a known Boss key
-    const matchedBossKey = Object.keys(bossMap).find(boss => boss.includes(val));
-    
-    if (matchedBossKey) {
-        const dropIds = bossMap[matchedBossKey];
-        // Map the hardcoded IDs to actual item objects in our loaded itemMap
-        const dropItems = Object.values(itemMap).filter(item => dropIds.includes(item.id));
-        
-        resultsDiv.innerHTML = `
-            <div style="padding:5px 8px; font-size:10px; color:#666; text-transform:uppercase; font-weight:bold; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,0.05)">Drops from ${matchedBossKey.toUpperCase()}</div>
-        ` + dropItems.map(item => {
-            const safeName = item.name.replace(/'/g, "\\'");
-            const formattedName = item.name.charAt(0).toUpperCase() + item.name.slice(1);
-            const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
-            const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-            
-            return `
-                <div class="suggested-item" onclick="getPrice('${safeName}')">
-                    <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
-                    <span>${item.name}</span>
-                </div>
-            `;
-        }).join('');
-        
-        resultsDiv.style.display = 'block';
-        return;
+// Formats item object arrays cleanly into your UI suggestions list layout
+function renderSuggestionsHTML(itemsArray, headerLabel = "") {
+    let html = "";
+    if (headerLabel) {
+        html += `<div style="padding:5px 8px; font-size:10px; color:#666; text-transform:uppercase; font-weight:bold; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,0.05)">${headerLabel}</div>`;
     }
     
-    // Regular Item Fallback Search
-    const matches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
-    resultsDiv.innerHTML = matches.map(m => {
-        const itemObj = itemMap[m];
-        const safeName = m.replace(/'/g, "\\'");
-        const formattedName = itemObj.name.charAt(0).toUpperCase() + itemObj.name.slice(1);
+    html += itemsArray.map(item => {
+        const safeName = item.name.replace(/'/g, "\\'");
+        const formattedName = item.name.charAt(0).toUpperCase() + item.name.slice(1);
         const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
         return `
             <div class="suggested-item" onclick="getPrice('${safeName}')">
                 <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
-                <span>${itemObj.name}</span>
+                <span>${item.name}</span>
             </div>
         `;
     }).join('');
     
-    resultsDiv.style.display = matches.length ? 'block' : 'none';
+    return html;
+}
+
+// Live lookup handler: searches normal items first, checks Wiki for Boss Drops second
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchDebounceTimer);
+    const val = searchInput.value.toLowerCase().trim();
+    
+    if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
+    
+    // 1. Regular Item Search
+    const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
+    
+    if (itemMatches.length > 0) {
+        const itemsDataArray = itemMatches.map(m => itemMap[m]);
+        resultsDiv.innerHTML = renderSuggestionsHTML(itemsDataArray);
+        resultsDiv.style.display = 'block';
+        return;
+    }
+    
+    // 2. Fallback: Wait until typing pauses for 250ms, then see if it's a Boss name on the Wiki
+    searchDebounceTimer = setTimeout(async () => {
+        // Format string to approximate standard Wiki title matching (e.g. "zulrah" -> "Zulrah")
+        const formattedBossQuery = val.charAt(0).toUpperCase() + val.slice(1);
+        
+        // Semantic MediaWiki Ask Query looking for items dropped by this monster name
+        const query = `[[Drops from::${formattedBossQuery}]]|?Drop id|limit=10`;
+        const url = `https://oldschool.runescape.wiki/api.php?action=ask&query=${encodeURIComponent(query)}&format=json&origin=*`;
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.query && data.query.results && Object.keys(data.query.results).length > 0) {
+                let bossDrops = [];
+                
+                for (const [key, value] of Object.entries(data.query.results)) {
+                    const dropIds = value.printouts['Drop id'];
+                    if (dropIds && dropIds.length > 0) {
+                        const itemId = dropIds[0];
+                        // Match against our local item map to ensure it's a valid, tradeable GE item
+                        const foundItem = Object.values(itemMap).find(item => item.id === itemId);
+                        if (foundItem) bossDrops.push(foundItem);
+                    }
+                }
+                
+                if (bossDrops.length > 0) {
+                    resultsDiv.innerHTML = renderSuggestionsHTML(bossDrops, `Drops from ${formattedBossQuery}`);
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+            }
+        } catch (err) {
+            console.error("Wiki Monster Ask query failed", err);
+        }
+        
+        resultsDiv.style.display = 'none';
+    }, 250);
 });
 
 function formatTimeAgo(totalMinutes) {
