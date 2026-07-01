@@ -291,17 +291,19 @@
         // 2. Synthesized Web Audio API UI Click Engine
         let audioCtx = null;
 
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
         function playHoverTick() {
             try {
-                // Initialize context on demand (handles browser auto-play policies safely)
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-
-                // Resume context if suspended by browser
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
+                initAudio();
+                if (!audioCtx || audioCtx.state === 'suspended') return;
 
                 const osc = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
@@ -309,20 +311,22 @@
                 osc.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                // Setup crisp mechanical switch tone frequency parameters
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(650, audioCtx.currentTime); 
 
-                // Instant volume decay envelope to create a clean "tick" rather than a beep
-                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime); // 4% low volume baseline
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05); // Fade to zero in 50ms
+                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime); 
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05); 
 
                 osc.start(audioCtx.currentTime);
                 osc.stop(audioCtx.currentTime + 0.06);
-            } catch (e) {
-                // Silently catch exceptions if audio context isn't supported or active
-            }
+            } catch (e) {}
         }
+
+        // Soft-bypass array: triggers layout activation on first mouse move, touch, or click event
+        window.addEventListener('mousemove', initAudio, { once: true });
+        window.addEventListener('touchstart', initAudio, { once: true });
+        window.addEventListener('click', initAudio, { once: true });
+        window.addEventListener('keydown', initAudio, { once: true });
 
         // Attach listeners across all your links
         document.querySelectorAll('.btn').forEach(button => {
