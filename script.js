@@ -5,15 +5,22 @@ const searchInput = document.getElementById('itemSearch'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
 
+// Clear input on click
+searchInput.addEventListener('click', () => {
+    searchInput.value = '';
+    resultsDiv.style.display = 'none';
+});
+
 async function initTracker() {
-    const [priceRes, mapRes] = await Promise.all([
-        fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
-        fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
-    ]);
-    const prices = await priceRes.json();
-    const mappings = await mapRes.json();
-    mappings.forEach(item => { if (prices.data[item.id]) itemMap[item.name.toLowerCase()] = item.id; });
-    loadHistory();
+    try {
+        const [priceRes, mapRes] = await Promise.all([
+            fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
+            fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
+        ]);
+        const prices = await priceRes.json();
+        const mappings = await mapRes.json();
+        mappings.forEach(item => { if (prices.data[item.id]) itemMap[item.name.toLowerCase()] = item.id; });
+    } catch (e) { console.error("Init failed", e); }
 }
 
 function saveHistory(name) {
@@ -41,24 +48,31 @@ async function getPrice(name) {
     searchInput.value = name;
     saveHistory(name);
     
+    priceBox.style.display = 'block';
+    priceBox.innerHTML = `<div style="padding:10px;">Loading...</div>`;
+    
     const id = itemMap[name.toLowerCase()];
     const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers });
     const data = await res.json();
     const p = data.data[id];
     
-    // NEW RELIABLE ICON URL
-    const iconUrl = `https://www.osrsbox.com/osrsbox-db/items-icons/${id}.png`;
+    // Using official Wiki endpoint for icons
+    const iconUrl = `https://oldschool.runescape.wiki/images/${name.replace(/ /g, '_')}_detail.png`;
     const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
     
     priceBox.classList.remove('fade-in');
     void priceBox.offsetWidth;
     priceBox.classList.add('fade-in');
     
-    priceBox.style.display = 'block';
     priceBox.innerHTML = `
-        <div class="icon-box"><img src="${iconUrl}" width="32" onerror="this.style.display='none'"> <strong>${name.toUpperCase()}</strong></div>
-        Buy: ${p.high ? p.high.toLocaleString() : 'N/A'} gp<br>
-        Sell: ${p.low ? p.low.toLocaleString() : 'N/A'} gp
+        <div class="icon-box" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="text-align: left;">
+                <strong>${name.toUpperCase()}</strong><br>
+                Buy: <span style="color:#00ff00">${p.high ? p.high.toLocaleString() : 'N/A'}</span> gp<br>
+                Sell: <span style="color:#ff0000">${p.low ? p.low.toLocaleString() : 'N/A'}</span> gp
+            </div>
+            <img src="${iconUrl}" width="40" onerror="this.style.display='none'">
+        </div>
         <span class="timestamp">Updated: ${timeAgo} mins ago</span>
     `;
 }
