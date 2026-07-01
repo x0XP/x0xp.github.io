@@ -284,21 +284,30 @@ async function getPrice(name, skipHistory = false) {
     void priceBox.offsetWidth;
     priceBox.classList.add('fade-in');
     
+    // Enforce containing position layout context for the absolute button anchor point
+    priceBox.style.position = 'relative';
+
     priceBox.innerHTML = `
-        <div class="price-container">
-            <div class="price-text">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                    <strong class="item-name" style="margin: 0;">${name.toUpperCase()}</strong>
-                    <a href="${wikiUrl}" target="_blank" class="wiki-btn" title="Open Wiki Page" style="display: inline-flex; align-items: center; justify-content: center; background: #2a2e3a; color: #a8c7fa; text-decoration: none; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #4a5050; transition: background 0.2s; height: 18px;">
-                        Wiki ↗
-                    </a>
-                </div>
+        <div class="price-container" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div class="price-text" style="padding-right: 12px; max-width: 75%;">
+                <strong class="item-name" style="display: block; margin: 0 0 8px 0; font-size: 16px; line-height: 1.2;">${name.toUpperCase()}</strong>
                 Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${formatGP(p.high)}</span> gp<br>
                 Sell: <span style="color:#ff0000" title="${p.low ? p.low.toLocaleString() : '0'} gp">${formatGP(p.low)}</span> gp
             </div>
-            ${iconUrl ? `<img src="${iconUrl}" class="item-icon">` : ''}
+            ${iconUrl ? `<img src="${iconUrl}" class="item-icon" style="max-width: 50px; max-height: 50px; object-fit: contain;">` : ''}
         </div>
-        <span class="timestamp">Updated: ${relativeTime}</span>
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
+            <span class="timestamp" style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
+            
+            <a href="${wikiUrl}" target="_blank" class="wiki-btn" title="Open Wiki Page" style="display: inline-flex; align-items: center; gap: 5px; background: #2a2e3a; color: #a8c7fa; text-decoration: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #4a5050; transition: background 0.2s, color 0.2s; height: 22px; box-sizing: border-box;">
+                <span>Wiki</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a8c7fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; flex-shrink: 0;">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+            </a>
+        </div>
     `;
 }
 
