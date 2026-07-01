@@ -1,4 +1,4 @@
-// 1. Favicon Rounded Masking Engine - i broke something idk what
+// 1. Favicon Rounded Masking Engine
 window.addEventListener('DOMContentLoaded', () => {
     const img = new Image();
     img.src = 'image0.jpg';
@@ -8,7 +8,15 @@ window.addEventListener('DOMContentLoaded', () => {
         canvas.width = 64; canvas.height = 64;
         ctx.beginPath(); ctx.arc(32, 32, 32, 0, Math.PI * 2); ctx.clip();
         ctx.drawImage(img, 0, 0, 64, 64);
-        document.getElementById('favicon').setAttribute('href', canvas.toDataURL('image/png'));
+        
+        let link = document.getElementById('favicon');
+        if (!link) {
+            link = document.createElement('link');
+            link.id = 'favicon';
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = canvas.toDataURL('image/png');
     };
 });
 
@@ -41,20 +49,25 @@ function playHoverTick() {
     } catch (e) {}
 }
 
-// OSRS Username Effect Logic
+// 3. OSRS Username Effect Logic
 const username = document.getElementById('username');
-username.addEventListener('mouseenter', () => {
-    username.classList.add('flash2-active', 'wave-active');
-});
-username.addEventListener('mouseleave', () => {
-    username.classList.remove('flash2-active', 'wave-active');
-});
 
-// Standard user interaction listeners
+if (username) {
+    username.addEventListener('mouseenter', () => {
+        username.classList.add('flash2-active', 'wave-active');
+        playHoverTick();
+    });
+
+    username.addEventListener('mouseleave', () => {
+        username.classList.remove('flash2-active', 'wave-active');
+    });
+}
+
+// 4. Standard user interaction listeners
 window.addEventListener('click', initAudio, { once: true });
 window.addEventListener('keydown', initAudio, { once: true });
 
-// Attach listeners across all your links
+// 5. Attach listeners across all your links
 document.querySelectorAll('.btn').forEach(button => {
     button.addEventListener('mouseenter', playHoverTick);
 });
