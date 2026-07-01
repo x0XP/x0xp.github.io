@@ -2,23 +2,13 @@ const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
 
 // --- AUDIO CONFIGURATION ---
-// Replace these URLs with your actual sound file paths (e.g., 'sounds/hover.mp3')
+// Replace this URL with your actual hover sound file path if needed
 const hoverSound = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3'); 
-const clickSound = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
-
-// Lower the volume so it isn't deafening to users
-hoverSound.volume = 0.2;
-clickSound.volume = 0.3;
+hoverSound.volume = 0.2; // Adjusted volume to keep it subtle
 
 function playHover() {
-    // Reset audio to beginning if hovered rapidly
     hoverSound.currentTime = 0; 
     hoverSound.play().catch(e => console.log("Audio play blocked until user interaction."));
-}
-
-function playClick() {
-    clickSound.currentTime = 0;
-    clickSound.play().catch(e => console.log("Audio play blocked."));
 }
 // ---------------------------
 
@@ -29,7 +19,6 @@ const searchInput = document.getElementById('itemSearch'),
 
 // Clear input field on click
 searchInput.addEventListener('click', () => {
-    playClick();
     searchInput.value = '';
     resultsDiv.style.display = 'none';
 });
@@ -64,7 +53,6 @@ function saveHistory(name) {
 
 function loadHistory() {
     const hist = JSON.parse(localStorage.getItem('osrsHistory') || '[]');
-    // Added onmouseenter="playHover()" so dynamically rendered history buttons play sound
     historyDiv.innerHTML = hist.map(n => `
         <span class="hist-btn" 
               onmouseenter="playHover()" 
@@ -79,7 +67,6 @@ function generateItemsHTML(itemsArray) {
         const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
-        // Added onmouseenter="playHover()" straight into the template string 
         return `
             <div class="suggested-item" onmouseenter="playHover()" onclick="getPrice('${safeName}')">
                 <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
@@ -119,7 +106,6 @@ function formatTimeAgo(totalMinutes) {
 }
 
 async function getPrice(name) {
-    playClick(); // Play selection audio click
     resultsDiv.style.display = 'none';
     searchInput.value = name;
     saveHistory(name);
