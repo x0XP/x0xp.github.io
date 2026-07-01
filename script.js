@@ -59,7 +59,7 @@ async function getPrice(name) {
     
     const id = itemMap[name.toLowerCase()];
     
-    // Fetch price and wiki icon data in parallel
+    // Fetch price and high-res image simultaneously
     const [priceRes, wikiRes] = await Promise.all([
         fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers }),
         fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=500&redirects=1`)
@@ -69,7 +69,7 @@ async function getPrice(name) {
     const wikiData = await wikiRes.json();
     const p = priceData.data[id];
 
-    // Safely extract icon
+    // Safe extraction logic tracking non -1 pages
     let iconUrl = "";
     if (wikiData.query && wikiData.query.pages) {
         const pages = wikiData.query.pages;
