@@ -19,7 +19,16 @@ async function initTracker() {
         ]);
         const prices = await priceRes.json();
         const mappings = await mapRes.json();
-        mappings.forEach(item => { if (prices.data[item.id]) itemMap[item.name.toLowerCase()] = item.id; });
+        
+        // Save both ID and formatting data to itemMap for fast icon rendering
+        mappings.forEach(item => { 
+            if (prices.data[item.id]) {
+                itemMap[item.name.toLowerCase()] = {
+                    id: item.id,
+                    name: item.name
+                };
+            }
+        });
         loadHistory();
     } catch (e) { console.error("Initialization failed", e); }
 }
@@ -36,14 +45,27 @@ function loadHistory() {
     historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>`).join('');
 }
 
+// Search autocomplete listener with 128px layout preview icons
 searchInput.addEventListener('input', () => {
     const val = searchInput.value.toLowerCase();
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
     const matches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
+    
     resultsDiv.innerHTML = matches.map(m => {
+        const itemObj = itemMap[m];
         const safeName = m.replace(/'/g, "\\'");
-        return `<div onclick="getPrice('${safeName}')">${m}</div>`;
+        
+        // Fast Wiki image endpoint format by replacing spaces with underscores for low-res previews
+        const formattedImgName = itemObj.name.replace(/ /g, '_').replace(/'/g, '%27');
+        const fastIconUrl = `https://oldschool.runescape.wiki/images/${formattedImgName}.png`;
+        
+        return `
+            <div class="suggested-item" onclick="getPrice('${safeName}')">
+                <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
+                <span>${itemObj.name}</span>
+            </div>
+        `;
     }).join('');
     
     resultsDiv.style.display = matches.length ? 'block' : 'none';
@@ -65,7 +87,7 @@ function formatTimeAgo(totalMinutes) {
         return `${totalDays} days ago`;
     }
     
-    const totalMonths = Math.round(totalDays / 30.4); // Average month length
+    const totalMonths = Math.round(totalDays / 30.4); 
     return `${totalMonths} months ago`;
 }
 
@@ -77,7 +99,13 @@ async function getPrice(name) {
     priceBox.style.display = 'block';
     priceBox.innerHTML = `<div style="padding:10px; text-align:center;">Loading...</div>`;
     
-    const id = itemMap[name.toLowerCase()];
+    const itemData = itemMap[name.toLowerCase()];
+    const id = itemData ? itemData.id : null;
+    
+    if (!id) {
+        priceBox.innerHTML = `<div style="padding:10px; text-align:center;">Item mapping missing.</div>`;
+        return;
+    }
     
     // Fetch price and high-res image simultaneously
     const [priceRes, wikiRes] = await Promise.all([
@@ -99,9 +127,7 @@ async function getPrice(name) {
         }
     }
     
-    // Get the raw time gap in minutes
     const rawMinutes = Math.round((Date.now()/1000 - p.highTime) / 60);
-    // Convert to a human-readable scale
     const relativeTime = formatTimeAgo(rawMinutes);
     
     priceBox.classList.remove('fade-in');
