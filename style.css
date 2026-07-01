@@ -27,6 +27,18 @@ body::after {
 }
 @keyframes noise-shift { 0% { background-position: 0 0; } 50% { background-position: -10px -10px; } 100% { background-position: 0 0; } }
 
+/* --- x0XP Wave Canvas Fix --- */
+#waveCanvas {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 160px;
+    z-index: 1; /* Placed exactly above background but beneath CRT effects and card layers */
+    pointer-events: none;
+    opacity: 0.45;
+}
+
 /* --- Animations --- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
@@ -83,9 +95,12 @@ body::after {
     cursor: pointer;
     color: #ddd;
     font-size: 12px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
-.suggested-item:hover { background: #2a2e3a; }
+.suggested-item:hover { 
+    background: #2a2e3a; 
+    transform: translateX(2px);
+}
 
 /* 128px approximate scale downscaled preview layout icons */
 .suggest-icon {
@@ -135,13 +150,29 @@ body::after {
 .hist-btn { 
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
     padding: 4px 8px; border-radius: 4px; color: #aaa; cursor: pointer; font-size: 11px; 
-    transition: all 0.3s ease; 
+    transition: all 0.2s ease; 
     animation: fadeIn 0.5s ease-out; 
 }
-.hist-btn:hover { background: rgba(255,255,255,0.1); }
+.hist-btn:hover { 
+    background: rgba(255,255,255,0.12); 
+    color: #fff;
+    transform: translateY(-1px);
+}
 
 /* --- Buttons --- */
 .button-container { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
 .button-row { display: flex; gap: 8px; }
-.btn { flex: 1; padding: 10px; border-radius: 5px; color: white; text-decoration: none; font-size: 13px; font-weight: 600; text-align: center; }
-.btn-github { background: #1f6feb; } .btn-youtube { background: #FF0000; } .btn-wom { background: rgba(255, 255, 255, 0.1); }
+.btn { 
+    flex: 1; padding: 10px; border-radius: 5px; color: white; text-decoration: none; font-size: 13px; font-weight: 600; text-align: center; 
+    transition: all 0.2s ease-in-out;
+}
+/* Restored Hover Interactive States */
+.btn:hover {
+    transform: translateY(-1.5px);
+    filter: brightness(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.btn-github { background: #1f6feb; } 
+.btn-youtube { background: #FF0000; } 
+.btn-wom { background: rgba(255, 255, 255, 0.1); }
+.btn-wom:hover { background: rgba(255, 255, 255, 0.18); }
