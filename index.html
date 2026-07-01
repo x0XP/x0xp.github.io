@@ -62,7 +62,7 @@
             z-index: 2;
         }
 
-        /* 📺 Aggressive Random Noise & Glitch Animation Keyframes */
+        /* Random Noise & Glitch Animation Keyframes */
         @keyframes aggressive-noise {
             0% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
             10% { transform: translate(-1px, 2px); background-position: 12px 45px, 0px 2px; }
@@ -94,6 +94,30 @@
             align-items: center;
             z-index: 3;
             position: relative;
+        }
+
+        /* Animated Dynamic Ambient Glow Mesh Backing */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            z-index: -1;
+            background: linear-gradient(45deg, #1f6feb, #4f46e5, #0ea5e9, #1f6feb);
+            background-size: 400% 400%;
+            border-radius: 24px;
+            filter: blur(40px);
+            opacity: 0.35;
+            animation: glow-mesh-pulse 10s ease infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glow-mesh-pulse {
+            0% { background-position: 0% 50%; opacity: 0.30; }
+            50% { background-position: 100% 50%; opacity: 0.45; filter: blur(45px); }
+            100% { background-position: 0% 50%; opacity: 0.30; }
         }
 
         /* The Circular Avatar */
@@ -225,7 +249,7 @@
         </div>
     </div>
 
-    <!-- Script to dynamically mask your square avatar into a round favicon -->
+    <!-- Script to dynamically mask square avatar into a round favicon -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const img = new Image();
