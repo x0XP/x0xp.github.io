@@ -37,7 +37,7 @@ async function initTracker() {
 
 function saveHistory(name) {
     let hist = JSON.parse(localStorage.getItem('osrsHistory') || '[]');
-    hist = [name, ...hist.filter(i => i !== name)].slice(0, 3);
+    hist = [name, ...hist.filter(i => i !== name)].slice(0, 5);
     localStorage.setItem('osrsHistory', JSON.stringify(hist));
     loadHistory();
 }
@@ -88,7 +88,8 @@ searchInput.addEventListener('input', () => {
         return; 
     }
     
-    const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
+    // CHANGED: Increased slice limit to 10 suggestions
+    const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 10);
     
     if (itemMatches.length > 0) {
         const localItemsArray = itemMatches.map(m => itemMap[m]);
