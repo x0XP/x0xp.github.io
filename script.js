@@ -100,20 +100,25 @@ function getClosestMatch(target) {
     let closestItem = null;
     const keys = Object.keys(itemMap);
     
-    // 1. Substring check (matches if you typed part of the name)
+    // 1. Substring check: Does the target contain the item name?
+    // This catches "scyther" because "scythe" is inside "scyther"
     for (let i = 0; i < keys.length; i++) {
-        if (keys[i].includes(target)) return itemMap[keys[i]];
+        if (target.includes(keys[i])) {
+            return itemMap[keys[i]];
+        }
     }
     
-    // 2. Strict Levenshtein with a "Starting Character" bias
+    // 2. Standard substring check: Does the item contain the target?
+    // This catches "scythe of vitur" when you type "scythe"
+    for (let i = 0; i < keys.length; i++) {
+        if (keys[i].includes(target)) {
+            return itemMap[keys[i]];
+        }
+    }
+    
+    // 3. Fallback to Levenshtein Distance for genuine typos
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
-        
-        // REJECTION RULE: If the first two letters don't match, ignore it entirely.
-        // This stops "Scyther" from ever seeing "Feather"
-        if (key.substring(0, 2) !== target.substring(0, 2)) continue;
-        
-        // Prune length difference
         if (Math.abs(key.length - target.length) > 3) continue;
         
         const dist = levenshtein(target, key);
@@ -125,7 +130,6 @@ function getClosestMatch(target) {
     
     return (minDistance <= 3 && closestItem) ? closestItem : null;
 }
-
 // Search Highlight Matching
 function generateItemsHTML(itemsArray, query) {
     return itemsArray.map((item, index) => {
