@@ -60,7 +60,7 @@
             z-index: 2;
         }
 
-        /*  Random Noise & Glitch Animation Keyframes */
+        /* 📺 Aggressive Random Noise & Glitch Animation Keyframes */
         @keyframes aggressive-noise {
             0% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
             10% { transform: translate(-1px, 2px); background-position: 12px 45px, 0px 2px; }
@@ -155,16 +155,15 @@
             font-size: 16px; 
         }
 
-        /* Specific Button Colors (GitHub) */
+        /* Specific Button Colors (GitHub Blue Theme) */
         .btn-github {
-            background-color: #1f2328;
+            background-color: #1f6feb;
             color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-github:hover {
-            background-color: #2f353c;
-            border-color: rgba(255, 255, 255, 0.2);
+            background-color: #388bfd;
             transform: translateY(-1px);
         }
 
@@ -192,14 +191,11 @@
             transform: translateY(-1px);
         }
 
-        /* Custom image icon styling for the WOM button */
-        .wom-icon {
+        /* Clean styling for the inline SVG icon */
+        .wom-svg {
             width: 18px;
             height: 18px;
-            border-radius: 4px;
-            object-fit: cover;
-            /* Shorthand blend mode to completely screen out pure black values */
-            mix-blend-mode: screen; 
+            fill: #e5c07b; /* Automatically tints the icon to match your gold text */
         }
 
         .btn:active {
@@ -213,7 +209,7 @@
         <img src="image0.jpg" alt="Avatar" class="avatar">
         
         <h1>x0XP</h1>
-        <p>nerdssss</p>
+        <p>im lazy so this is all made w/ ai</p>
         
         <div class="button-container">
             <div class="button-row">
@@ -227,7 +223,10 @@
             </div>
             
             <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
-                <img src="https://avatars.githubusercontent.com/u/65183441?s=200&v=4" alt="Wise Old Man" class="wom-icon"> WiseOldMan
+                <svg class="wom-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+                </svg>
+                WiseOldMan
             </a>
         </div>
     </div>
