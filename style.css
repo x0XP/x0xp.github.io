@@ -10,6 +10,7 @@ body, html {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* 1. Base Image Layer */
 body {
     background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('image0.jpg'); 
     background-position: center;
@@ -22,7 +23,7 @@ body {
     position: relative;
 }
 
-/* CRT Scanlines Layer */
+/* 2. CRT Scanlines */
 body::before {
     content: " ";
     display: block;
@@ -36,11 +37,9 @@ body::before {
     will-change: opacity;
 }
 
-body:has(.btn:hover)::before {
-    opacity: 0.75;
-}
+body:has(.btn:hover)::before { opacity: 0.75; }
 
-/* Screen Glitch Layer */
+/* 3. The Animated Random Noise & Screen Glitch Layer */
 body::after {
     content: "";
     position: absolute;
@@ -58,13 +57,21 @@ body::after {
 @keyframes aggressive-noise {
     0% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
     10% { transform: translate(-1px, 2px); background-position: 12px 45px, 0px 2px; }
+    20% { transform: translate(3px, -1px); background-position: -85px 23px, 0px -1px; }
+    30% { transform: translate(-2px, 3px); background-position: 40px -90px, 0px 3px; }
+    40% { transform: translate(1px, -3px); background-position: -12px -5px, 0px -2px; }
     50% { transform: translate(-3px, 1px); background-position: 73px 18px, 0px 0px; }
+    60% { transform: translate(2px, 2px); background-position: -34px 62px, 0px 1px; }
+    70% { transform: translate(-1px, -2px); background-position: 91px -43px, 0px -3px; }
+    80% { transform: translate(3px, 3px); background-position: -50px 0px, 0px 2px; }
+    90% { transform: translate(-2px, -1px); background-position: 15px 88px, 0px -1px; }
     100% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
 }
 
 .card {
     background-color: rgba(10, 14, 23, 0.9); 
     backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 40px;
@@ -82,43 +89,8 @@ body::after {
     100% { opacity: 1; transform: translateY(0); }
 }
 
-.avatar {
-    width: 85px; height: 85px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 2px solid rgba(255, 255, 255, 0.15);
-}
-
+.avatar { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); border: 2px solid rgba(255, 255, 255, 0.15); }
 h1 { font-size: 28px; margin: 0 0 8px 0; font-weight: 700; cursor: default; }
-
-/* OSRS Animation Effects (Forced Priority) */
-#username span {
-    display: inline-block;
-    position: relative;
-}
-
-#username.flash2-active span {
-    animation: flash2 0.3s infinite steps(1) !important;
-}
-
-@keyframes flash2 {
-    0% { color: #FF0000 !important; }
-    50% { color: #FFFF00 !important; }
-    100% { color: #FF0000 !important; }
-}
-
-#username.wave-active span {
-    animation: wave-move 0.5s infinite alternate !important;
-}
-
-@keyframes wave-move {
-    0% { transform: translateY(0) !important; }
-    100% { transform: translateY(-8px) !important; }
-}
-
-#username.wave-active span:nth-child(1) { animation-delay: 0.0s !important; }
-#username.wave-active span:nth-child(2) { animation-delay: 0.1s !important; }
-#username.wave-active span:nth-child(3) { animation-delay: 0.2s !important; }
-#username.wave-active span:nth-child(4) { animation-delay: 0.3s !important; }
-
-/* Buttons & Text */
 p { font-size: 11px; color: rgba(255, 255, 255, 0.45); margin: 0 0 25px 0; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
 
 .button-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
@@ -127,10 +99,12 @@ p { font-size: 11px; color: rgba(255, 255, 255, 0.45); margin: 0 0 25px 0; font-
 .btn {
     flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px 16px;
     font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px; cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease, letter-spacing 0.2s ease, border-color 0.2s ease;
 }
-
+.btn i { font-size: 16px; transition: transform 0.2s ease; }
+.btn:hover { letter-spacing: 0.5px; transform: translateY(-2px); }
+.btn:hover i { transform: scale(1.1); }
 .btn-github { background-color: #1f6feb; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
 .btn-youtube { background-color: #FF0000; color: #ffffff; border: 1px solid transparent; }
 .btn-wom { background-color: rgba(255, 255, 255, 0.07); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
-.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: scale(0.97); }
