@@ -56,20 +56,34 @@ body::after {
 .results-list div { padding: 8px; cursor: pointer; color: #ddd; font-size: 12px; }
 .results-list div:hover { background: #2a2e3a; }
 
-.price-box { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; display: none; font-size: 13px; color: white; }
-.icon-box { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-
-/* --- FIXED: Item Icon Transparency & Sharpness --- */
-.icon-box img { 
-    background: transparent !important; 
-    border: none !important; 
-    image-rendering: pixelated; 
-    object-fit: contain;
-    width: 48px; /* Added explicit size to match original intention */
-    height: 48px;
+/* --- Price Display Container Box --- */
+.price-box { 
+    margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); 
+    border-radius: 5px; display: none; font-size: 13px; color: white; 
 }
 
-.timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; }
+/* Flex layout containing text and image side-by-side */
+.price-container { 
+    display: flex; justify-content: space-between; align-items: center; width: 100%; 
+}
+
+/* Prevents long text from breaking layout bounds */
+.price-text { 
+    text-align: left; flex-grow: 1; min-width: 0; 
+}
+
+.item-name { 
+    display: block; margin-bottom: 5px; color: #fff; 
+}
+
+/* Enforces 48x48 bounds on the 500px high-res file */
+.item-icon { 
+    width: 48px; height: 48px; margin-left: 15px; 
+    background: transparent !important; border: none !important; 
+    object-fit: contain; flex-shrink: 0; 
+}
+
+.timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; text-align: left; }
 
 /* --- History List (Fixed Layout) --- */
 .history-list { 
