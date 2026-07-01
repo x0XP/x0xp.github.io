@@ -43,7 +43,15 @@ body::after {
 }
 
 .avatar { width: 150px; height: 150px; border-radius: 12px; object-fit: cover; margin-bottom: 15px; border: 2px solid rgba(255, 255, 255, 0.15); }
-#username { margin: 0 0 8px 0; font-size: 28px; color: #fff; }
+
+/* Fix: Explicitly color the header text white to prevent Font Awesome inheritance and visibility loss */
+#username, .username, h2 { 
+    margin: 0 0 8px 0; 
+    font-size: 28px; 
+    color: #ffffff !important; 
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
 
 /* --- GE Tracker --- */
 .ge-tracker { margin-top: 20px; width: 100%; text-align: left; position: relative; }
@@ -60,6 +68,7 @@ body::after {
 .price-box { 
     margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); 
     border-radius: 5px; display: none; font-size: 13px; color: white; 
+    width: 100%;
 }
 
 /* Flex layout containing text and image side-by-side */
