@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>x0XP</title>
-    <link rel="icon" type="image/jpeg" href="image0.jpg">
+    <!-- Placeholder favicon link that Javascript will overwrite with a round version -->
+    <link id="favicon" rel="icon" type="image/png" href="image0.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* General Page Styles */
@@ -201,7 +202,7 @@
         <img src="image0.jpg" alt="Avatar" class="avatar">
         
         <h1>x0XP</h1>
-        <p>rawr x3 nuzzles</p>
+        <p>nerdssss</p>
         
         <div class="button-container">
             <!-- Side-by-Side Row for GitHub and YouTube -->
@@ -217,10 +218,38 @@
             
             <!-- Full Width Button for Wise Old Man -->
             <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
-                <i class="fas fa-hat-wizard"></i> WiseOldMan
+                <i class="fas fa-hat-wizard"></i> Wise Old Man
             </a>
         </div>
     </div>
+
+    <!-- Script to dynamically mask your square avatar into a round favicon -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const img = new Image();
+            img.src = 'image0.jpg';
+            img.onload = function() {
+                // Create an in-memory canvas element
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set favicon resolution standard dimensions
+                canvas.width = 64;
+                canvas.height = 64;
+                
+                // Draw a perfect circular clipping path layout area
+                ctx.beginPath();
+                ctx.arc(32, 32, 32, 0, Math.PI * 2);
+                ctx.clip();
+                
+                // Draw your avatar file centered within the circle
+                ctx.drawImage(img, 0, 0, 64, 64);
+                
+                // Export and swap the dynamic circular PNG directly into the header
+                document.getElementById('favicon').setAttribute('href', canvas.toDataURL('image/png'));
+            };
+        });
+    </script>
 
 </body>
 </html>
