@@ -130,13 +130,15 @@ h1 {
     position: relative;
 }
 
+/* The OSRS-style hard-switch flash */
 #username.flash2-active span {
-    animation: flash2 0.5s infinite alternate;
+    animation: flash2 0.3s infinite steps(1);
 }
 
 @keyframes flash2 {
     0% { color: #FF0000; }
-    100% { color: #FFFF00; }
+    50% { color: #FFFF00; }
+    100% { color: #FF0000; }
 }
 
 #username.wave-active span {
