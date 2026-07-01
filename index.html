@@ -82,7 +82,7 @@
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            width: 380px;
+            width: 400px;
             max-width: 90%;
             padding: 40px;
             text-align: center;
@@ -120,10 +120,18 @@
             font-weight: 400;
         }
 
-        /* The Container for the Two Buttons */
+        /* Updated Button Container for 3 Buttons */
         .button-container {
             display: flex;
+            flex-direction: column;
             gap: 12px; 
+            width: 100%;
+        }
+
+        /* Row layout for the top two buttons */
+        .button-row {
+            display: flex;
+            gap: 12px;
             width: 100%;
         }
 
@@ -171,6 +179,19 @@
             transform: translateY(-1px);
         }
 
+        /* Specific Button Colors (Wise Old Man - OSRS Brown/Gold Theme) */
+        .btn-wom {
+            background-color: #4a3c31;
+            color: #e5c07b;
+            border: 1px solid rgba(229, 192, 123, 0.3);
+        }
+
+        .btn-wom:hover {
+            background-color: #5c4b3d;
+            border-color: rgba(229, 192, 123, 0.6);
+            transform: translateY(-1px);
+        }
+
         .btn:active {
             transform: scale(0.97);
         }
@@ -185,12 +206,18 @@
         <p>nerdssss</p>
         
         <div class="button-container">
-            <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
-                <i class="fab fa-github"></i> GitHub
-            </a>
+            <div class="button-row">
+                <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                
+                <a href="https://www.youtube.com/@xZeRoXP" target="_blank" class="btn btn-youtube">
+                    <i class="fab fa-youtube"></i> YouTube
+                </a>
+            </div>
             
-            <a href="https://www.youtube.com/@xZeRoXP" target="_blank" class="btn btn-youtube">
-                <i class="fab fa-youtube"></i> YouTube
+            <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
+                <i class="fas fa-scroll"></i> WiseOldMan
             </a>
         </div>
     </div>
