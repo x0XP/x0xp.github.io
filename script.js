@@ -58,13 +58,20 @@ async function getPrice(name) {
     priceBox.innerHTML = `<div style="padding:10px; text-align:center;">Loading...</div>`;
     
     const id = itemMap[name.toLowerCase()];
-    const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers });
-    const data = await res.json();
-    const p = data.data[id];
+    const [priceRes, wikiRes] = await Promise.all([
+        fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers }),
+        // Look up the exact image filename from the Wiki
+        fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=100`)
+    ]);
     
-    // Standard Wiki image formatting
-    const formattedName = name.charAt(0).toUpperCase() + name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
-    const iconUrl = `https://oldschool.runescape.wiki/images/${formattedName}.png`;
+    const priceData = await priceRes.json();
+    const p = priceData.data[id];
+    
+    const wikiData = await wikiRes.json();
+    const pages = wikiData.query.pages;
+    const pageId = Object.keys(pages)[0];
+    // This gives us the direct, correct URL provided by the Wiki
+    const iconUrl = pages[pageId].thumbnail ? pages[pageId].thumbnail.source : null;
     
     const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
     
@@ -72,7 +79,6 @@ async function getPrice(name) {
     void priceBox.offsetWidth;
     priceBox.classList.add('fade-in');
     
-    // The onerror logic below checks for _1 automatically if the first request fails
     priceBox.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div style="text-align: left; flex-grow: 1;">
@@ -80,9 +86,7 @@ async function getPrice(name) {
                 Buy: <span style="color:#00ff00">${p.high ? p.high.toLocaleString() : 'N/A'}</span> gp<br>
                 Sell: <span style="color:#ff0000">${p.low ? p.low.toLocaleString() : 'N/A'}</span> gp
             </div>
-            <img src="${iconUrl}" width="48" height="48" 
-                 style="margin-left: 15px; background: rgba(0,0,0,0.2); border-radius: 4px;" 
-                 onerror="if(!this.dataset.tried) { this.dataset.tried = 'true'; this.src = this.src.replace('.png', '_1.png'); } else { this.style.display = 'none'; }">
+            ${iconUrl ? `<img src="${iconUrl}" width="48" height="48" style="margin-left: 15px; background: rgba(0,0,0,0.2); border-radius: 4px;">` : ''}
         </div>
         <span class="timestamp" style="margin-top: 10px; display: block; color: #666; text-align: left;">Updated: ${timeAgo} mins ago</span>
     `;
