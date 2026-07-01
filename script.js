@@ -40,10 +40,14 @@ async function getPrice(name) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
     saveHistory(name);
-    const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemMap[name.toLowerCase()]}`, { headers });
+    
+    const id = itemMap[name.toLowerCase()];
+    const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers });
     const data = await res.json();
-    const p = data.data[itemMap[name.toLowerCase()]];
-    const iconUrl = `https://oldschool.runescape.wiki/images/${name.replace(/ /g, '_').replace(/'/g, "%27")}.png`;
+    const p = data.data[id];
+    
+    // NEW RELIABLE ICON URL
+    const iconUrl = `https://www.osrsbox.com/osrsbox-db/items-icons/${id}.png`;
     const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
     
     priceBox.classList.remove('fade-in');
