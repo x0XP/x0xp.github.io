@@ -1,78 +1,57 @@
-// OSRS Wiki API User-Agent requirement
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
-
-// 1. Load Item Mappings and Filter for GE items
 let itemMap = {};
+const searchInput = document.getElementById('itemSearch'),
+      resultsDiv = document.getElementById('results'),
+      priceBox = document.getElementById('priceDisplay'),
+      historyDiv = document.getElementById('history');
 
 async function initTracker() {
-    try {
-        // Fetch live prices first to get only items currently on the GE
-        const response = await fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers });
-        const data = await response.json();
-        const latestPrices = data.data; // This object contains IDs of only GE-tradable items
-
-        // Fetch the master item mapping
-        const mappingRes = await fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers });
-        const mappings = await mappingRes.json();
-
-        // Populate itemMap only with items found in the live prices object
-        mappings.forEach(item => {
-            if (latestPrices[item.id]) {
-                itemMap[item.name.toLowerCase()] = item.id;
-            }
-        });
-        console.log("Tracker Initialized: Tradable items loaded.");
-    } catch (error) {
-        console.error("Error loading GE data:", error);
-    }
+    const [priceRes, mapRes] = await Promise.all([
+        fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
+        fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
+    ]);
+    const prices = await priceRes.json();
+    const mappings = await mapRes.json();
+    mappings.forEach(item => { if (prices.data[item.id]) itemMap[item.name.toLowerCase()] = item.id; });
+    loadHistory();
 }
 
-// Initialize on page load
-initTracker();
+function saveHistory(name) {
+    let hist = JSON.parse(localStorage.getItem('osrsHistory') || '[]');
+    hist = [name, ...hist.filter(i => i !== name)].slice(0, 3);
+    localStorage.setItem('osrsHistory', JSON.stringify(hist));
+    loadHistory();
+}
 
-// 2. Search & Fetch logic
-const searchInput = document.getElementById('itemSearch');
-const resultsDiv = document.getElementById('results');
-const priceBox = document.getElementById('priceDisplay');
+function loadHistory() {
+    const hist = JSON.parse(localStorage.getItem('osrsHistory') || '[]');
+    historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n}')">${n}</span>`).join('');
+}
 
 searchInput.addEventListener('input', () => {
     const val = searchInput.value.toLowerCase();
-    
-    // Minimum 3 characters to start searching
-    if (val.length < 3) { 
-        resultsDiv.style.display = 'none'; 
-        return; 
-    }
-    
-    // Filter matching names from the filtered map
+    if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     const matches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
-    
-    if (matches.length > 0) {
-        resultsDiv.innerHTML = matches.map(m => `<div onclick="getPrice('${m}')">${m}</div>`).join('');
-        resultsDiv.style.display = 'block';
-    } else {
-        resultsDiv.style.display = 'none';
-    }
+    resultsDiv.innerHTML = matches.map(m => `<div onclick="getPrice('${m}')">${m}</div>`).join('');
+    resultsDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-// 3. Fetch Price
 async function getPrice(name) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
-    
-    try {
-        const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemMap[name]}`, { headers });
-        const data = await res.json();
-        const p = data.data[itemMap[name]];
-        
-        priceBox.style.display = 'block';
-        priceBox.innerHTML = `
-            <strong>${name.toUpperCase()}</strong><br>
-            Buy: ${p.high.toLocaleString()} gp<br>
-            Sell: ${p.low.toLocaleString()} gp
-        `;
-    } catch (error) {
-        priceBox.innerHTML = "Error fetching price.";
-        priceBox.style.display = 'block';
-    }
+    saveHistory(name);
+    const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemMap[name]}`, { headers });
+    const data = await res.json();
+    const p = data.data[itemMap[name]];
+    const iconUrl = `https://oldschool.runescape.wiki/images/${name.replace(/ /g, '_')}.png`;
+    const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
+    priceBox.style.display = 'block';
+    priceBox.innerHTML = `
+        <div class="icon-box"><img src="${iconUrl}" width="32" onerror="this.style.display='none'"> <strong>${name.toUpperCase()}</strong></div>
+        Buy: ${p.high ? p.high.toLocaleString() : 'N/A'} gp<br>
+        Sell: ${p.low ? p.low.toLocaleString() : 'N/A'} gp
+        <span class="timestamp">Updated: ${timeAgo} mins ago</span>
+    `;
 }
+
+initTracker();
