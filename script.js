@@ -219,6 +219,7 @@ async function getPrice(name, skipHistory = false) {
     
     const rawMinutes = p.highTime ? Math.round((Date.now()/1000 - p.highTime) / 60) : NaN;
     const relativeTime = formatTimeAgo(rawMinutes);
+    const wikiUrl = `https://oldschool.runescape.wiki/w/${encodeURIComponent(name)}`;
     
     priceBox.classList.remove('fade-in');
     void priceBox.offsetWidth;
@@ -227,7 +228,12 @@ async function getPrice(name, skipHistory = false) {
     priceBox.innerHTML = `
         <div class="price-container">
             <div class="price-text">
-                <strong class="item-name">${name.toUpperCase()}</strong>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <strong class="item-name" style="margin: 0;">${name.toUpperCase()}</strong>
+                    <a href="${wikiUrl}" target="_blank" class="wiki-btn" title="Open Wiki Page" style="display: inline-flex; align-items: center; justify-content: center; background: #2a2e3a; color: #a8c7fa; text-decoration: none; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #4a5050; transition: background 0.2s; height: 18px;">
+                        Wiki ↗
+                    </a>
+                </div>
                 Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${formatGP(p.high)}</span> gp<br>
                 Sell: <span style="color:#ff0000" title="${p.low ? p.low.toLocaleString() : '0'} gp">${formatGP(p.low)}</span> gp
             </div>
