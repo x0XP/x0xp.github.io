@@ -1,6 +1,7 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
 let selectedIndex = -1; // Tracks current keyboard item selection index
+let debounceTimer; // Tracks typing delay timer
 
 const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
@@ -12,6 +13,14 @@ searchInput.addEventListener('click', () => {
     searchInput.value = '';
     resultsDiv.style.display = 'none';
     selectedIndex = -1;
+});
+
+// Close autocomplete box immediately when clicking anywhere outside
+document.addEventListener('click', (e) => {
+    if (e.target !== searchInput && e.target !== resultsDiv && !resultsDiv.contains(e.target)) {
+        resultsDiv.style.display = 'none';
+        selectedIndex = -1;
+    }
 });
 
 async function initTracker() {
@@ -32,12 +41,18 @@ async function initTracker() {
             }
         });
         loadHistory();
+        
+        // IMPROVEMENT: Session Memory Restore on page load
+        const savedItem = sessionStorage.getItem('lastSearchedItem');
+        if (savedItem) {
+            getPrice(savedItem, true); // true skips saving to history duplicates
+        }
     } catch (e) { console.error("Initialization failed", e); }
 }
 
 function saveHistory(name) {
     let hist = JSON.parse(localStorage.getItem('osrsHistory') || '[]');
-    hist = [name, ...hist.filter(i => i !== name)].slice(0, 5);
+    hist = [name, ...hist.filter(i => i !== name)].slice(0, 3);
     localStorage.setItem('osrsHistory', JSON.stringify(hist));
     loadHistory();
 }
@@ -49,7 +64,7 @@ function loadHistory() {
     `).join('');
 }
 
-// 1. IMPROVEMENT: Smart Formatting for Millions (e.g., 10.5M, 250K)
+// Smart Formatting for Millions (e.g., 10.5M, 250K)
 function formatGP(num) {
     if (!num && num !== 0) return 'N/A';
     if (num >= 1000000) return (num / 1000000).toFixed(2).replace(/\.00$/, '') + 'M';
@@ -57,7 +72,7 @@ function formatGP(num) {
     return num.toString();
 }
 
-// 2. IMPROVEMENT: Search Highlight Matching
+// Search Highlight Matching
 function generateItemsHTML(itemsArray, query) {
     return itemsArray.map((item, index) => {
         const safeName = item.name.replace(/'/g, "\\'");
@@ -65,7 +80,6 @@ function generateItemsHTML(itemsArray, query) {
         const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
-        // Highlight matching text characters using a neon green color accent
         const regex = new RegExp(`(${query})`, 'gi');
         const highlightedName = item.name.replace(regex, `<strong style="color: #00ff00;">$1</strong>`);
         
@@ -78,8 +92,10 @@ function generateItemsHTML(itemsArray, query) {
     }).join('');
 }
 
-// Instant local item lookup handler
+// Instant local item lookup handler with IMPROVEMENTS (Debounce & Empty State Warning)
 searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    
     const val = searchInput.value.toLowerCase().trim();
     selectedIndex = -1;
     
@@ -88,37 +104,55 @@ searchInput.addEventListener('input', () => {
         return; 
     }
     
-    // CHANGED: Increased slice limit to 10 suggestions
-    const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 10);
-    
-    if (itemMatches.length > 0) {
-        const localItemsArray = itemMatches.map(m => itemMap[m]);
-        resultsDiv.innerHTML = generateItemsHTML(localItemsArray, val);
-        resultsDiv.style.display = 'block';
-    } else {
-        resultsDiv.style.display = 'none';
-    }
+    // IMPROVEMENT: 150ms Debounce to keep interface fluid during rapid typing
+    debounceTimer = setTimeout(() => {
+        const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 10);
+        
+        if (itemMatches.length > 0) {
+            const localItemsArray = itemMatches.map(m => itemMap[m]);
+            resultsDiv.innerHTML = generateItemsHTML(localItemsArray, val);
+            resultsDiv.style.display = 'block';
+        } else {
+            // IMPROVEMENT: Empty Search State visually feedback inside suggestions box
+            resultsDiv.innerHTML = `
+                <div class="suggested-item" style="color: #666; cursor: default; justify-content: center;">
+                    <span>No items found</span>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+    }, 150);
 });
 
-// 3. IMPROVEMENT: Keyboard Arrow Key & Enter Navigation
+// Keyboard Arrow Key, Tab Key & Enter Navigation support with IMPROVEMENT (Loop-Around Focus)
 searchInput.addEventListener('keydown', (e) => {
     const items = resultsDiv.getElementsByClassName('suggested-item');
-    if (!items.length) return;
+    if (!items.length || items[0].innerText === "No items found") return;
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
-        if (selectedIndex < items.length - 1) selectedIndex++;
+        // IMPROVEMENT: Loop around to top if pressing down at the end
+        if (selectedIndex < items.length - 1) {
+            selectedIndex++;
+        } else {
+            selectedIndex = 0;
+        }
         updateVisualSelection(items);
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
         e.preventDefault();
-        if (selectedIndex > 0) selectedIndex--;
+        // IMPROVEMENT: Loop around to bottom if pressing up at the beginning
+        if (selectedIndex > 0) {
+            selectedIndex--;
+        } else {
+            selectedIndex = items.length - 1;
+        }
         updateVisualSelection(items);
     } else if (e.key === 'Enter') {
         e.preventDefault();
         if (selectedIndex > -1 && items[selectedIndex]) {
             items[selectedIndex].click();
         } else if (items[0]) {
-            items[0].click(); // Default select first suggestion option
+            items[0].click(); 
         }
     }
 });
@@ -143,11 +177,17 @@ function formatTimeAgo(totalMinutes) {
     return `${Math.round(totalDays / 30.4)} months ago`;
 }
 
-async function getPrice(name) {
+async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
-    saveHistory(name);
     selectedIndex = -1;
+    
+    if (!skipHistory) {
+        saveHistory(name);
+    }
+    
+    // IMPROVEMENT: Save current selection to Session Storage
+    sessionStorage.setItem('lastSearchedItem', name);
     
     priceBox.style.display = 'block';
     priceBox.innerHTML = `<div style="padding:10px; text-align:center;">Loading...</div>`;
@@ -185,18 +225,8 @@ async function getPrice(name) {
     void priceBox.offsetWidth;
     priceBox.classList.add('fade-in');
     
-    // Renders matching exact card template structure from screenshot bounds
     priceBox.innerHTML = `
         <div class="price-container">
             <div class="price-text">
                 <strong class="item-name">${name.toUpperCase()}</strong>
-                Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${formatGP(p.high)}</span> gp<br>
-                Sell: <span style="color:#ff0000" title="${p.low ? p.low.toLocaleString() : '0'} gp">${formatGP(p.low)}</span> gp
-            </div>
-            ${iconUrl ? `<img src="${iconUrl}" class="item-icon">` : ''}
-        </div>
-        <span class="timestamp">Updated: ${relativeTime}</span>
-    `;
-}
-
-initTracker();
+                Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${format
