@@ -94,16 +94,25 @@ function levenshtein(a, b) {
     return tmp[alen];
 }
 
-// Scans local itemMap keys to locate the closest edit-distance candidate
+// Scans local itemMap keys to locate the closest candidate smartly
 function getClosestMatch(target) {
     let minDistance = Infinity;
     let closestItem = null;
     const keys = Object.keys(itemMap);
     
+    // Step 1: Check if the typed word is a substring of an item name (handles "Scyther" matching "Scythe")
+    for (let i = 0; i < keys.length; i++) {
+        if (keys[i].includes(target)) {
+            return itemMap[keys[i]];
+        }
+    }
+    
+    // Step 2: Fallback to Levenshtein Distance for complete typos (e.g., "Scythrr")
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
-        // Prune entries that are wildly different in length to save cycles
-        if (Math.abs(key.length - target.length) > 4) continue;
+        
+        // Prune entries wildly different in length
+        if (Math.abs(key.length - target.length) > 3) continue;
         
         const dist = levenshtein(target, key);
         if (dist < minDistance) {
@@ -111,8 +120,9 @@ function getClosestMatch(target) {
             closestItem = itemMap[key];
         }
     }
-    // Only suggest if the edit distance threshold is tight (<= 4 edits)
-    if (minDistance <= 4 && closestItem) {
+    
+    // Only suggest if the edit distance threshold is tight
+    if (minDistance <= 3 && closestItem) {
         return closestItem;
     }
     return null;
