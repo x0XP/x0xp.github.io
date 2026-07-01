@@ -6,16 +6,14 @@ const searchInput = document.getElementById('itemSearch'),
       historyDiv = document.getElementById('history');
 
 async function initTracker() {
-    try {
-        const [priceRes, mapRes] = await Promise.all([
-            fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
-            fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
-        ]);
-        const prices = await priceRes.json();
-        const mappings = await mapRes.json();
-        mappings.forEach(item => { if (prices.data[item.id]) itemMap[item.name.toLowerCase()] = item.id; });
-        loadHistory();
-    } catch (e) { console.error("Initialization failed", e); }
+    const [priceRes, mapRes] = await Promise.all([
+        fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
+        fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
+    ]);
+    const prices = await priceRes.json();
+    const mappings = await mapRes.json();
+    mappings.forEach(item => { if (prices.data[item.id]) itemMap[item.name.toLowerCase()] = item.id; });
+    loadHistory();
 }
 
 function saveHistory(name) {
@@ -33,15 +31,8 @@ function loadHistory() {
 searchInput.addEventListener('input', () => {
     const val = searchInput.value.toLowerCase();
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
-    
     const matches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
-    
-    // ESCAPED APOSTROPHE FIX:
-    resultsDiv.innerHTML = matches.map(m => {
-        const safeName = m.replace(/'/g, "\\'");
-        return `<div onclick="getPrice('${safeName}')">${m}</div>`;
-    }).join('');
-    
+    resultsDiv.innerHTML = matches.map(m => `<div onclick="getPrice('${m.replace(/'/g, "\\'")}')">${m}</div>`).join('');
     resultsDiv.style.display = matches.length ? 'block' : 'none';
 });
 
@@ -49,13 +40,15 @@ async function getPrice(name) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
     saveHistory(name);
-    
     const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemMap[name.toLowerCase()]}`, { headers });
     const data = await res.json();
     const p = data.data[itemMap[name.toLowerCase()]];
-    
     const iconUrl = `https://oldschool.runescape.wiki/images/${name.replace(/ /g, '_').replace(/'/g, "%27")}.png`;
     const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
+    
+    priceBox.classList.remove('fade-in');
+    void priceBox.offsetWidth;
+    priceBox.classList.add('fade-in');
     
     priceBox.style.display = 'block';
     priceBox.innerHTML = `
