@@ -27,6 +27,20 @@ body::after {
 }
 @keyframes noise-shift { 0% { background-position: 0 0; } 50% { background-position: -10px -10px; } 100% { background-position: 0 0; } }
 
+/* --- Skeleton Loader --- */
+@keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+}
+
+.skeleton {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, #2a2e3a 8%, #363b4a 18%, #2a2e3a 33%);
+    background-size: 800px 100px;
+    border-radius: 4px;
+    width: 100%;
+}
+
 /* --- x0XP Wave Canvas Fix --- */
 #waveCanvas {
     position: fixed;
@@ -34,7 +48,7 @@ body::after {
     left: 0;
     width: 100%;
     height: 160px;
-    z-index: 1; /* Placed exactly above background but beneath CRT effects and card layers */
+    z-index: 1; 
     pointer-events: none;
     opacity: 0.45;
 }
@@ -71,7 +85,6 @@ body::after {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* Target the subtitle text ("nerdsss") */
 .card #username + *,
 .card #username + div,
 .card #username + p,
@@ -87,13 +100,11 @@ body::after {
 .ge-tracker { margin-top: 20px; width: 100%; text-align: left; position: relative; }
 #itemSearch { width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 5px; z-index: 5; }
 
-/* Autocomplete Suggestion Results List Container */
 .results-list { 
     position: absolute; width: 100%; background: #1a1d26; border: 1px solid rgba(255,255,255,0.1); 
     z-index: 999; display: none; max-height: 180px; overflow-y: auto; border-radius: 0 0 5px 5px; 
 }
 
-/* Individual list item alignment with its icon */
 .suggested-item {
     display: flex;
     align-items: center;
@@ -109,7 +120,6 @@ body::after {
     transform: translateX(2px);
 }
 
-/* 128px approximate scale downscaled preview layout icons */
 .suggest-icon {
     width: 24px;
     height: 24px;
@@ -119,12 +129,11 @@ body::after {
     border: none !important;
 }
 
-/* --- Price Display Container Box --- */
+/* --- Price Display --- */
 .price-box { 
     margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); 
     border-radius: 5px; display: none; font-size: 13px; color: white; 
-    width: 100%;
-    position: relative; /* Context positioning for absolute adjustments inside */
+    width: 100%; position: relative;
 }
 
 .price-container { 
@@ -139,7 +148,6 @@ body::after {
     display: block; margin-bottom: 5px; color: #fff; 
 }
 
-/* Enforces 48x48 bounds on the high-res 500px file */
 .item-icon { 
     width: 48px; height: 48px; margin-left: 15px; 
     background: transparent !important; border: none !important; 
@@ -148,7 +156,6 @@ body::after {
 
 .timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; text-align: left; }
 
-/* Fixed Vector Wiki Button - Solid Across Mobile and Desktop */
 .wiki-btn {
     display: inline-flex;
     align-items: center;
@@ -173,7 +180,6 @@ body::after {
     border-color: #626b7e;
 }
 
-/* Vector Arrow State Tracking Hover Inversions */
 .wiki-btn svg {
     display: inline-block;
     flex-shrink: 0;
@@ -185,39 +191,21 @@ body::after {
     transform: translate(0.5px, -0.5px);
 }
 
-/* --- History List --- */
-.history-list { 
-    display: flex; 
-    gap: 5px; 
-    margin-top: 10px; 
-    flex-wrap: wrap; 
-}
+/* --- History & Buttons --- */
+.history-list { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
 .hist-btn { 
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
     padding: 4px 8px; border-radius: 4px; color: #aaa; cursor: pointer; font-size: 11px; 
     transition: all 0.2s ease; 
-    animation: fadeIn 0.5s ease-out; 
 }
-.hist-btn:hover { 
-    background: rgba(255,255,255,0.12); 
-    color: #fff;
-    transform: translateY(-1px);
-}
+.hist-btn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
 
-/* --- Buttons --- */
 .button-container { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-.button-row { display: flex; gap: 8px; }
 .btn { 
     flex: 1; padding: 10px; border-radius: 5px; color: white; text-decoration: none; font-size: 13px; font-weight: 600; text-align: center; 
     transition: all 0.2s ease-in-out;
 }
-/* Restored Hover Interactive States */
-.btn:hover {
-    transform: translateY(-1.5px);
-    filter: brightness(1.15);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
+.btn:hover { transform: translateY(-1.5px); filter: brightness(1.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
 .btn-github { background: #1f6feb; } 
 .btn-youtube { background: #FF0000; } 
 .btn-wom { background: rgba(255, 255, 255, 0.1); }
-.btn-wom:hover { background: rgba(255, 255, 255, 0.18); }
