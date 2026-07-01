@@ -45,10 +45,7 @@
         body::after {
             content: "";
             position: absolute;
-            /* Extra spacing allows the layer to shift without showing edges */
             top: -50px; left: -50px; right: -50px; bottom: -50px;
-            
-            /* High-density random grain generator + horizontal tracking line elements */
             background-image: 
                 url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
                 repeating-linear-gradient(
@@ -58,8 +55,6 @@
                     transparent 1px,
                     transparent 4px
                 );
-            
-            /* Animates position rapidly to create random grain movement and tracking glitches */
             animation: aggressive-noise 0.1s infinite steps(3);
             pointer-events: none;
             z-index: 2;
@@ -95,7 +90,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            z-index: 3; /* Always keeps the primary UI content above the chaos */
+            z-index: 3;
             position: relative;
         }
 
@@ -165,14 +160,14 @@
             transform: translateY(-1px);
         }
 
-        /* Specific Button Colors (Discord) */
-        .btn-discord {
-            background-color: #5865F2;
+        /* Specific Button Colors (YouTube) */
+        .btn-youtube {
+            background-color: #FF0000;
             color: #ffffff;
         }
 
-        .btn-discord:hover {
-            background-color: #4e5aca;
+        .btn-youtube:hover {
+            background-color: #cc0000;
             transform: translateY(-1px);
         }
 
@@ -187,11 +182,15 @@
         <img src="image0.jpg" alt="Avatar" class="avatar">
         
         <h1>x0XP</h1>
-        <p>nerds</p>
+        <p>nerdssss</p>
         
         <div class="button-container">
             <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
                 <i class="fab fa-github"></i> GitHub
+            </a>
+            
+            <a href="https://www.youtube.com/@xZeRoXP" target="_blank" class="btn btn-youtube">
+                <i class="fab fa-youtube"></i> YouTube
             </a>
         </div>
     </div>
