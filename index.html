@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>x0XP</title>
-    <!-- Placeholder favicon link that Javascript will overwrite with a round version -->
     <link id="favicon" rel="icon" type="image/png" href="image0.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -62,7 +61,7 @@
             z-index: 2;
         }
 
-        /* Random Noise & Glitch Animation Keyframes */
+        /* 📺 Aggressive Random Noise & Glitch Animation Keyframes */
         @keyframes aggressive-noise {
             0% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
             10% { transform: translate(-1px, 2px); background-position: 12px 45px, 0px 2px; }
@@ -79,7 +78,7 @@
 
         /* The Semi-Transparent Central Card */
         .card {
-            background-color: rgba(10, 14, 23, 0.9); 
+            background-color: rgba(10, 14, 23, 0.85); 
             backdrop-filter: blur(15px); 
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -88,36 +87,17 @@
             max-width: 90%;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 3;
             position: relative;
-        }
 
-        /* Animated Dynamic Ambient Glow Mesh Backing */
-        .card::before {
-            content: "";
-            position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
-            z-index: -1;
-            background: linear-gradient(45deg, #1f6feb, #4f46e5, #0ea5e9, #1f6feb);
-            background-size: 400% 400%;
-            border-radius: 24px;
-            filter: blur(40px);
-            opacity: 0.35;
-            animation: glow-mesh-pulse 10s ease infinite;
-            pointer-events: none;
-        }
-
-        @keyframes glow-mesh-pulse {
-            0% { background-position: 0% 50%; opacity: 0.30; }
-            50% { background-position: 100% 50%; opacity: 0.45; filter: blur(45px); }
-            100% { background-position: 0% 50%; opacity: 0.30; }
+            /* ✨ Layered Real Backwards Box-Glow (True Backdrop Light) */
+            box-shadow: 
+                0 0 40px rgba(31, 111, 235, 0.25),   /* Inner Blue Bleed */
+                0 0 70px rgba(79, 70, 229, 0.2),     /* Mid Indigo Halo */
+                0 25px 60px rgba(0, 0, 0, 0.6);      /* Grounding Ambient Base Drop Shadow */
         }
 
         /* The Circular Avatar */
@@ -231,7 +211,6 @@
         <p>nerdssss</p>
         
         <div class="button-container">
-            <!-- Side-by-Side Row for GitHub and YouTube -->
             <div class="button-row">
                 <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
                     <i class="fab fa-github"></i> GitHub
@@ -242,14 +221,12 @@
                 </a>
             </div>
             
-            <!-- Full Width Button for Wise Old Man -->
             <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
-                <i class="fas fa-hat-wizard"></i> WiseOldMan
+                <i class="fas fa-hat-wizard"></i> Wise Old Man
             </a>
         </div>
     </div>
 
-    <!-- Script to dynamically mask square avatar into a round favicon -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const img = new Image();
