@@ -180,14 +180,16 @@
             transform: translateY(-1px);
         }
 
-        /* Specific Button Colors (Wise Old Man - Brand Cyan Theme) */
+        /* Specific Button Colors (Sleek Dark Anchor Theme) */
         .btn-wom {
-            background-color: #0ea5e9;
+            background-color: rgba(255, 255, 255, 0.07);
             color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-wom:hover {
-            background-color: #0284c7;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-1px);
         }
 
@@ -218,7 +220,7 @@
             
             <!-- Full Width Button for Wise Old Man -->
             <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
-                <i class="fas fa-hat-wizard"></i> Wise Old Man
+                <i class="fas fa-hat-wizard"></i> WiseOldMan
             </a>
         </div>
     </div>
@@ -229,23 +231,18 @@
             const img = new Image();
             img.src = 'image0.jpg';
             img.onload = function() {
-                // Create an in-memory canvas element
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Set favicon resolution standard dimensions
                 canvas.width = 64;
                 canvas.height = 64;
                 
-                // Draw a perfect circular clipping path layout area
                 ctx.beginPath();
                 ctx.arc(32, 32, 32, 0, Math.PI * 2);
                 ctx.clip();
                 
-                // Draw your avatar file centered within the circle
                 ctx.drawImage(img, 0, 0, 64, 64);
                 
-                // Export and swap the dynamic circular PNG directly into the header
                 document.getElementById('favicon').setAttribute('href', canvas.toDataURL('image/png'));
             };
         });
