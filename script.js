@@ -45,7 +45,7 @@ function loadHistory() {
     historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>`).join('');
 }
 
-// Search autocomplete listener with 128px layout preview icons
+// Search autocomplete listener with fast redirect-lookup previews
 searchInput.addEventListener('input', () => {
     const val = searchInput.value.toLowerCase();
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
@@ -56,13 +56,16 @@ searchInput.addEventListener('input', () => {
         const itemObj = itemMap[m];
         const safeName = m.replace(/'/g, "\\'");
         
-        // Fast Wiki image endpoint format by replacing spaces with underscores for low-res previews
-        const formattedImgName = itemObj.name.replace(/ /g, '_').replace(/'/g, '%27');
-        const fastIconUrl = `https://oldschool.runescape.wiki/images/${formattedImgName}.png`;
+        // Capitalize the first letter to match the Wiki's filename requirements
+        const formattedName = itemObj.name.charAt(0).toUpperCase() + itemObj.name.slice(1);
+        const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
+        
+        // FIX: Using MediaWiki's Special:Redirect tool to pull the real asset bypassing hashes
+        const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
         return `
             <div class="suggested-item" onclick="getPrice('${safeName}')">
-                <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
+                <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
                 <span>${itemObj.name}</span>
             </div>
         `;
