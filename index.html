@@ -15,7 +15,6 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             background-color: #060814;
-            /* Improvement 3: Crisp font hardware anti-aliasing rendering */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -43,11 +42,10 @@
             z-index: 1;
             background-size: 100% 4px;
             pointer-events: none;
-            /* Improvement 4: Transition link to allow interaction reactive feedback */
             transition: opacity 0.3s ease;
         }
 
-        /* Improvement 4: Subtly reduce scanline intensity when interacting with the dashboard */
+        /* Subtly reduce scanline intensity when interacting with the dashboard */
         body:has(.btn:hover)::before {
             opacity: 0.75;
         }
@@ -103,8 +101,6 @@
             align-items: center;
             z-index: 3;
             position: relative;
-            
-            /* Improvement 5: Elegant startup fade-in entry */
             animation: card-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
@@ -133,7 +129,7 @@
             position: relative;
         }
 
-        /* Improvement 1: Cyber chromatic glitch split on title hover */
+        /* Cyber chromatic glitch split on title hover */
         h1:hover::before, h1:hover::after {
             content: "x0XP";
             position: absolute;
@@ -160,7 +156,6 @@
         }
 
         p {
-            /* Improvement 3: Clean, spaced tracking configuration */
             font-size: 11px;
             color: rgba(255, 255, 255, 0.45);
             margin: 0 0 25px 0;
@@ -196,7 +191,6 @@
             font-weight: 600;
             text-decoration: none;
             border-radius: 6px;
-            /* Improvement 2: Adjusted transitions speed for premium elastic feel */
             transition: background-color 0.2s ease, transform 0.2s ease, letter-spacing 0.2s ease, border-color 0.2s ease;
             cursor: pointer;
         }
@@ -206,7 +200,7 @@
             transition: transform 0.2s ease;
         }
 
-        /* Improvement 2: Apply smooth micro-expansion on button hover */
+        /* Apply smooth micro-expansion on button hover */
         .btn:hover {
             letter-spacing: 0.5px;
             transform: translateY(-2px);
@@ -274,30 +268,65 @@
             </div>
             
             <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
-                <i class="fas fa-hat-wizard"></i> WiseOldMan
+                <i class="fas fa-hat-wizard"></i> Wise Old Man
             </a>
         </div>
     </div>
 
     <script>
+        // 1. Favicon Rounded Masking Engine
         window.addEventListener('DOMContentLoaded', () => {
             const img = new Image();
             img.src = 'image0.jpg';
             img.onload = function() {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                canvas.width = 64;
-                canvas.height = 64;
-                
-                ctx.beginPath();
-                ctx.arc(32, 32, 32, 0, Math.PI * 2);
-                ctx.clip();
-                
+                canvas.width = 64; canvas.height = 64;
+                ctx.beginPath(); ctx.arc(32, 32, 32, 0, Math.PI * 2); ctx.clip();
                 ctx.drawImage(img, 0, 0, 64, 64);
-                
                 document.getElementById('favicon').setAttribute('href', canvas.toDataURL('image/png'));
             };
+        });
+
+        // 2. Synthesized Web Audio API UI Click Engine
+        let audioCtx = null;
+
+        function playHoverTick() {
+            try {
+                // Initialize context on demand (handles browser auto-play policies safely)
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                // Resume context if suspended by browser
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                // Setup crisp mechanical switch tone frequency parameters
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(650, audioCtx.currentTime); 
+
+                // Instant volume decay envelope to create a clean "tick" rather than a beep
+                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime); // 4% low volume baseline
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05); // Fade to zero in 50ms
+
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.06);
+            } catch (e) {
+                // Silently catch exceptions if audio context isn't supported or active
+            }
+        }
+
+        // Attach listeners across all your links
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseenter', playHoverTick);
         });
     </script>
 
