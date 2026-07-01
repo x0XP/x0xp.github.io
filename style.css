@@ -60,10 +60,23 @@ body::after {
 .icon-box { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
 .timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; }
 
-.history-list { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; animation: fadeIn 0.5s ease-out; }
+/* --- History List (Fixed Layout) --- */
+.history-list { 
+    display: flex; 
+    gap: 5px; 
+    margin-top: 10px; 
+    flex-wrap: wrap; 
+}
 .hist-btn { 
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
     padding: 4px 8px; border-radius: 4px; color: #aaa; cursor: pointer; font-size: 11px; 
     transition: all 0.3s ease; 
+    animation: fadeIn 0.5s ease-out; /* Animation applied to buttons only */
 }
 .hist-btn:hover { background: rgba(255,255,255,0.1); }
+
+/* --- Buttons --- */
+.button-container { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+.button-row { display: flex; gap: 8px; }
+.btn { flex: 1; padding: 10px; border-radius: 5px; color: white; text-decoration: none; font-size: 13px; font-weight: 600; text-align: center; }
+.btn-github { background: #1f6feb; } .btn-youtube { background: #FF0000; } .btn-wom { background: rgba(255, 255, 255, 0.1); }
