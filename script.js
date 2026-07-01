@@ -1,5 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
+let selectedIndex = -1; // Tracks current keyboard item selection index
 
 const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
@@ -10,6 +11,7 @@ const searchInput = document.getElementById('itemSearch'),
 searchInput.addEventListener('click', () => {
     searchInput.value = '';
     resultsDiv.style.display = 'none';
+    selectedIndex = -1;
 });
 
 async function initTracker() {
@@ -47,25 +49,39 @@ function loadHistory() {
     `).join('');
 }
 
-function generateItemsHTML(itemsArray) {
-    return itemsArray.map(item => {
+// 1. IMPROVEMENT: Smart Formatting for Millions (e.g., 10.5M, 250K)
+function formatGP(num) {
+    if (!num && num !== 0) return 'N/A';
+    if (num >= 1000000) return (num / 1000000).toFixed(2).replace(/\.00$/, '') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+}
+
+// 2. IMPROVEMENT: Search Highlight Matching
+function generateItemsHTML(itemsArray, query) {
+    return itemsArray.map((item, index) => {
         const safeName = item.name.replace(/'/g, "\\'");
         const formattedName = item.name.charAt(0).toUpperCase() + item.name.slice(1);
         const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
+        // Highlight matching text characters using a neon green color accent
+        const regex = new RegExp(`(${query})`, 'gi');
+        const highlightedName = item.name.replace(regex, `<strong style="color: #00ff00;">$1</strong>`);
+        
         return `
-            <div class="suggested-item" onclick="getPrice('${safeName}')">
+            <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')">
                 <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
-                <span>${item.name}</span>
+                <span>${highlightedName}</span>
             </div>
         `;
     }).join('');
 }
 
-// Instant local item lookup only
+// Instant local item lookup handler
 searchInput.addEventListener('input', () => {
     const val = searchInput.value.toLowerCase().trim();
+    selectedIndex = -1;
     
     if (val.length < 3) { 
         resultsDiv.style.display = 'none'; 
@@ -76,12 +92,46 @@ searchInput.addEventListener('input', () => {
     
     if (itemMatches.length > 0) {
         const localItemsArray = itemMatches.map(m => itemMap[m]);
-        resultsDiv.innerHTML = generateItemsHTML(localItemsArray);
+        resultsDiv.innerHTML = generateItemsHTML(localItemsArray, val);
         resultsDiv.style.display = 'block';
     } else {
         resultsDiv.style.display = 'none';
     }
 });
+
+// 3. IMPROVEMENT: Keyboard Arrow Key & Enter Navigation
+searchInput.addEventListener('keydown', (e) => {
+    const items = resultsDiv.getElementsByClassName('suggested-item');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (selectedIndex < items.length - 1) selectedIndex++;
+        updateVisualSelection(items);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (selectedIndex > 0) selectedIndex--;
+        updateVisualSelection(items);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedIndex > -1 && items[selectedIndex]) {
+            items[selectedIndex].click();
+        } else if (items[0]) {
+            items[0].click(); // Default select first suggestion option
+        }
+    }
+});
+
+function updateVisualSelection(elements) {
+    for (let i = 0; i < elements.length; i++) {
+        if (i === selectedIndex) {
+            elements[i].style.background = '#2a2e3a';
+            elements[i].scrollIntoView({ block: 'nearest' });
+        } else {
+            elements[i].style.background = '';
+        }
+    }
+}
 
 function formatTimeAgo(totalMinutes) {
     if (totalMinutes < 60) return `${totalMinutes} mins ago`;
@@ -96,6 +146,7 @@ async function getPrice(name) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
     saveHistory(name);
+    selectedIndex = -1;
     
     priceBox.style.display = 'block';
     priceBox.innerHTML = `<div style="padding:10px; text-align:center;">Loading...</div>`;
@@ -133,12 +184,13 @@ async function getPrice(name) {
     void priceBox.offsetWidth;
     priceBox.classList.add('fade-in');
     
+    // Renders matching exact card template structure from screenshot bounds
     priceBox.innerHTML = `
         <div class="price-container">
             <div class="price-text">
                 <strong class="item-name">${name.toUpperCase()}</strong>
-                Buy: <span style="color:#00ff00">${p.high ? p.high.toLocaleString() : 'N/A'}</span> gp<br>
-                Sell: <span style="color:#ff0000">${p.low ? p.low.toLocaleString() : 'N/A'}</span> gp
+                Buy: <span style="color:#00ff00" title="${p.high ? p.high.toLocaleString() : '0'} gp">${formatGP(p.high)}</span> gp<br>
+                Sell: <span style="color:#ff0000" title="${p.low ? p.low.toLocaleString() : '0'} gp">${formatGP(p.low)}</span> gp
             </div>
             ${iconUrl ? `<img src="${iconUrl}" class="item-icon">` : ''}
         </div>
