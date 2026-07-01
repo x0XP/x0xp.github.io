@@ -1,13 +1,13 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let searchDebounceTimer; // Keeps typing perfectly smooth
+let searchDebounceTimer; // Controls typing smoothness
 
 const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
 
-// Clear input on click
+// Clear input field on click
 searchInput.addEventListener('click', () => {
     searchInput.value = '';
     resultsDiv.style.display = 'none';
@@ -46,14 +46,9 @@ function loadHistory() {
     historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>`).join('');
 }
 
-// Formats item object arrays cleanly into your UI suggestions list layout
-function renderSuggestionsHTML(itemsArray, headerLabel = "") {
-    let html = "";
-    if (headerLabel) {
-        html += `<div style="padding:5px 8px; font-size:10px; color:#666; text-transform:uppercase; font-weight:bold; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,0.05)">${headerLabel}</div>`;
-    }
-    
-    html += itemsArray.map(item => {
+// Formats item lists cleanly into structured HTML block sections
+function generateItemsHTML(itemsArray) {
+    return itemsArray.map(item => {
         const safeName = item.name.replace(/'/g, "\\'");
         const formattedName = item.name.charAt(0).toUpperCase() + item.name.slice(1);
         const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
@@ -66,34 +61,29 @@ function renderSuggestionsHTML(itemsArray, headerLabel = "") {
             </div>
         `;
     }).join('');
-    
-    return html;
 }
 
-// Live lookup handler: searches normal items first, checks Wiki for Boss Drops second
+// Live lookup handler combining direct local items + live Wiki Boss tables
 searchInput.addEventListener('input', () => {
     clearTimeout(searchDebounceTimer);
     const val = searchInput.value.toLowerCase().trim();
     
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
-    // 1. Regular Item Search
+    // 1. Render instant matching local items first (No delay)
     const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
+    const localItemsArray = itemMatches.map(m => itemMap[m]);
     
-    if (itemMatches.length > 0) {
-        const itemsDataArray = itemMatches.map(m => itemMap[m]);
-        resultsDiv.innerHTML = renderSuggestionsHTML(itemsDataArray);
-        resultsDiv.style.display = 'block';
-        return;
-    }
-    
-    // 2. Fallback: Wait until typing pauses for 250ms, then see if it's a Boss name on the Wiki
+    let baseHtml = localItemsArray.length > 0 ? generateItemsHTML(localItemsArray) : "";
+    resultsDiv.innerHTML = baseHtml;
+    if (baseHtml) resultsDiv.style.display = 'block';
+
+    // 2. Safely look up matching Boss Drops in the background after typing stops
     searchDebounceTimer = setTimeout(async () => {
-        // Format string to approximate standard Wiki title matching (e.g. "zulrah" -> "Zulrah")
         const formattedBossQuery = val.charAt(0).toUpperCase() + val.slice(1);
         
-        // Semantic MediaWiki Ask Query looking for items dropped by this monster name
-        const query = `[[Drops from::${formattedBossQuery}]]|?Drop id|limit=10`;
+        // Corrected property syntax using OSRS Wiki's standard "Dropped by" template relation
+        const query = `[[Dropped by::${formattedBossQuery}]]|?ID|limit=12`;
         const url = `https://oldschool.runescape.wiki/api.php?action=ask&query=${encodeURIComponent(query)}&format=json&origin=*`;
         
         try {
@@ -104,27 +94,28 @@ searchInput.addEventListener('input', () => {
                 let bossDrops = [];
                 
                 for (const [key, value] of Object.entries(data.query.results)) {
-                    const dropIds = value.printouts['Drop id'];
-                    if (dropIds && dropIds.length > 0) {
-                        const itemId = dropIds[0];
-                        // Match against our local item map to ensure it's a valid, tradeable GE item
-                        const foundItem = Object.values(itemMap).find(item => item.id === itemId);
-                        if (foundItem) bossDrops.push(foundItem);
+                    // Pull item mappings using either structural wiki page names or item ID data blocks
+                    const wikiItemName = key.toLowerCase();
+                    const foundItem = itemMap[wikiItemName] || Object.values(itemMap).find(item => item.name.toLowerCase() === wikiItemName);
+                    
+                    if (foundItem && !bossDrops.some(d => d.id === foundItem.id)) {
+                        bossDrops.push(foundItem);
                     }
                 }
                 
                 if (bossDrops.length > 0) {
-                    resultsDiv.innerHTML = renderSuggestionsHTML(bossDrops, `Drops from ${formattedBossQuery}`);
+                    const labelHtml = `<div style="padding:6px 8px; font-size:10px; color:#999; text-transform:uppercase; font-weight:bold; letter-spacing:1px; background: rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.05); border-top:1px solid rgba(255,255,255,0.05)">Drops from ${formattedBossQuery}</div>`;
+                    const dropsHtml = generateItemsHTML(bossDrops);
+                    
+                    // Append the boss table results underneath any direct item matches
+                    resultsDiv.innerHTML = baseHtml + labelHtml + dropsHtml;
                     resultsDiv.style.display = 'block';
-                    return;
                 }
             }
         } catch (err) {
-            console.error("Wiki Monster Ask query failed", err);
+            console.error("OSRS Wiki Boss lookup failed", err);
         }
-        
-        resultsDiv.style.display = 'none';
-    }, 250);
+    }, 300);
 });
 
 function formatTimeAgo(totalMinutes) {
