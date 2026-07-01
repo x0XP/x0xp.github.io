@@ -70,6 +70,54 @@ function formatGP(num) {
     return num.toLocaleString();
 }
 
+// Super lightweight single-array Levenshtein distance formulation
+function levenshtein(a, b) {
+    const tmp = [];
+    let i, j, alen = a.length, blen = b.length;
+    if (alen === 0) return blen;
+    if (blen === 0) return alen;
+    for (i = 0; i <= alen; i++) tmp[i] = i;
+    for (i = 1; i <= blen; i++) {
+        let prev = i;
+        for (j = 1; j <= alen; j++) {
+            let val;
+            if (b[i - 1] === a[j - 1]) {
+                val = tmp[j - 1];
+            } else {
+                val = Math.min(tmp[j - 1] + 1, Math.min(tmp[j] + 1, prev + 1));
+            }
+            tmp[j - 1] = prev;
+            prev = val;
+        }
+        tmp[alen] = prev;
+    }
+    return tmp[alen];
+}
+
+// Scans local itemMap keys to locate the closest edit-distance candidate
+function getClosestMatch(target) {
+    let minDistance = Infinity;
+    let closestItem = null;
+    const keys = Object.keys(itemMap);
+    
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        // Prune entries that are wildly different in length to save cycles
+        if (Math.abs(key.length - target.length) > 4) continue;
+        
+        const dist = levenshtein(target, key);
+        if (dist < minDistance) {
+            minDistance = dist;
+            closestItem = itemMap[key];
+        }
+    }
+    // Only suggest if the edit distance threshold is tight (<= 4 edits)
+    if (minDistance <= 4 && closestItem) {
+        return closestItem;
+    }
+    return null;
+}
+
 // Search Highlight Matching
 function generateItemsHTML(itemsArray, query) {
     return itemsArray.map((item, index) => {
@@ -90,7 +138,7 @@ function generateItemsHTML(itemsArray, query) {
     }).join('');
 }
 
-// Instant local item lookup handler with Debounce & Empty State Warning
+// Instant local item lookup handler with Debounce, Fuzzy Fallback & Empty State Warning
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     
@@ -111,12 +159,23 @@ searchInput.addEventListener('input', () => {
             resultsDiv.innerHTML = generateItemsHTML(localItemsArray, val);
             resultsDiv.style.display = 'block';
         } else {
-            // Empty Search State visually feedback inside suggestions box
-            resultsDiv.innerHTML = `
-                <div class="suggested-item" style="color: #666; cursor: default; justify-content: center;">
-                    <span>No items found</span>
-                </div>
-            `;
+            // Trigger Fuzzy Autocomplete logic on complete miss
+            const closest = getClosestMatch(val);
+            if (closest) {
+                const safeName = closest.name.replace(/'/g, "\\'");
+                resultsDiv.innerHTML = `
+                    <div class="suggested-item" onclick="getPrice('${safeName}')" style="justify-content: center; cursor: pointer;">
+                        <span>Did you mean: <strong style="color: #00ff00;">${closest.name}</strong>?</span>
+                    </div>
+                `;
+            } else {
+                // Absolute Empty Search State visual feedback
+                resultsDiv.innerHTML = `
+                    <div class="suggested-item" style="color: #666; cursor: default; justify-content: center;">
+                        <span>No items found</span>
+                    </div>
+                `;
+            }
             resultsDiv.style.display = 'block';
         }
     }, 150);
