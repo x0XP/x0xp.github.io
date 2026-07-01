@@ -1,6 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let searchDebounceTimer; // Controls typing smoothness
+let searchDebounceTimer; 
 
 const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
@@ -46,7 +46,7 @@ function loadHistory() {
     historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>`).join('');
 }
 
-// Formats item lists cleanly into structured HTML block sections
+// Generates the suggestion layout items
 function generateItemsHTML(itemsArray) {
     return itemsArray.map(item => {
         const safeName = item.name.replace(/'/g, "\\'");
@@ -63,14 +63,14 @@ function generateItemsHTML(itemsArray) {
     }).join('');
 }
 
-// Live lookup handler combining direct local items + live Wiki Boss tables
+// Live lookup handler: searches items instantly, queries Wiki live for monster drop tables
 searchInput.addEventListener('input', () => {
     clearTimeout(searchDebounceTimer);
     const val = searchInput.value.toLowerCase().trim();
     
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
-    // 1. Render instant matching local items first (No delay)
+    // 1. Instantly display matching items from our local mapping (no delay)
     const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
     const localItemsArray = itemMatches.map(m => itemMap[m]);
     
@@ -78,12 +78,13 @@ searchInput.addEventListener('input', () => {
     resultsDiv.innerHTML = baseHtml;
     if (baseHtml) resultsDiv.style.display = 'block';
 
-    // 2. Safely look up matching Boss Drops in the background after typing stops
+    // 2. Query the Wiki database live for any Monsters matching this search term
     searchDebounceTimer = setTimeout(async () => {
-        const formattedBossQuery = val.charAt(0).toUpperCase() + val.slice(1);
+        // Capitalize words slightly to help match Wiki indexing patterns
+        const formattedQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
-        // Corrected property syntax using OSRS Wiki's standard "Dropped by" template relation
-        const query = `[[Dropped by::${formattedBossQuery}]]|?ID|limit=12`;
+        // Uses the database wildcard '~*' to match partial entries dynamically
+        const query = `[[Dropped by::~*${formattedQuery}*]]|?Drop item|limit=25`;
         const url = `https://oldschool.runescape.wiki/api.php?action=ask&query=${encodeURIComponent(query)}&format=json&origin=*`;
         
         try {
@@ -91,31 +92,42 @@ searchInput.addEventListener('input', () => {
             const data = await response.json();
             
             if (data.query && data.query.results && Object.keys(data.query.results).length > 0) {
-                let bossDrops = [];
-                
-                for (const [key, value] of Object.entries(data.query.results)) {
-                    // Pull item mappings using either structural wiki page names or item ID data blocks
-                    const wikiItemName = key.toLowerCase();
-                    const foundItem = itemMap[wikiItemName] || Object.values(itemMap).find(item => item.name.toLowerCase() === wikiItemName);
+                let monsterDrops = [];
+                let detectedMonsterName = formattedQuery;
+
+                for (const [subobjectKey, subobjectValue] of Object.entries(data.query.results)) {
+                    const dropItemPrintout = subobjectValue.printouts['Drop item'];
                     
-                    if (foundItem && !bossDrops.some(d => d.id === foundItem.id)) {
-                        bossDrops.push(foundItem);
+                    if (dropItemPrintout && dropItemPrintout.length > 0) {
+                        // Extract the clean item name text from the subobject relation entry
+                        const rawItemName = dropItemPrintout[0].fulltext || dropItemPrintout[0];
+                        const lookupKey = rawItemName.toLowerCase().trim();
+                        const foundItem = itemMap[lookupKey];
+                        
+                        // Parse out the actual monster name from the data to build a clean title header
+                        if (subobjectValue.fulltext && subobjectValue.fulltext.includes('#')) {
+                            detectedMonsterName = subobjectValue.fulltext.split('#')[0];
+                        }
+
+                        if (foundItem && !monsterDrops.some(d => d.id === foundItem.id)) {
+                            monsterDrops.push(foundItem);
+                        }
                     }
                 }
                 
-                if (bossDrops.length > 0) {
-                    const labelHtml = `<div style="padding:6px 8px; font-size:10px; color:#999; text-transform:uppercase; font-weight:bold; letter-spacing:1px; background: rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.05); border-top:1px solid rgba(255,255,255,0.05)">Drops from ${formattedBossQuery}</div>`;
-                    const dropsHtml = generateItemsHTML(bossDrops);
+                if (monsterDrops.length > 0) {
+                    const labelHtml = `<div style="padding:6px 8px; font-size:10px; color:#999; text-transform:uppercase; font-weight:bold; letter-spacing:1px; background: rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.05); border-top:1px solid rgba(255,255,255,0.05)">Drops from ${detectedMonsterName}</div>`;
+                    const dropsHtml = generateItemsHTML(monsterDrops.slice(0, 10)); // Top 10 tradeable drops
                     
-                    // Append the boss table results underneath any direct item matches
+                    // Show item matches and dynamic boss drops together seamlessly
                     resultsDiv.innerHTML = baseHtml + labelHtml + dropsHtml;
                     resultsDiv.style.display = 'block';
                 }
             }
         } catch (err) {
-            console.error("OSRS Wiki Boss lookup failed", err);
+            console.error("Dynamic Wiki drop table lookup failed", err);
         }
-    }, 300);
+    }, 400); // 400ms pause wait ensures we don't spam requests while typing phrases
 });
 
 function formatTimeAgo(totalMinutes) {
