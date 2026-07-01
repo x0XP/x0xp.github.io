@@ -62,9 +62,8 @@ async function getPrice(name) {
     const data = await res.json();
     const p = data.data[id];
     
-    // Official Wiki Image formatting: Capitalize first letter, replace spaces with underscores
-    const wikiName = name.charAt(0).toUpperCase() + name.slice(1);
-    const formattedName = wikiName.replace(/ /g, '_').replace(/'/g, "%27");
+    // Standard Wiki image formatting
+    const formattedName = name.charAt(0).toUpperCase() + name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
     const iconUrl = `https://oldschool.runescape.wiki/images/${formattedName}.png`;
     
     const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
@@ -73,7 +72,7 @@ async function getPrice(name) {
     void priceBox.offsetWidth;
     priceBox.classList.add('fade-in');
     
-    // Flexbox structure: Text left, Icon right
+    // The onerror logic below checks for _1 automatically if the first request fails
     priceBox.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div style="text-align: left; flex-grow: 1;">
@@ -81,7 +80,9 @@ async function getPrice(name) {
                 Buy: <span style="color:#00ff00">${p.high ? p.high.toLocaleString() : 'N/A'}</span> gp<br>
                 Sell: <span style="color:#ff0000">${p.low ? p.low.toLocaleString() : 'N/A'}</span> gp
             </div>
-            <img src="${iconUrl}" width="48" height="48" style="margin-left: 15px; background: rgba(0,0,0,0.2); border-radius: 4px;" onerror="this.style.display='none'">
+            <img src="${iconUrl}" width="48" height="48" 
+                 style="margin-left: 15px; background: rgba(0,0,0,0.2); border-radius: 4px;" 
+                 onerror="if(!this.dataset.tried) { this.dataset.tried = 'true'; this.src = this.src.replace('.png', '_1.png'); } else { this.style.display = 'none'; }">
         </div>
         <span class="timestamp" style="margin-top: 10px; display: block; color: #666; text-align: left;">Updated: ${timeAgo} mins ago</span>
     `;
