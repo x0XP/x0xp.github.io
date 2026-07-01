@@ -10,7 +10,6 @@ body, html {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* 1. Base Image Layer with Dark Overlay */
 body {
     background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('image0.jpg'); 
     background-position: center;
@@ -23,7 +22,7 @@ body {
     position: relative;
 }
 
-/* 2. Heavy CRT Scanlines Layer */
+/* CRT Scanlines Layer */
 body::before {
     content: " ";
     display: block;
@@ -41,20 +40,14 @@ body:has(.btn:hover)::before {
     opacity: 0.75;
 }
 
-/* 3. The Animated Random Noise & Screen Glitch Layer */
+/* Screen Glitch Layer */
 body::after {
     content: "";
     position: absolute;
     top: -50px; left: -50px; right: -50px; bottom: -50px;
     background-image: 
         url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
-        repeating-linear-gradient(
-            0deg,
-            rgba(255, 255, 255, 0.08) 0px,
-            rgba(255, 255, 255, 0.08) 1px,
-            transparent 1px,
-            transparent 4px
-        );
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 1px, transparent 1px, transparent 4px);
     animation: aggressive-noise 0.1s infinite steps(3);
     pointer-events: none;
     z-index: 2;
@@ -65,38 +58,23 @@ body::after {
 @keyframes aggressive-noise {
     0% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
     10% { transform: translate(-1px, 2px); background-position: 12px 45px, 0px 2px; }
-    20% { transform: translate(3px, -1px); background-position: -85px 23px, 0px -1px; }
-    30% { transform: translate(-2px, 3px); background-position: 40px -90px, 0px 3px; }
-    40% { transform: translate(1px, -3px); background-position: -12px -5px, 0px -2px; }
     50% { transform: translate(-3px, 1px); background-position: 73px 18px, 0px 0px; }
-    60% { transform: translate(2px, 2px); background-position: -34px 62px, 0px 1px; }
-    70% { transform: translate(-1px, -2px); background-position: 91px -43px, 0px -3px; }
-    80% { transform: translate(3px, 3px); background-position: -50px 0px, 0px 2px; }
-    90% { transform: translate(-2px, -1px); background-position: 15px 88px, 0px -1px; }
     100% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
 }
 
 .card {
     background-color: rgba(10, 14, 23, 0.9); 
     backdrop-filter: blur(15px); 
-    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 40px;
     text-align: center;
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     z-index: 3;
     position: relative;
-    box-sizing: border-box;
     width: 380px;
     max-width: 90%;
-    opacity: 0;
-    transform: translateY(30px);
     animation: card-appear 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: transform, opacity;
 }
 
 @keyframes card-appear {
@@ -105,110 +83,54 @@ body::after {
 }
 
 .avatar {
-    width: 85px;
-    height: 85px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    width: 85px; height: 85px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-h1 {
-    font-size: 28px;
-    margin: 0 0 8px 0;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    position: relative;
-    cursor: default;
-}
+h1 { font-size: 28px; margin: 0 0 8px 0; font-weight: 700; cursor: default; }
 
-/* OSRS Animation Effects */
+/* OSRS Animation Effects (Forced Priority) */
 #username span {
     display: inline-block;
-    transition: color 0.1s;
     position: relative;
 }
 
-/* The OSRS-style hard-switch flash */
 #username.flash2-active span {
-    animation: flash2 0.3s infinite steps(1);
+    animation: flash2 0.3s infinite steps(1) !important;
 }
 
 @keyframes flash2 {
-    0% { color: #FF0000; }
-    50% { color: #FFFF00; }
-    100% { color: #FF0000; }
+    0% { color: #FF0000 !important; }
+    50% { color: #FFFF00 !important; }
+    100% { color: #FF0000 !important; }
 }
 
 #username.wave-active span {
-    animation: wave-move 0.5s infinite alternate;
+    animation: wave-move 0.5s infinite alternate !important;
 }
 
 @keyframes wave-move {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-8px); }
+    0% { transform: translateY(0) !important; }
+    100% { transform: translateY(-8px) !important; }
 }
 
-#username.wave-active span:nth-child(1) { animation-delay: 0.0s; }
-#username.wave-active span:nth-child(2) { animation-delay: 0.1s; }
-#username.wave-active span:nth-child(3) { animation-delay: 0.2s; }
-#username.wave-active span:nth-child(4) { animation-delay: 0.3s; }
+#username.wave-active span:nth-child(1) { animation-delay: 0.0s !important; }
+#username.wave-active span:nth-child(2) { animation-delay: 0.1s !important; }
+#username.wave-active span:nth-child(3) { animation-delay: 0.2s !important; }
+#username.wave-active span:nth-child(4) { animation-delay: 0.3s !important; }
 
-p {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.45);
-    margin: 0 0 25px 0;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-}
+/* Buttons & Text */
+p { font-size: 11px; color: rgba(255, 255, 255, 0.45); margin: 0 0 25px 0; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
 
-.button-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px; 
-    width: 100%;
-}
-
-.button-row {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-}
+.button-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.button-row { display: flex; gap: 12px; width: 100%; }
 
 .btn {
-    flex: 1; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px; 
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: background-color 0.2s ease, transform 0.2s ease, letter-spacing 0.2s ease, border-color 0.2s ease;
-    cursor: pointer;
-}
-
-.btn i {
-    font-size: 16px; 
-    transition: transform 0.2s ease;
-}
-
-.btn:hover {
-    letter-spacing: 0.5px;
-    transform: translateY(-2px);
-}
-.btn:hover i {
-    transform: scale(1.1);
+    flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px 16px;
+    font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 6px; cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .btn-github { background-color: #1f6feb; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
-.btn-github:hover { background-color: #388bfd; }
 .btn-youtube { background-color: #FF0000; color: #ffffff; border: 1px solid transparent; }
-.btn-youtube:hover { background-color: #cc0000; }
 .btn-wom { background-color: rgba(255, 255, 255, 0.07); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
-.btn-wom:hover { background-color: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.2); }
-.btn:active { transform: scale(0.97); }
+.btn:hover { transform: translateY(-2px); }
