@@ -96,27 +96,24 @@ function levenshtein(a, b) {
 
 // Scans local itemMap keys to locate the closest candidate smartly
 function getClosestMatch(target) {
-    let minDistance = Infinity;
-    let closestItem = null;
     const keys = Object.keys(itemMap);
     
-    // 1. Substring check: Does the target contain the item name?
-    // This catches "scyther" because "scythe" is inside "scyther"
+    // 1. Exact or partial word match (The most reliable method)
+    // This looks for items where the first word matches the start of your search
     for (let i = 0; i < keys.length; i++) {
-        if (target.includes(keys[i])) {
-            return itemMap[keys[i]];
+        const itemName = keys[i];
+        const firstWord = itemName.split(' ')[0];
+        
+        // If the item starts with the word you typed, we found the intended item
+        if (target.startsWith(firstWord)) {
+            return itemMap[itemName];
         }
     }
     
-    // 2. Standard substring check: Does the item contain the target?
-    // This catches "scythe of vitur" when you type "scythe"
-    for (let i = 0; i < keys.length; i++) {
-        if (keys[i].includes(target)) {
-            return itemMap[keys[i]];
-        }
-    }
+    // 2. Fallback to distance math ONLY if we haven't found a word match
+    let minDistance = Infinity;
+    let closestItem = null;
     
-    // 3. Fallback to Levenshtein Distance for genuine typos
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         if (Math.abs(key.length - target.length) > 3) continue;
@@ -128,8 +125,9 @@ function getClosestMatch(target) {
         }
     }
     
-    return (minDistance <= 3 && closestItem) ? closestItem : null;
+    return (minDistance <= 2 && closestItem) ? closestItem : null;
 }
+
 // Search Highlight Matching
 function generateItemsHTML(itemsArray, query) {
     return itemsArray.map((item, index) => {
