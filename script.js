@@ -28,25 +28,29 @@ function playHoverTick() {
     try {
         initAudio();
         if (!audioCtx || audioCtx.state === 'suspended') return;
-
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-
         osc.type = 'sine';
         osc.frequency.setValueAtTime(650, audioCtx.currentTime); 
-
         gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime); 
         gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05); 
-
         osc.start(audioCtx.currentTime);
         osc.stop(audioCtx.currentTime + 0.06);
     } catch (e) {}
 }
 
-// Standard user interaction listeners to safely catch user context unblocking rules
+// OSRS Username Effect Logic
+const username = document.getElementById('username');
+username.addEventListener('mouseenter', () => {
+    username.classList.add('flash2-active', 'wave-active');
+});
+username.addEventListener('mouseleave', () => {
+    username.classList.remove('flash2-active', 'wave-active');
+});
+
+// Standard user interaction listeners
 window.addEventListener('click', initAudio, { once: true });
 window.addEventListener('keydown', initAudio, { once: true });
 
