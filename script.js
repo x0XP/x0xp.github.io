@@ -1,11 +1,23 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
+
+// Hardcoded popular boss drop tables so suggestions show up instantly while typing!
+const bossMap = {
+    "zulrah": [12924, 12934, 12922, 12932, 6571, 12919], // Blowpipe, Scales, Magic Fang, Serpentine, Onyx, Onyx muta
+    "vorkath": [22002, 22106, 21992, 11286, 11283, 19529], // Skeletal visage, Necklace, Dragonbone necklace, Draconic visage, D shield
+    "abyssal sire": [13265, 13274, 13275, 13276, 13263, 4151], // Dagger, Bludgeon claw, Spine, Axon, Head, Whip
+    "nex": [26382, 26384, 26374, 26372, 26233, 11785], // Torva full, Plate, Legs, Vambraces, Zaryte crossbow, Armadyl crossbow
+    "the whisperer": [28238, 28258, 28240, 28256, 28314], // Bellator vestige, Siren's vitriol, Quartz, Awakener's orb, Virtus mask
+    "duke sucellus": [28236, 28258, 28240, 28256, 28316], // Magus vestige, etc.
+    "vardorvis": [28232, 28258, 28240, 28256, 28318], // Ultor vestige, etc.
+    "the leviathan": [28234, 28258, 28240, 28256, 28320] // Venator vestige, etc.
+};
+
 const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
 
-// Clear input on click
 searchInput.addEventListener('click', () => {
     searchInput.value = '';
     resultsDiv.style.display = 'none';
@@ -20,7 +32,6 @@ async function initTracker() {
         const prices = await priceRes.json();
         const mappings = await mapRes.json();
         
-        // Save both ID and formatting data to itemMap for fast icon rendering
         mappings.forEach(item => { 
             if (prices.data[item.id]) {
                 itemMap[item.name.toLowerCase()] = {
@@ -45,22 +56,46 @@ function loadHistory() {
     historyDiv.innerHTML = hist.map(n => `<span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>`).join('');
 }
 
-// Search autocomplete listener with fast redirect-lookup previews
+// Intercepts input: checks if it matches a boss name first, then falls back to regular items
 searchInput.addEventListener('input', () => {
-    const val = searchInput.value.toLowerCase();
+    const val = searchInput.value.toLowerCase().trim();
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
-    const matches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
+    // Check if what they typed matches a known Boss key
+    const matchedBossKey = Object.keys(bossMap).find(boss => boss.includes(val));
     
+    if (matchedBossKey) {
+        const dropIds = bossMap[matchedBossKey];
+        // Map the hardcoded IDs to actual item objects in our loaded itemMap
+        const dropItems = Object.values(itemMap).filter(item => dropIds.includes(item.id));
+        
+        resultsDiv.innerHTML = `
+            <div style="padding:5px 8px; font-size:10px; color:#666; text-transform:uppercase; font-weight:bold; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,0.05)">Drops from ${matchedBossKey.toUpperCase()}</div>
+        ` + dropItems.map(item => {
+            const safeName = item.name.replace(/'/g, "\\'");
+            const formattedName = item.name.charAt(0).toUpperCase() + item.name.slice(1);
+            const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
+            const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+            
+            return `
+                <div class="suggested-item" onclick="getPrice('${safeName}')">
+                    <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
+                    <span>${item.name}</span>
+                </div>
+            `;
+        }).join('');
+        
+        resultsDiv.style.display = 'block';
+        return;
+    }
+    
+    // Regular Item Fallback Search
+    const matches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 5);
     resultsDiv.innerHTML = matches.map(m => {
         const itemObj = itemMap[m];
         const safeName = m.replace(/'/g, "\\'");
-        
-        // Capitalize the first letter to match the Wiki's filename requirements
         const formattedName = itemObj.name.charAt(0).toUpperCase() + itemObj.name.slice(1);
         const filename = formattedName.replace(/ /g, '_').replace(/'/g, "%27");
-        
-        // FIX: Using MediaWiki's Special:Redirect tool to pull the real asset bypassing hashes
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
         return `
@@ -74,24 +109,13 @@ searchInput.addEventListener('input', () => {
     resultsDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-// Helper function to format large chunks of minutes cleanly
 function formatTimeAgo(totalMinutes) {
-    if (totalMinutes < 60) {
-        return `${totalMinutes} mins ago`;
-    }
-    
+    if (totalMinutes < 60) return `${totalMinutes} mins ago`;
     const totalHours = Math.round(totalMinutes / 60);
-    if (totalHours < 24) {
-        return `${totalHours} hours ago`;
-    }
-    
+    if (totalHours < 24) return `${totalHours} hours ago`;
     const totalDays = Math.round(totalHours / 24);
-    if (totalDays < 30) {
-        return `${totalDays} days ago`;
-    }
-    
-    const totalMonths = Math.round(totalDays / 30.4); 
-    return `${totalMonths} months ago`;
+    if (totalDays < 30) return `${totalDays} days ago`;
+    return `${Math.round(totalDays / 30.4)} months ago`;
 }
 
 async function getPrice(name) {
@@ -110,7 +134,6 @@ async function getPrice(name) {
         return;
     }
     
-    // Fetch price and high-res image simultaneously
     const [priceRes, wikiRes] = await Promise.all([
         fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers }),
         fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=500&redirects=1`)
@@ -120,7 +143,6 @@ async function getPrice(name) {
     const wikiData = await wikiRes.json();
     const p = priceData.data[id];
 
-    // Safe extraction logic tracking non -1 pages
     let iconUrl = "";
     if (wikiData.query && wikiData.query.pages) {
         const pages = wikiData.query.pages;
