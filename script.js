@@ -49,6 +49,26 @@ searchInput.addEventListener('input', () => {
     resultsDiv.style.display = matches.length ? 'block' : 'none';
 });
 
+// Helper function to format large chunks of minutes cleanly
+function formatTimeAgo(totalMinutes) {
+    if (totalMinutes < 60) {
+        return `${totalMinutes} mins ago`;
+    }
+    
+    const totalHours = Math.round(totalMinutes / 60);
+    if (totalHours < 24) {
+        return `${totalHours} hours ago`;
+    }
+    
+    const totalDays = Math.round(totalHours / 24);
+    if (totalDays < 30) {
+        return `${totalDays} days ago`;
+    }
+    
+    const totalMonths = Math.round(totalDays / 30.4); // Average month length
+    return `${totalMonths} months ago`;
+}
+
 async function getPrice(name) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
@@ -79,7 +99,10 @@ async function getPrice(name) {
         }
     }
     
-    const timeAgo = Math.round((Date.now()/1000 - p.highTime) / 60);
+    // Get the raw time gap in minutes
+    const rawMinutes = Math.round((Date.now()/1000 - p.highTime) / 60);
+    // Convert to a human-readable scale
+    const relativeTime = formatTimeAgo(rawMinutes);
     
     priceBox.classList.remove('fade-in');
     void priceBox.offsetWidth;
@@ -94,7 +117,7 @@ async function getPrice(name) {
             </div>
             ${iconUrl ? `<img src="${iconUrl}" class="item-icon">` : ''}
         </div>
-        <span class="timestamp">Updated: ${timeAgo} mins ago</span>
+        <span class="timestamp">Updated: ${relativeTime}</span>
     `;
 }
 
