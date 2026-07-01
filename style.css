@@ -1,25 +1,70 @@
-/* Core Layout */
-body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background-color: #060814; display: flex; justify-content: center; align-items: center; }
-
-/* Backgrounds */
-body { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('image0.jpg') center/cover no-repeat; }
-
-/* CRT Scanline & Noise */
-body::before { content: " "; position: absolute; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%); z-index: 1; pointer-events: none; background-size: 100% 4px; }
-body::after { content: ""; position: absolute; inset: -50px; z-index: 2; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"); animation: aggressive-noise 0.1s infinite steps(3); }
-@keyframes aggressive-noise { 0% { transform: translate(0,0); } 50% { transform: translate(-2px, 1px); } 100% { transform: translate(0,0); } }
-
-/* The Card */
-.card {
-    background: rgba(10, 14, 23, 0.9); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px; padding: 30px; text-align: center; z-index: 3; width: 320px;
-    display: flex; flex-direction: column; align-items: center; box-sizing: border-box; max-height: 90vh; overflow-y: auto;
+/* --- Global Reset --- */
+* { box-sizing: border-box; }
+html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    background-color: #060814;
 }
 
-/* Avatar Fix */
-.avatar { width: 150px !important; height: 150px !important; border-radius: 12px; object-fit: cover; margin-bottom: 15px; border: 2px solid rgba(255, 255, 255, 0.15); }
+/* --- Full Screen Background --- */
+body {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('image0.jpg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
 
-/* Username Wave */
+/* CRT Scanlines Layer */
+body::before { 
+    content: " "; position: absolute; inset: 0; 
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%); 
+    z-index: 1; pointer-events: none; background-size: 100% 4px; 
+}
+
+/* Noise Layer */
+body::after { 
+    content: ""; position: absolute; inset: -50px; z-index: 2; pointer-events: none; 
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"); 
+    animation: aggressive-noise 0.1s infinite steps(3); 
+}
+@keyframes aggressive-noise { 0% { transform: translate(0,0); } 50% { transform: translate(-2px, 1px); } 100% { transform: translate(0,0); } }
+
+/* --- The Card --- */
+.card {
+    background: rgba(10, 14, 23, 0.9);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    z-index: 3;
+    width: 320px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* --- Avatar --- */
+.avatar { 
+    width: 150px; height: 150px; 
+    border-radius: 12px; 
+    object-fit: cover; 
+    margin-bottom: 15px; 
+    border: 2px solid rgba(255, 255, 255, 0.15); 
+}
+
+/* --- Username Wave --- */
+#username { margin: 0 0 8px 0; font-size: 28px; color: #fff; }
 #username span { display: inline-block; transition: transform 0.2s; cursor: default; }
 #username:hover span { animation: wave-move 0.5s infinite alternate; }
 @keyframes wave-move { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
@@ -28,14 +73,27 @@ body::after { content: ""; position: absolute; inset: -50px; z-index: 2; pointer
 #username span:nth-child(3) { animation-delay: 0.2s; }
 #username span:nth-child(4) { animation-delay: 0.3s; }
 
-/* GE Tracker */
-.ge-tracker { margin-top: 20px; width: 100%; position: relative; text-align: left; }
-#itemSearch { width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 5px; box-sizing: border-box; }
-.results-list { position: absolute; width: 100%; background: #1a1d26; border: 1px solid rgba(255,255,255,0.1); z-index: 10; max-height: 120px; overflow-y: auto; display: none; }
+/* --- GE Tracker --- */
+.ge-tracker { margin-top: 20px; width: 100%; text-align: left; position: relative; }
+#itemSearch { 
+    width: 100%; padding: 10px; background: rgba(0,0,0,0.5); 
+    border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 5px; 
+}
+.results-list { 
+    position: absolute; width: 100%; background: #1a1d26; 
+    border: 1px solid rgba(255,255,255,0.1); z-index: 10; display: none; 
+}
 .results-list div { padding: 8px; cursor: pointer; color: #ddd; font-size: 12px; }
 .results-list div:hover { background: #2a2e3a; }
-.price-box { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; display: none; font-size: 13px; }
+.price-box { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; display: none; font-size: 13px; color: white; }
 
-/* Buttons */
-.btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; margin-bottom: 8px; border-radius: 5px; color: white; text-decoration: none; font-size: 13px; font-weight: 600; cursor: pointer; }
-.btn-github { background: #1f6feb; } .btn-youtube { background: #FF0000; } .btn-wom { background: rgba(255, 255, 255, 0.1); }
+/* --- Buttons --- */
+.button-container { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.button-row { display: flex; gap: 8px; }
+.btn { 
+    flex: 1; padding: 10px; border-radius: 5px; color: white; 
+    text-decoration: none; font-size: 13px; font-weight: 600; text-align: center;
+}
+.btn-github { background: #1f6feb; } 
+.btn-youtube { background: #FF0000; } 
+.btn-wom { background: rgba(255, 255, 255, 0.1); }
