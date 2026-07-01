@@ -64,12 +64,10 @@ function loadHistory() {
     `).join('');
 }
 
-// Smart Formatting for Millions (e.g., 10.5M, 250K)
+// Add Commas
 function formatGP(num) {
     if (!num && num !== 0) return 'N/A';
-    if (num >= 1000000) return (num / 1000000).toFixed(2).replace(/\.00$/, '') + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    return num.toString();
+    return num.toLocaleString();
 }
 
 // Search Highlight Matching
