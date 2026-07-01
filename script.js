@@ -61,7 +61,7 @@ async function getPrice(name) {
     const [priceRes, wikiRes] = await Promise.all([
         fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers }),
         // Look up the exact image filename from the Wiki
-        fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=100`)
+        fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=500`)
     ]);
     
     const priceData = await priceRes.json();
