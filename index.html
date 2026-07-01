@@ -29,48 +29,55 @@
             position: relative;
         }
 
-        /* 2. Heavy CRT Scanlines & Rolling Bar Layer */
+        /* 2. Heavy CRT Scanlines Layer */
         body::before {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: 
-                /* Horizontal scanlines */
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
-                /* Moving vertical refresh bar */
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%);
             z-index: 1;
-            background-size: 100% 3px, 6px 100%;
+            background-size: 100% 4px;
             pointer-events: none;
         }
 
-        /* 3. The Aggressive Animated Screen Glitch / Noise Layer */
+        /* 3. The Animated Random Noise & Screen Glitch Layer */
         body::after {
             content: "";
             position: absolute;
-            top: -20%; left: -20%; right: -20%; bottom: -20%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(255, 255, 255, 0.1) 0px,
-                rgba(255, 255, 255, 0.1) 1px,
-                transparent 1px,
-                transparent 4px
-            );
-            /* Animates position, opacity, and scaling to simulate tracking distortion */
-            animation: violent-static 0.15s infinite steps(2);
+            /* Extra spacing allows the layer to shift without showing edges */
+            top: -50px; left: -50px; right: -50px; bottom: -50px;
+            
+            /* High-density random grain generator + horizontal tracking line elements */
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(255, 255, 255, 0.08) 0px,
+                    rgba(255, 255, 255, 0.08) 1px,
+                    transparent 1px,
+                    transparent 4px
+                );
+            
+            /* Animates position rapidly to create random grain movement and tracking glitches */
+            animation: aggressive-noise 0.1s infinite steps(3);
             pointer-events: none;
             z-index: 2;
         }
 
-        /* 📺 Heavy Distortion Animation Keyframes */
-        @keyframes violent-static {
-            0% { transform: translate(0, 0) scale(1); opacity: 0.85; }
-            20% { transform: translate(-1%, 0.5%) scale(1.02); opacity: 0.95; }
-            40% { transform: translate(0.5%, -1%) scale(1.01); }
-            60% { transform: translate(-0.5%, -0.5%) scale(1.03); opacity: 0.75; }
-            80% { transform: translate(1%, 1%) scale(1); }
-            100% { transform: translate(-1.5%, -0.5%) scale(1.02); opacity: 0.9; }
+        /* 📺 Aggressive Random Noise & Glitch Animation Keyframes */
+        @keyframes aggressive-noise {
+            0% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
+            10% { transform: translate(-1px, 2px); background-position: 12px 45px, 0px 2px; }
+            20% { transform: translate(3px, -1px); background-position: -85px 23px, 0px -1px; }
+            30% { transform: translate(-2px, 3px); background-position: 40px -90px, 0px 3px; }
+            40% { transform: translate(1px, -3px); background-position: -12px -5px, 0px -2px; }
+            50% { transform: translate(-3px, 1px); background-position: 73px 18px, 0px 0px; }
+            60% { transform: translate(2px, 2px); background-position: -34px 62px, 0px 1px; }
+            70% { transform: translate(-1px, -2px); background-position: 91px -43px, 0px -3px; }
+            80% { transform: translate(3px, 3px); background-position: -50px 0px, 0px 2px; }
+            90% { transform: translate(-2px, -1px); background-position: 15px 88px, 0px -1px; }
+            100% { transform: translate(0, 0); background-position: 0px 0px, 0px 0px; }
         }
 
         /* The Semi-Transparent Central Card */
@@ -88,7 +95,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            z-index: 3; /* Completely stays on top of all the background distortion */
+            z-index: 3; /* Always keeps the primary UI content above the chaos */
             position: relative;
         }
 
@@ -180,15 +187,11 @@
         <img src="image0.jpg" alt="Avatar" class="avatar">
         
         <h1>x0XP</h1>
-        <p>i used ai for this cause im lazy af</p>
+        <p>nerds</p>
         
         <div class="button-container">
             <a href="https://github.com/x0XP" target="_blank" class="btn btn-github">
-                <i class="fab fa-github"></i> GitHub Profile
-            </a>
-            
-            <a href="YOUR_DISCORD_LINK_HERE" target="_blank" class="btn btn-discord">
-                <i class="fab fa-discord"></i> Discord
+                <i class="fab fa-github"></i> GitHub
             </a>
         </div>
     </div>
