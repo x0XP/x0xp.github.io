@@ -192,12 +192,14 @@
             transform: translateY(-1px);
         }
 
-        /* Custom image icon scaling for the WOM button */
+        /* Custom image icon styling for the WOM button */
         .wom-icon {
             width: 18px;
             height: 18px;
             border-radius: 4px;
             object-fit: cover;
+            /* Shorthand blend mode to completely screen out pure black values */
+            mix-blend-mode: screen; 
         }
 
         .btn:active {
