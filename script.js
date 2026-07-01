@@ -1,4 +1,4 @@
-// 1. Favicon Rounded Masking Engine
+// 1. Favicon Rounded Masking Engine - i broke something idk what
 window.addEventListener('DOMContentLoaded', () => {
     const img = new Image();
     img.src = 'image0.jpg';
