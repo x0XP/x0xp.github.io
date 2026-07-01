@@ -2,9 +2,8 @@ const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
 
 // --- AUDIO CONFIGURATION ---
-// Replace this URL with your actual hover sound file path if needed
 const hoverSound = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3'); 
-hoverSound.volume = 0.2; // Adjusted volume to keep it subtle
+hoverSound.volume = 0.2; 
 
 function playHover() {
     hoverSound.currentTime = 0; 
@@ -159,4 +158,62 @@ async function getPrice(name) {
     `;
 }
 
+// --- RESTORED x0XP WAVE CANVAS ENGINE ---
+function initWaveAnimation() {
+    const canvas = document.getElementById('waveCanvas') || document.createElement('canvas');
+    if (!canvas.id) {
+        canvas.id = 'waveCanvas';
+        canvas.style.position = 'fixed';
+        canvas.style.bottom = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '160px';
+        canvas.style.zIndex = '-1';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.opacity = '0.45';
+        document.body.appendChild(canvas);
+    }
+
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = 160;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let count = 0;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.04)'; // Subtle x0XP tracker green tint color accent
+        
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        for (let i = 0; i <= canvas.width; i += 4) {
+            const y = Math.sin(i * 0.006 + count) * 20 + Math.cos(i * 0.003 + count * 0.5) * 10 + 60;
+            ctx.lineTo(i, y);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.02)';
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        for (let i = 0; i <= canvas.width; i += 4) {
+            const y = Math.cos(i * 0.005 + count * 0.8) * 15 + Math.sin(i * 0.004 + count * 0.3) * 12 + 75;
+            ctx.lineTo(i, y);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.fill();
+
+        count += 0.015;
+        animationFrameId = requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// Global Initialization Start Trigger calls
 initTracker();
+initWaveAnimation();
