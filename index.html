@@ -43,6 +43,8 @@
             background-size: 100% 4px;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            /* Suggestion 1: Hardware Acceleration */
+            will-change: opacity;
         }
 
         /* Subtly reduce scanline intensity when interacting with the dashboard */
@@ -67,6 +69,9 @@
             animation: aggressive-noise 0.1s infinite steps(3);
             pointer-events: none;
             z-index: 2;
+            /* Suggestion 1: Hardware Acceleration */
+            will-change: transform, background-position;
+            transform: translateZ(0);
         }
 
         /* 📺 Aggressive Random Noise & Glitch Animation Keyframes */
@@ -91,8 +96,6 @@
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            width: 400px;
-            max-width: 90%;
             padding: 40px;
             text-align: center;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
@@ -101,11 +104,21 @@
             align-items: center;
             z-index: 3;
             position: relative;
-            animation: card-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-sizing: border-box;
+
+            /* Suggestion 5: Flexible, Mobile-Safe Proportions */
+            width: 380px;
+            max-width: 90%;
+
+            /* Suggestion 2: Smooth Physics-Based Cubic Bezier Transition Entrance */
+            opacity: 0;
+            transform: translateY(30px);
+            animation: card-appear 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, opacity;
         }
 
         @keyframes card-appear {
-            0% { opacity: 0; transform: translateY(10px); }
+            0% { opacity: 0; transform: translateY(30px); }
             100% { opacity: 1; transform: translateY(0); }
         }
 
@@ -268,7 +281,7 @@
             </div>
             
             <a href="https://wiseoldman.net/players/x0XP" target="_blank" class="btn btn-wom">
-                <i class="fas fa-hat-wizard"></i> WiseOldMan
+                <i class="fas fa-hat-wizard"></i> Wise Old Man
             </a>
         </div>
     </div>
@@ -322,9 +335,7 @@
             } catch (e) {}
         }
 
-        // Soft-bypass array: triggers layout activation on first mouse move, touch, or click event
-        window.addEventListener('mousemove', initAudio, { once: true });
-        window.addEventListener('touchstart', initAudio, { once: true });
+        // Standard user interaction listeners to safely catch user context unblocking rules
         window.addEventListener('click', initAudio, { once: true });
         window.addEventListener('keydown', initAudio, { once: true });
 
