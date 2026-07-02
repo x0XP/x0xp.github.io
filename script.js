@@ -91,7 +91,7 @@ async function loadCollectionLogData() {
     });
     const bossNamesNormSet = new Set(bossNamesNorm.keys());
 
-    const headings = doc.querySelectorAll('h3');   // <-- FIXED: use h3
+    const headings = doc.querySelectorAll('h3');
     const bossMap = {};
     let matchedBosses = 0;
     let totalBossHeadings = 0;
@@ -123,12 +123,16 @@ async function loadCollectionLogData() {
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length === 0) return; // skip header row
-            const itemLink = cells[0].querySelector('a');
-            if (!itemLink) return;
-            const itemName = itemLink.textContent.trim();
-            if (itemMap[itemName.toLowerCase()]) {
-                items.push(itemName);
-            }
+            // Loop through ALL cells, not just the first one
+            cells.forEach(cell => {
+                const links = cell.querySelectorAll('a');
+                links.forEach(link => {
+                    const itemName = link.textContent.trim();
+                    if (itemMap[itemName.toLowerCase()]) {
+                        items.push(itemName);
+                    }
+                });
+            });
         });
 
         if (items.length > 0) {
