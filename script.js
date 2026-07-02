@@ -60,7 +60,6 @@ async function loadCollectionLogData() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Helper: remove [edit] and curly apostrophes, then trim
     const cleanText = str =>
         str.replace(/\[edit\]/g, '')
            .replace(/’/g, "'")
@@ -68,7 +67,7 @@ async function loadCollectionLogData() {
            .trim();
 
     const headings = doc.querySelectorAll('h3');
-    const tables = Array.from(doc.querySelectorAll('table.wikitable')); // all tables in document order
+    const tables = Array.from(doc.querySelectorAll('table.wikitable'));
 
     const bossMap = {};
     let bossesWithItems = 0;
@@ -79,7 +78,6 @@ async function loadCollectionLogData() {
         const headingText = cleanText(heading.textContent);
         if (!headingText) return;
 
-        // Find the first table that appears after this heading (in document order)
         let targetTable = null;
         for (let table of tables) {
             const pos = heading.compareDocumentPosition(table);
@@ -88,16 +86,13 @@ async function loadCollectionLogData() {
                 break;
             }
         }
-        if (!targetTable) {
-            console.log(`No table after heading: "${headingText}"`);
-            return;
-        }
+        if (!targetTable) return;
 
         const items = [];
         const rows = targetTable.querySelectorAll('tr');
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
-            if (cells.length === 0) return; // skip header row
+            if (cells.length === 0) return;
             cells.forEach(cell => {
                 const links = cell.querySelectorAll('a');
                 links.forEach(link => {
@@ -110,22 +105,13 @@ async function loadCollectionLogData() {
         });
 
         if (items.length > 0) {
-            bossMap[headingText] = [...new Set(items)]; // deduplicate
+            bossMap[headingText] = [...new Set(items)];
             bossesWithItems++;
             console.log(`✅ ${headingText}: [${bossMap[headingText].join(', ')}]`);
-        } else {
-            console.log(`❌ ${headingText}: no tradeable items`);
         }
     });
 
     console.log(`Bosses with tradeable uniques: ${bossesWithItems}`);
-    if (bossMap['Barrows Chests']) {
-        console.log('Barrows Chests items:', bossMap['Barrows Chests']);
-    }
-    if (bossMap['Vorkath']) {
-        console.log('Vorkath items:', bossMap['Vorkath']);
-    }
-
     bossCollectionCache = bossMap;
 }
 
@@ -145,7 +131,16 @@ async function fetchHTML(pageTitle) {
 }
 
 // ------------------------------------------------------------
-// History & UI helpers (unchanged)
+// Helper: find boss name in cache, case‑insensitively
+// ------------------------------------------------------------
+function findBossKey(name) {
+    const lower = name.toLowerCase();
+    return Object.keys(bossCollectionCache).find(key => key.toLowerCase() === lower)
+        || Object.keys(bossCollectionCache).find(key => key.toLowerCase().includes(lower));
+}
+
+// ------------------------------------------------------------
+// History & UI helpers
 // ------------------------------------------------------------
 function saveHistory(name) {
     if (!itemMap[name.toLowerCase()]) return; 
@@ -281,7 +276,7 @@ function generateDropdownHTML(entries, query) {
 }
 
 // ------------------------------------------------------------
-// Search input handler – now uses bossCollectionCache keys
+// Search input handler
 // ------------------------------------------------------------
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
@@ -293,7 +288,6 @@ searchInput.addEventListener('input', () => {
     debounceTimer = setTimeout(() => {
         let combinedResults = [];
 
-        // Get all boss names that have tradeable items
         const allBossNames = Object.keys(bossCollectionCache);
         const matchedBosses = allBossNames.filter(boss => boss.toLowerCase().includes(valLower));
 
@@ -307,15 +301,12 @@ searchInput.addEventListener('input', () => {
                     boss: boss
                 }));
             } else {
-                // Should never happen (we only keep bosses with items), but fallback
                 combinedResults.push({ name: boss, isBoss: true });
             }
         } else if (matchedBosses.length > 1) {
-            // Multiple bosses match – show their names so the user can pick one
             combinedResults = matchedBosses.map(boss => ({ name: boss, isBoss: true }));
         }
 
-        // If no boss suggestions, fall back to standard item search
         if (combinedResults.length === 0) {
             Object.keys(itemMap).forEach(name => {
                 if (name.includes(valLower)) {
@@ -344,6 +335,7 @@ searchInput.addEventListener('input', () => {
 searchInput.addEventListener('keydown', (e) => {
     const items = resultsDiv.getElementsByClassName('suggested-item');
     if (!items.length || items[0].innerText === "No results located") return;
+
     if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
         selectedIndex = (selectedIndex < items.length - 1) ? selectedIndex + 1 : 0;
@@ -357,7 +349,14 @@ searchInput.addEventListener('keydown', (e) => {
         if (selectedIndex > -1 && items[selectedIndex]) {
             items[selectedIndex].click();
         } else {
-            getPrice(searchInput.value.trim());
+            const val = searchInput.value.trim().toLowerCase();
+            // If no item selected, try to find a matching boss and use its exact name
+            const bossKey = findBossKey(val);
+            if (bossKey) {
+                getPrice(bossKey);
+            } else {
+                getPrice(searchInput.value.trim());
+            }
         }
     }
 });
@@ -378,7 +377,7 @@ function formatTimeAgo(totalMinutes) {
 }
 
 // ------------------------------------------------------------
-// Price display
+// Price / Collection log display
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
@@ -404,8 +403,9 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // Show boss collection log (tradeable items only)
-        const items = bossCollectionCache[name] || [];
+        // Try to find boss name case‑insensitively
+        const bossKey = findBossKey(name);
+        const items = bossKey ? bossCollectionCache[bossKey] || [] : [];
         if (items.length === 0) {
             priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
             return;
@@ -432,7 +432,7 @@ async function getPrice(name, skipHistory = false) {
         priceBox.classList.add('fade-in');
         priceBox.innerHTML = `
             <div style="text-align:left; width:100%;">
-                <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} COLLECTION LOG</strong>
+                <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${bossKey.toUpperCase()} COLLECTION LOG</strong>
                 <div style="max-height:250px; overflow-y:auto; padding-right:2px;">
                     ${uniquesHtml}
                 </div>
