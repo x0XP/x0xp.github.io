@@ -1,5 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
+let bossNames = [];           // NEW: cache of all collection-log page titles
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -35,6 +36,21 @@ async function initTracker() {
                 itemMap[item.name.toLowerCase()] = { id: item.id, name: item.name };
             }
         });
+
+        // NEW: preload all distinct boss/collection-log page names
+        try {
+            const cargoRes = await fetch(
+                'https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Page&group_by=Page&limit=500&format=json&origin=*',
+                { headers }
+            );
+            const cargoData = await cargoRes.json();
+            if (cargoData.cargoquery) {
+                bossNames = cargoData.cargoquery.map(row => row.title.Page);
+            }
+        } catch (e) {
+            console.error('Failed to load boss names', e);
+        }
+
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -120,23 +136,41 @@ function levenshtein(a, b) {
     return tmp[alen];
 }
 
+// UPDATED: now searches both items and bosses
 function getClosestMatch(target) {
     const keys = Object.keys(itemMap);
-    const cleanTarget = target.replace(/er$/, '').replace(/s$/, ''); 
+    const cleanTarget = target.replace(/er$/, '').replace(/s$/, '');
+    // 1. Substring match among items
     for (let i = 0; i < keys.length; i++) {
         if (keys[i].includes(cleanTarget)) return itemMap[keys[i]];
     }
-    let minDistance = Infinity;
-    let closestItem = null;
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
+    // 2. Levenshtein among items
+    let minDistItem = Infinity, closestItem = null;
+    for (let key of keys) {
         const dist = levenshtein(target, key);
-        if (dist < minDistance) {
-            minDistance = dist;
+        if (dist < minDistItem) {
+            minDistItem = dist;
             closestItem = itemMap[key];
         }
     }
-    return closestItem;
+    // If we have a very good item match, return it
+    if (closestItem && minDistItem <= 2) return closestItem;
+
+    // 3. Substring match among bosses
+    for (let boss of bossNames) {
+        if (boss.toLowerCase().includes(cleanTarget)) return { name: boss }; // boss pseudo-item
+    }
+    // 4. Levenshtein among bosses
+    let minDistBoss = Infinity, closestBoss = null;
+    for (let boss of bossNames) {
+        const dist = levenshtein(target, boss.toLowerCase());
+        if (dist < minDistBoss) {
+            minDistBoss = dist;
+            closestBoss = boss;
+        }
+    }
+    if (closestBoss && minDistBoss <= 2) return { name: closestBoss };
+    return null; // no good match
 }
 
 function generateDropdownHTML(combinedList, query) {
@@ -176,24 +210,20 @@ searchInput.addEventListener('input', () => {
     debounceTimer = setTimeout(async () => {
         let combinedResults = [];
 
-        // 1. DYNAMIC LOOKUP: Dynamic lookup against the correct Page field in Cargo with proper Title Case translation
-        try {
-            const formatQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Page&where=Page%20LIKE%20%22%25${encodeURIComponent(formatQuery)}%25%22&group_by=Page&limit=5&format=json&origin=*`;
-            const checkRes = await fetch(cargoUrl, { headers });
-            const checkData = await checkRes.json();
-            
-            if (checkData.cargoquery) {
-                checkData.cargoquery.forEach(row => {
-                    combinedResults.push({ name: row.title.Page, isBoss: true });
-                });
+        // 1. LOCAL BOSS MATCH: filter preloaded bossNames (no network call needed)
+        bossNames.forEach(boss => {
+            if (boss.toLowerCase().includes(valLower)) {
+                combinedResults.push({ name: boss, isBoss: true });
             }
-        } catch (e) { console.error("Collection log verification issue", e); }
+        });
 
-        // 2. Gather matched standard items from live local cache
+        // 2. LOCAL ITEM MATCH: filter itemMap keys
         Object.keys(itemMap).forEach(name => {
             if (name.includes(valLower)) {
-                combinedResults.push({ name: itemMap[name].name, isBoss: false });
+                // Avoid duplicates if a boss name also matches an item name (rare)
+                if (!combinedResults.some(r => r.name === itemMap[name].name)) {
+                    combinedResults.push({ name: itemMap[name].name, isBoss: false });
+                }
             }
         });
 
@@ -203,7 +233,7 @@ searchInput.addEventListener('input', () => {
             return;
         }
 
-        // 3. Spellcheck fallback safeguard
+        // 3. Spellcheck fallback (now includes bosses)
         const closest = getClosestMatch(valLower);
         if (closest) {
             const safeName = closest.name.replace(/'/g, "\\'");
@@ -297,7 +327,6 @@ async function getPrice(name, skipHistory = false) {
                 const filename = itemTitle.charAt(0).toUpperCase() + itemTitle.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
                 const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
                 
-                // Fetch the live Grand Exchange price if it's tradeable, else mark untradeable
                 const valueText = match ? 'Tradeable' : '<span style="color:#7a8294;">Untradeable</span>';
 
                 uniquesHtml += `
@@ -328,7 +357,7 @@ async function getPrice(name, skipHistory = false) {
         }
     }
 
-    // Normal tradeable item flow code block remains unchanged
+    // Normal tradeable item flow
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
