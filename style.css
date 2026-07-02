@@ -37,7 +37,7 @@ body::after {
     animation: shimmer 1.5s infinite linear;
     background: linear-gradient(to right, #2a2e3a 8%, #363b4a 18%, #2a2e3a 33%);
     background-size: 800px 100px;
-    border-radius: 4px;
+    border-radius: 6px;
     width: 100%;
 }
 
@@ -96,8 +96,44 @@ body::after {
     font-weight: normal;
 }
 
-/* --- GE Tracker --- */
-.ge-tracker { margin-top: 20px; width: 100%; text-align: left; position: relative; }
+/* --- Buttons Layout Fix --- */
+.button-container { 
+    width: 100%; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin-top: 5px; 
+    margin-bottom: 15px;
+}
+.button-row { 
+    display: flex; 
+    gap: 8px; 
+    width: 100%;
+}
+.btn { 
+    display: inline-block;
+    padding: 10px; 
+    border-radius: 5px; 
+    color: white; 
+    text-decoration: none; 
+    font-size: 13px; 
+    font-weight: 600; 
+    text-align: center; 
+    transition: all 0.2s ease-in-out;
+}
+.btn:hover { transform: translateY(-1.5px); filter: brightness(1.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+.btn-github { background: #1f6feb; flex: 1; } 
+.btn-youtube { background: #FF0000; flex: 1; } 
+.btn-wom { background: rgba(255, 255, 255, 0.1); width: 100%; }
+.btn-wom:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* --- GE Tracker Layout Context --- */
+.ge-tracker { 
+    margin-top: 10px; 
+    width: 100%; 
+    text-align: left; 
+    position: relative; 
+}
 #itemSearch { width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 5px; z-index: 5; }
 
 .results-list { 
@@ -131,8 +167,9 @@ body::after {
 
 /* --- Price Display --- */
 .price-box { 
-    margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); 
-    border-radius: 5px; display: none; font-size: 13px; color: white; 
+    margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.3); 
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px; display: none; font-size: 13px; color: white; 
     width: 100%; position: relative;
 }
 
@@ -154,7 +191,7 @@ body::after {
     object-fit: contain; flex-shrink: 0; 
 }
 
-.timestamp { font-size: 10px; color: #666; margin-top: 5px; display: block; text-align: left; }
+.timestamp { font-size: 10px; color: #7a8294; margin-top: 5px; display: block; text-align: left; }
 
 .wiki-btn {
     display: inline-flex;
@@ -191,21 +228,11 @@ body::after {
     transform: translate(0.5px, -0.5px);
 }
 
-/* --- History & Buttons --- */
-.history-list { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+/* --- History --- */
+.history-list { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; justify-content: center; width: 100%; }
 .hist-btn { 
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
     padding: 4px 8px; border-radius: 4px; color: #aaa; cursor: pointer; font-size: 11px; 
     transition: all 0.2s ease; 
 }
 .hist-btn:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
-
-.button-container { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-.btn { 
-    flex: 1; padding: 10px; border-radius: 5px; color: white; text-decoration: none; font-size: 13px; font-weight: 600; text-align: center; 
-    transition: all 0.2s ease-in-out;
-}
-.btn:hover { transform: translateY(-1.5px); filter: brightness(1.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-.btn-github { background: #1f6feb; } 
-.btn-youtube { background: #FF0000; } 
-.btn-wom { background: rgba(255, 255, 255, 0.1); }
