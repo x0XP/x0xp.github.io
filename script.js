@@ -1,4 +1,4 @@
-const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
+const headers = { 'User-Agent': 'x0XP-Item-Price-Checker - .x0xp on Discord' };
 let itemMap = {};
 let bossCollectionCache = {};   // boss name -> array of tradeable item names
 let selectedIndex = -1;
