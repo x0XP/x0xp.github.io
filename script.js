@@ -772,11 +772,11 @@ async function getPrice(name, skipHistory = false) {
     animateCardHeight(() => {
       priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:8px;">
-                        <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
-                        ${shareButtonHTML(shareUrl)}
-                    </div>
-                    <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
+                      <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
+                    <span style="position:relative; right:-4px;">${shareButtonHTML(shareUrl)}</span>
+                  </div>
+                    <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:2px;">
                         ${uniquesHtml}
                     </div>
                 </div>
