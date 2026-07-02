@@ -1,6 +1,7 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let bossNames = [];           // all boss page names
+let bossNames = [];
+let bossTradeableMap = {};   // boss page name -> array of tradeable item names
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -9,8 +10,6 @@ const searchInput = document.getElementById('itemSearch'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
 
-// Hardcoded fallback list of every boss (and some popular collection-log pages)
-// Used only if the live API fails completely.
 const FALLBACK_BOSSES = [
     "Abyssal Sire", "Alchemical Hydra", "Araxxor", "Artio", "Callisto", "Cerberus",
     "Chaos Elemental", "Chaos Fanatic", "Commander Zilyana", "Corporeal Beast",
@@ -53,9 +52,8 @@ async function initTracker() {
             }
         });
 
-        // Load boss names from a more reliable API endpoint
         await loadBossNames();
-
+        await loadBossTradeables();   // NEW: preload all tradeable boss uniques
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -65,7 +63,7 @@ async function initTracker() {
 
 async function loadBossNames() {
     try {
-        const url = 'https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle=Category:Bosses&cmlimit=max&format=json&origin=*';
+        const url = 'https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle=Category:Bosses&cmnamespace=0&cmlimit=max&format=json&origin=*';
         const res = await fetch(url, { headers });
         const data = await res.json();
         if (data.query && data.query.categorymembers) {
@@ -76,8 +74,43 @@ async function loadBossNames() {
     } catch (e) {
         console.warn('Boss category API failed, using hardcoded list', e);
     }
-    bossNames = [...FALLBACK_BOSSES]; // always available
+    bossNames = [...FALLBACK_BOSSES];
     console.log(`Using ${bossNames.length} hardcoded boss names`);
+}
+
+// NEW: fetch all collection log items and build boss -> tradeable items map
+async function loadBossTradeables() {
+    bossTradeableMap = {};
+    let offset = 0;
+    const limit = 500;
+    let hasMore = true;
+
+    while (hasMore) {
+        try {
+            const url = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Page,Item&limit=${limit}&offset=${offset}&format=json&origin=*`;
+            const res = await fetch(url, { headers });
+            const data = await res.json();
+            const rows = data.cargoquery || [];
+            if (rows.length === 0) break;
+
+            rows.forEach(row => {
+                const page = row.title.Page;
+                const item = row.title.Item;
+                if (!bossTradeableMap[page]) bossTradeableMap[page] = [];
+                // only add if the item is tradeable (exists in itemMap)
+                if (itemMap[item.toLowerCase()]) {
+                    bossTradeableMap[page].push(item);
+                }
+            });
+
+            offset += limit;
+            if (rows.length < limit) hasMore = false;
+        } catch (e) {
+            console.warn('Cargo fetch error, stopping pagination', e);
+            hasMore = false;
+        }
+    }
+    console.log(`Preloaded tradeable uniques for ${Object.keys(bossTradeableMap).length} bosses`);
 }
 
 function saveHistory(name) {
@@ -161,11 +194,9 @@ function levenshtein(a, b) {
 function getClosestMatch(target) {
     const keys = Object.keys(itemMap);
     const cleanTarget = target.replace(/er$/, '').replace(/s$/, '');
-    // 1. Substring match among items
     for (let i = 0; i < keys.length; i++) {
         if (keys[i].includes(cleanTarget)) return itemMap[keys[i]];
     }
-    // 2. Levenshtein among items
     let minDistItem = Infinity, closestItem = null;
     for (let key of keys) {
         const dist = levenshtein(target, key);
@@ -176,11 +207,9 @@ function getClosestMatch(target) {
     }
     if (closestItem && minDistItem <= 2) return closestItem;
 
-    // 3. Substring match among bosses
     for (let boss of bossNames) {
         if (boss.toLowerCase().includes(cleanTarget)) return { name: boss };
     }
-    // 4. Levenshtein among bosses
     let minDistBoss = Infinity, closestBoss = null;
     for (let boss of bossNames) {
         const dist = levenshtein(target, boss.toLowerCase());
@@ -193,13 +222,15 @@ function getClosestMatch(target) {
     return null;
 }
 
-function generateDropdownHTML(combinedList, query) {
-    return combinedList.map((entry, index) => {
+// MODIFIED: generates HTML for boss unique items as well
+function generateDropdownHTML(entries, query) {
+    return entries.map((entry, index) => {
         const safeName = entry.name.replace(/'/g, "\\'");
         const regex = new RegExp(`(${query})`, 'gi');
         const highlightedName = entry.name.replace(regex, `<strong style="color: #00ff00;">$1</strong>`);
         
         if (entry.isBoss) {
+            // boss page suggestion (shown when multiple bosses match)
             return `
                 <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
                     <img src="https://oldschool.runescape.wiki/images/Collection_log_icon.png" class="suggest-icon" style="width:16px; height:16px;">
@@ -207,10 +238,22 @@ function generateDropdownHTML(combinedList, query) {
                 </div>
             `;
         }
+
+        if (entry.isBossDrop) {
+            // tradeable unique item from a boss
+            const filename = entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
+            const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+            return `
+                <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
+                    <img src="${imgUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
+                    <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(${entry.boss} drop)</span></span>
+                </div>
+            `;
+        }
         
+        // normal tradeable item
         const filename = entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-        
         return `
             <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')">
                 <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
@@ -227,24 +270,39 @@ searchInput.addEventListener('input', () => {
     selectedIndex = -1;
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
-    debounceTimer = setTimeout(async () => {
+    debounceTimer = setTimeout(() => {
         let combinedResults = [];
 
-        // 1. LOCAL BOSS MATCH from preloaded/fullback bossNames
-        bossNames.forEach(boss => {
-            if (boss.toLowerCase().includes(valLower)) {
+        // 1. Check if the input matches any boss names
+        const matchedBosses = bossNames.filter(boss => boss.toLowerCase().includes(valLower));
+
+        if (matchedBosses.length === 1) {
+            // Exactly one boss matched: show its tradeable uniques directly
+            const boss = matchedBosses[0];
+            const items = bossTradeableMap[boss] || [];
+            if (items.length > 0) {
+                combinedResults = items.map(item => ({
+                    name: item,
+                    isBossDrop: true,
+                    boss: boss
+                }));
+            } else {
+                // No tradeable uniques known? fallback to the boss page suggestion
                 combinedResults.push({ name: boss, isBoss: true });
             }
-        });
+        } else if (matchedBosses.length > 1) {
+            // Multiple bosses match: show the boss names so user can pick one
+            combinedResults = matchedBosses.map(boss => ({ name: boss, isBoss: true }));
+        }
 
-        // 2. LOCAL ITEM MATCH from itemMap
-        Object.keys(itemMap).forEach(name => {
-            if (name.includes(valLower)) {
-                if (!combinedResults.some(r => r.name === itemMap[name].name)) {
+        // 2. If no boss suggestions were generated, fall back to standard item search
+        if (combinedResults.length === 0) {
+            Object.keys(itemMap).forEach(name => {
+                if (name.includes(valLower)) {
                     combinedResults.push({ name: itemMap[name].name, isBoss: false });
                 }
-            }
-        });
+            });
+        }
 
         if (combinedResults.length > 0) {
             resultsDiv.innerHTML = generateDropdownHTML(combinedResults.slice(0, 15), val);
@@ -252,7 +310,7 @@ searchInput.addEventListener('input', () => {
             return;
         }
 
-        // 3. Spellcheck fallback (now includes bosses)
+        // 3. Spellcheck fallback (now includes bosses and items)
         const closest = getClosestMatch(valLower);
         if (closest) {
             const safeName = closest.name.replace(/'/g, "\\'");
@@ -324,6 +382,7 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
+        // If the name matches a boss, try to show its collection log as before
         try {
             const formatQuery = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
             const logUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Item&where=Page%20LIKE%20%22%25${encodeURIComponent(formatQuery)}%25%22&limit=50&format=json&origin=*`;
@@ -375,6 +434,7 @@ async function getPrice(name, skipHistory = false) {
         }
     }
 
+    // Standard tradeable item display
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
