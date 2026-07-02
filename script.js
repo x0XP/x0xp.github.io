@@ -198,6 +198,21 @@ function formatGP(num) {
     return num.toLocaleString();
 }
 
+// NEW: short format for k/m/b
+function formatShortGP(num) {
+    if (num == null) return 'N/A';
+    if (num >= 1e9) {
+        return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1e6) {
+        return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1e3) {
+        return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toLocaleString();
+}
+
 function formatTimeAgo(totalMinutes) {
     if (isNaN(totalMinutes) || totalMinutes < 0) return "Just now";
     if (totalMinutes < 60) return `${totalMinutes} mins ago`;
@@ -242,6 +257,22 @@ function getClosestMatch(target) {
     }
     if (closestItem && minDistItem <= 2) return closestItem;
     return null;
+}
+
+// ------------------------------------------------------------
+// Fetch live prices for a list of item names (used in boss view)
+// ------------------------------------------------------------
+async function fetchPricesForItemNames(itemNames) {
+    const ids = itemNames.map(n => itemMap[n.toLowerCase()]?.id).filter(id => id != null);
+    if (ids.length === 0) return {};
+    const url = `https://prices.runescape.wiki/api/v1/osrs/latest?id=${ids.join(',')}`;
+    try {
+        const res = await fetch(url, { headers });
+        const data = await res.json();
+        return data.data || {};
+    } catch (e) {
+        return {};
+    }
 }
 
 // ------------------------------------------------------------
@@ -377,7 +408,7 @@ function updateVisualSelection(elements) {
 }
 
 // ------------------------------------------------------------
-// Price display (single item or boss list with icons)
+// Price display (single item or boss list with prices)
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
@@ -398,7 +429,7 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // Boss view – show simple list with icons
+        // Boss view – show list with icons and live average prices
         const bossKey = findBossKey(name);
         if (!bossKey || !bossCollectionCache[bossKey] || bossCollectionCache[bossKey].length === 0) {
             priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
@@ -406,17 +437,26 @@ async function getPrice(name, skipHistory = false) {
         }
 
         const items = bossCollectionCache[bossKey];
+        // Fetch live prices for all items
+        const priceData = await fetchPricesForItemNames(items);
+
         let uniquesHtml = '';
         items.forEach(itemTitle => {
             const filename = itemTitle.charAt(0).toUpperCase() + itemTitle.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
             const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+
+            const id = itemMap[itemTitle.toLowerCase()]?.id;
+            const p = id && priceData[id] ? priceData[id] : {};
+            const avg = (p.high && p.low) ? (p.high + p.low) / 2 : null;
+            const priceStr = avg != null ? formatShortGP(avg) : 'N/A';
+
             uniquesHtml += `
                 <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
                     <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
                         <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
                         <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
                     </div>
-                    <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">Tradeable</span>
+                    <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">${priceStr}</span>
                 </div>
             `;
         });
