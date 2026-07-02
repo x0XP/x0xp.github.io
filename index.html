@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>x0XP</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div class="card">
+            <img src="image0.jpg" alt="Avatar" class="avatar" />
+            <h1 id="username">
+                <span>x</span><span>0</span><span>X</span><span>P</span>
+            </h1>
+            <p>OSRS Utils</p>
+
+            <div class="button-container">
+                <div class="button-row">
+                    <a
+                        href="https://github.com/x0XP"
+                        target="_blank"
+                        class="btn btn-github"
+                        ><i class="fab fa-github"></i> GitHub</a
+                    >
+                    <a
+                        href="https://www.youtube.com/@xZeRoXP"
+                        target="_blank"
+                        class="btn btn-youtube"
+                        ><i class="fab fa-youtube"></i> YouTube</a
+                    >
+                </div>
+                <a
+                    href="https://wiseoldman.net/players/x0XP"
+                    target="_blank"
+                    class="btn btn-wom"
+                    ><i class="fas fa-hat-wizard"></i> Wise Old Man</a
+                >
+            </div>
+
+            <div class="ge-tracker">
+                <!-- Search bar with info icon inside -->
+                <div style="position: relative">
+                    <input
+                        type="text"
+                        id="itemSearch"
+                        placeholder="Search GE Item..."
+                        style="padding-right: 32px"
+                    />
+                    <span
+                        id="infoIcon"
+                        style="
+                            position: absolute;
+                            right: 8px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            cursor: pointer;
+                            display: inline-flex;
+                            align-items: center;
+                            color: #7a8294;
+                            transition: color 0.2s;
+                        "
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                fill="none"
+                            />
+                            <path
+                                d="M12 7v1.5M12 11v5"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </span>
+                </div>
+
+                <div id="results" class="results-list"></div>
+                <div id="priceDisplay" class="price-box"></div>
+                <div id="history" class="history-list"></div>
+
+                <!-- Help box – appears to the right of the card -->
+                <div id="helpBox" class="help-box">
+                    <strong>How to use</strong><br />
+                    Type any item or boss name. Press <b>Enter</b> for instant
+                    price (or boss uniques).<br />
+                    Click a boss to see all its tradeable drops with live
+                    prices.<br />
+                    Last 5 searches are saved below.
+                </div>
+            </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
