@@ -1,5 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
+let dynamicBossList = []; // Filled dynamically from the wiki database on load
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -23,18 +24,31 @@ document.addEventListener('click', (e) => {
 
 async function initTracker() {
     try {
-        const [priceRes, mapRes] = await Promise.all([
+        // Fetch prices, item mapping, and the dynamic list of monsters with uniques simultaneously
+        const bossCargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Monster&group_by=Monster&where=Rarity%20LIKE%20%22%25Unique%25%22&limit=500&format=json&origin=*`;
+        
+        const [priceRes, mapRes, bossRes] = await Promise.all([
             fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
-            fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
+            fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers }),
+            fetch(bossCargoUrl, { headers })
         ]);
+        
         const prices = await priceRes.json();
         const mappings = await mapRes.json();
+        const bossData = await bossRes.json();
         
+        // 1. Populate standard item dictionary
         mappings.forEach(item => { 
             if (prices.data[item.id]) {
                 itemMap[item.name.toLowerCase()] = { id: item.id, name: item.name };
             }
         });
+
+        // 2. Populate our dynamic boss array from the Wiki Cargo result
+        if (bossData.cargoquery) {
+            dynamicBossList = bossData.cargoquery.map(row => row.title.Monster);
+        }
+        
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -43,7 +57,6 @@ async function initTracker() {
 }
 
 function saveHistory(name) {
-    // 1. Record layout bounds before modifying DOM tree (FLIP Technique)
     const oldButtons = Array.from(historyDiv.children);
     const oldPositions = oldButtons.map(btn => {
         const rect = btn.getBoundingClientRect();
@@ -54,10 +67,8 @@ function saveHistory(name) {
     hist = [name, ...hist.filter(i => i !== name)].slice(0, 3);
     localStorage.setItem('osrsHistory', JSON.stringify(hist));
     
-    // 2. Refresh active UI nodes
     loadHistory();
 
-    // 3. Complete FLIP execution vector calculations to slide elements smoothly
     const newButtons = Array.from(historyDiv.children);
     newButtons.forEach(btn => {
         const btnName = btn.textContent.trim();
@@ -170,7 +181,40 @@ searchInput.addEventListener('input', () => {
     selectedIndex = -1;
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
-    debounceTimer = setTimeout(() => {
+    debounceTimer = setTimeout(async () => {
+        // Cross-examine text inputs against the dynamic monster database fetched on load
+        const matchedBoss = dynamicBossList.find(boss => boss.toLowerCase().includes(val));
+        
+        if (matchedBoss) {
+            resultsDiv.innerHTML = `<div class="suggested-item" style="color:#ffae00; justify-content:center; font-size:11px;">Loading ${matchedBoss} uniques...</div>`;
+            resultsDiv.style.display = 'block';
+            
+            try {
+                const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(matchedBoss)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
+                const cargoRes = await fetch(cargoUrl, { headers });
+                const cargoData = await cargoRes.json();
+                const results = cargoData.cargoquery || [];
+                
+                const validDrops = [];
+                results.forEach(row => {
+                    const match = itemMap[row.title.Item.toLowerCase()];
+                    if (match && !validDrops.some(d => d.name === match.name)) {
+                        validDrops.push(match);
+                    }
+                });
+
+                if (validDrops.length > 0) {
+                    resultsDiv.innerHTML = generateItemsHTML(validDrops, val);
+                } else {
+                    resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; justify-content: center;"><span>No tradeable drops found</span></div>`;
+                }
+            } catch (err) {
+                resultsDiv.innerHTML = `<div class="suggested-item" style="color: #ff5555; justify-content: center;"><span>Error loading drops</span></div>`;
+            }
+            return;
+        }
+
+        // Fallback layout filtering for standard items
         const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 10);
         if (itemMatches.length > 0) {
             resultsDiv.innerHTML = generateItemsHTML(itemMatches.map(m => itemMap[m]), val);
@@ -185,7 +229,7 @@ searchInput.addEventListener('input', () => {
             }
             resultsDiv.style.display = 'block';
         }
-    }, 150);
+    }, 200);
 });
 
 searchInput.addEventListener('keydown', (e) => {
@@ -201,7 +245,11 @@ searchInput.addEventListener('keydown', (e) => {
         updateVisualSelection(items);
     } else if (e.key === 'Enter') {
         e.preventDefault();
-        (selectedIndex > -1 && items[selectedIndex]) ? items[selectedIndex].click() : items[0].click();
+        if (selectedIndex > -1 && items[selectedIndex]) {
+            items[selectedIndex].click();
+        } else {
+            getPrice(searchInput.value.trim());
+        }
     }
 });
 
@@ -232,7 +280,6 @@ async function getPrice(name, skipHistory = false) {
     priceBox.classList.remove('fade-in');
     priceBox.style.display = 'block';
     
-    // Structured Multi-Part Skeleton Layout Frame
     priceBox.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
             <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
@@ -250,12 +297,11 @@ async function getPrice(name, skipHistory = false) {
 
     const itemData = itemMap[name.toLowerCase()];
     
-    // Code Path A: Target parameter is NOT a tradeable item -> Run Boss Query against Cargo Engine
     if (!itemData) {
         try {
-            // Capitalize structural bounds to perfectly fit DB indices
-            const formattedBossName = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(formattedBossName)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
+            // Locate precise string spacing format matching dynamic list
+            const matchedBoss = dynamicBossList.find(b => b.toLowerCase() === name.toLowerCase()) || name;
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(matchedBoss)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
             
             const cargoRes = await fetch(cargoUrl, { headers });
             const cargoData = await cargoRes.json();
@@ -270,7 +316,6 @@ async function getPrice(name, skipHistory = false) {
             results.forEach(row => {
                 const drop = row.title;
                 const match = itemMap[drop.Item.toLowerCase()];
-                // Verify entry exists in real-time pricing array to instantly filter out untradeable drop configurations
                 if (match) { 
                     const filename = drop.Item.charAt(0).toUpperCase() + drop.Item.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
                     const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
@@ -296,7 +341,7 @@ async function getPrice(name, skipHistory = false) {
             priceBox.classList.add('fade-in');
             priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} DROP LOG</strong>
+                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${matchedBoss.toUpperCase()} DROP LOG</strong>
                     <div style="max-height:160px; overflow-y:auto; padding-right:2px;">
                         ${uniquesHtml}
                     </div>
@@ -309,7 +354,6 @@ async function getPrice(name, skipHistory = false) {
         }
     }
 
-    // Code Path B: Target matches an internal Item -> Fetch live market economics
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
