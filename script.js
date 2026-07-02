@@ -43,6 +43,11 @@ async function initTracker() {
 }
 
 function saveHistory(name) {
+    // Only save to history if it's a real tradeable item in our dictionary
+    if (!itemMap[name.toLowerCase()]) {
+        return; 
+    }
+
     const oldButtons = Array.from(historyDiv.children);
     const oldPositions = oldButtons.map(btn => {
         const rect = btn.getBoundingClientRect();
@@ -175,10 +180,9 @@ searchInput.addEventListener('input', () => {
             .filter(name => name.includes(val))
             .map(m => itemMap[m]);
         
-        // 2. Query the Wiki Cargo database live to see if this string maps to a Boss Name
+        // 2. Query the Wiki Cargo database live with case-insensitive LOWER() matching
         try {
-            const formattedQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-            const checkBossUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Monster&where=Monster%20LIKE%20%22%25${encodeURIComponent(formattedQuery)}%25%22&group_by=Monster&limit=1&format=json&origin=*`;
+            const checkBossUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Monster&where=LOWER(Monster)%20LIKE%20%22%25${encodeURIComponent(val)}%25%22&group_by=Monster&limit=1&format=json&origin=*`;
             
             const bossRes = await fetch(checkBossUrl, { headers });
             const bossData = await bossRes.json();
@@ -186,13 +190,13 @@ searchInput.addEventListener('input', () => {
             if (bossData.cargoquery && bossData.cargoquery.length > 0) {
                 const matchedBoss = bossData.cargoquery[0].title.Monster;
                 
-                // Fetch the unique drops for this boss monster
+                // Fetch unique drops for the resolved boss configuration name
                 const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(matchedBoss)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
                 const cargoRes = await fetch(cargoUrl, { headers });
                 const cargoData = await cargoRes.json();
                 const results = cargoData.cargoquery || [];
                 
-                // Append tradeable uniques straight to the temporary list
+                // Append tradeable uniquely structured boss drops
                 results.forEach(row => {
                     const match = itemMap[row.title.Item.toLowerCase()];
                     if (match) {
@@ -211,14 +215,14 @@ searchInput.addEventListener('input', () => {
             }
         });
 
-        // 4. Render unified list framework or trigger spillover search rules
+        // 4. Render unified list framework
         if (combinedResults.length > 0) {
             resultsDiv.innerHTML = generateItemsHTML(combinedResults.slice(0, 15), val);
             resultsDiv.style.display = 'block';
             return;
         }
 
-        // 5. Fallback spellchecker if everything returned blank
+        // 5. Fallback spellchecker if everything returned completely empty
         const closest = getClosestMatch(val);
         if (closest) {
             const safeName = closest.name.replace(/'/g, "\\'");
@@ -297,8 +301,7 @@ async function getPrice(name, skipHistory = false) {
     
     if (!itemData) {
         try {
-            const formattedQuery = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%20LIKE%20%22%25${encodeURIComponent(formattedQuery)}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&group_by=Item&format=json&origin=*`;
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=LOWER(Monster)%20LIKE%20%22%25${encodeURIComponent(name.toLowerCase())}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&group_by=Item&format=json&origin=*`;
             
             const cargoRes = await fetch(cargoUrl, { headers });
             const cargoData = await cargoRes.json();
