@@ -757,7 +757,7 @@ async function getPrice(name, skipHistory = false) {
     });
 
     // *** UPDATED: Use Cloudflare Worker for share links ***
-    const shareUrl = `https://x0xp-embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
+    const shareUrl = `https://embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
 
     animateCardHeight(() => {
       priceBox.innerHTML = `
@@ -804,7 +804,7 @@ async function getPrice(name, skipHistory = false) {
     );
 
     // *** UPDATED: Use Cloudflare Worker for share links ***
-    const shareUrl = `https://x0xp-embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}`;
+    const shareUrl = `https://embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}`;
 
     animateCardHeight(() => {
       priceBox.innerHTML = `
