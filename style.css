@@ -27,19 +27,17 @@ body::after {
 }
 @keyframes noise-shift { 0% { background-position: 0 0; } 50% { background-position: -10px -10px; } 100% { background-position: 0 0; } }
 
-/* --- Skeleton Loader --- */
+/* --- Itemized Skeleton Loader --- */
 @keyframes shimmer {
-    0% { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
 }
 
 .skeleton {
-    display: block;
-    width: 100%;
-    background: linear-gradient(90deg, #1a1d26 25%, #2a2e3a 50%, #1a1d26 75%);
-    background-size: 800px 100%;
-    animation: shimmer 1.6s infinite linear;
-    border-radius: 6px;
+    display: inline-block;
+    animation: shimmer 1.4s infinite linear;
+    background: linear-gradient(90deg, #161922 25%, #262a36 50%, #161922 75%);
+    background-size: 400px 100%;
 }
 
 /* --- x0XP Wave Canvas Fix --- */
