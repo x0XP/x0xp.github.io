@@ -1,6 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let bossCollectionCache = {};   // boss name (from heading) -> array of tradeable items
+let bossCollectionCache = {};   // boss name -> array of tradeable items
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -130,9 +130,7 @@ async function fetchHTML(pageTitle) {
     }
 }
 
-// ------------------------------------------------------------
-// Helper: find boss name in cache, case‑insensitively
-// ------------------------------------------------------------
+// Helper: find boss key case‑insensitively
 function findBossKey(name) {
     const lower = name.toLowerCase();
     return Object.keys(bossCollectionCache).find(key => key.toLowerCase() === lower)
@@ -200,6 +198,14 @@ function formatGP(num) {
     return num.toLocaleString();
 }
 
+function formatTimeAgo(totalMinutes) {
+    if (isNaN(totalMinutes) || totalMinutes < 0) return "Just now";
+    if (totalMinutes < 60) return `${totalMinutes} mins ago`;
+    const totalHours = Math.round(totalMinutes / 60);
+    if (totalHours < 24) return `${totalHours} hours ago`;
+    return `${Math.round(totalHours / 24)} days ago`;
+}
+
 function levenshtein(a, b) {
     const tmp = [];
     let i, j, alen = a.length, blen = b.length;
@@ -238,6 +244,50 @@ function getClosestMatch(target) {
     return null;
 }
 
+// ------------------------------------------------------------
+// Fetch prices for multiple items
+// ------------------------------------------------------------
+async function fetchPricesForItems(itemNames) {
+    const ids = itemNames.map(n => itemMap[n.toLowerCase()]?.id).filter(id => id != null);
+    if (ids.length === 0) return {};
+    const url = `https://prices.runescape.wiki/api/v1/osrs/latest?id=${ids.join(',')}`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    return data.data || {};
+}
+
+// ------------------------------------------------------------
+// Generate item card HTML (same as single item view)
+// ------------------------------------------------------------
+function generateItemCard(itemName, priceData, iconUrl) {
+    const p = priceData || {};
+    const relativeTime = formatTimeAgo(p.highTime ? Math.round((Date.now()/1000 - p.highTime) / 60) : NaN);
+    return `
+        <div class="item-card" style="background: #1e2233; border: 1px solid #2a2e3a; border-radius: 8px; padding: 12px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                ${iconUrl ? `<img src="${iconUrl}" style="width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;">` : ''}
+                <strong style="font-size: 14px; color: #fff; word-break: break-word;">${itemName}</strong>
+            </div>
+            <div style="font-size: 12px; line-height: 1.5; color: #a8c7fa;">
+                Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp<br>
+                Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+                <span style="font-size: 10px; color: #7a8294;">Updated: ${relativeTime}</span>
+                <a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(itemName)}" target="_blank" style="color: #a8c7fa; text-decoration: none; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                    Wiki
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a8c7fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+// ------------------------------------------------------------
+// Dropdown HTML (unchanged)
+// ------------------------------------------------------------
 function generateDropdownHTML(entries, query) {
     return entries.map((entry, index) => {
         const safeName = entry.name.replace(/'/g, "\\'");
@@ -350,7 +400,6 @@ searchInput.addEventListener('keydown', (e) => {
             items[selectedIndex].click();
         } else {
             const val = searchInput.value.trim().toLowerCase();
-            // If no item selected, try to find a matching boss and use its exact name
             const bossKey = findBossKey(val);
             if (bossKey) {
                 getPrice(bossKey);
@@ -368,16 +417,8 @@ function updateVisualSelection(elements) {
     }
 }
 
-function formatTimeAgo(totalMinutes) {
-    if (isNaN(totalMinutes) || totalMinutes < 0) return "Just now";
-    if (totalMinutes < 60) return `${totalMinutes} mins ago`;
-    const totalHours = Math.round(totalMinutes / 60);
-    if (totalHours < 24) return `${totalHours} hours ago`;
-    return `${Math.round(totalHours / 24)} days ago`;
-}
-
 // ------------------------------------------------------------
-// Price / Collection log display
+// Price display (single item or boss collection with cards)
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
@@ -390,58 +431,66 @@ async function getPrice(name, skipHistory = false) {
     priceBox.style.display = 'block';
     
     priceBox.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
-                <div class="skeleton" style="height: 16px; width: 95%; border-radius: 4px;"></div>
-                <div class="skeleton" style="height: 13px; width: 65%; border-radius: 4px;"></div>
-                <div class="skeleton" style="height: 13px; width: 55%; border-radius: 4px;"></div>
-            </div>
-            <div class="skeleton" style="width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; margin-left: 15px;"></div>
+        <div style="display: flex; justify-content: center; padding: 20px;">
+            <div class="skeleton" style="height: 80px; width: 90%; border-radius: 8px;"></div>
         </div>
     `;
 
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // Try to find boss name case‑insensitively
+        // Boss view – show cards for all tradeable uniques
         const bossKey = findBossKey(name);
-        const items = bossKey ? bossCollectionCache[bossKey] || [] : [];
-        if (items.length === 0) {
+        if (!bossKey || !bossCollectionCache[bossKey] || bossCollectionCache[bossKey].length === 0) {
             priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
             return;
         }
 
-        let uniquesHtml = '';
-        items.forEach(itemTitle => {
-            const matchItem = itemMap[itemTitle.toLowerCase()];
-            const filename = itemTitle.charAt(0).toUpperCase() + itemTitle.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
-            const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-            const valueText = matchItem ? 'Tradeable' : '<span style="color:#7a8294;">Untradeable</span>';
-            uniquesHtml += `
-                <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
-                        <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
-                        <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ${matchItem ? 'cursor:pointer; text-decoration:underline;' : ''}" ${matchItem ? `onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')"` : ''}>${itemTitle}</span>
+        const items = bossCollectionCache[bossKey];
+        try {
+            // Fetch prices for all items in parallel
+            const priceData = await fetchPricesForItems(items);
+
+            // Fetch icons for all items in parallel (using Wiki API's pageimages)
+            const iconPromises = items.map(item => 
+                fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(item)}&pithumbsize=48&redirects=1&origin=*`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const pages = data.query?.pages || {};
+                        const page = Object.values(pages)[0];
+                        return page?.thumbnail?.source || '';
+                    })
+                    .catch(() => '')
+            );
+            const icons = await Promise.all(iconPromises);
+
+            // Build cards HTML
+            let cardsHtml = '';
+            items.forEach((item, idx) => {
+                const p = priceData[itemMap[item.toLowerCase()]?.id] || {};
+                const iconUrl = icons[idx] || '';
+                cardsHtml += generateItemCard(item, p, iconUrl);
+            });
+
+            void priceBox.offsetWidth;
+            priceBox.classList.add('fade-in');
+            priceBox.innerHTML = `
+                <div style="text-align:left; width:100%;">
+                    <strong style="display:block; margin-bottom:12px; font-size:16px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:8px;">
+                        ${bossKey.toUpperCase()} UNIQUES
+                    </strong>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px;">
+                        ${cardsHtml}
                     </div>
-                    <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">${valueText}</span>
                 </div>
             `;
-        });
-
-        void priceBox.offsetWidth;
-        priceBox.classList.add('fade-in');
-        priceBox.innerHTML = `
-            <div style="text-align:left; width:100%;">
-                <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${bossKey.toUpperCase()} COLLECTION LOG</strong>
-                <div style="max-height:250px; overflow-y:auto; padding-right:2px;">
-                    ${uniquesHtml}
-                </div>
-            </div>
-        `;
+        } catch (err) {
+            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed loading boss data.</div>`;
+        }
         return;
     }
 
-    // Normal item price display
+    // Normal item price display (single item)
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
@@ -463,18 +512,18 @@ async function getPrice(name, skipHistory = false) {
         priceBox.classList.add('fade-in');
 
         priceBox.innerHTML = `
-            <div class="price-container" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <div class="price-text" style="padding-right: 12px; max-width: 75%;">
-                    <strong class="item-name" style="display: block; margin: 0 0 8px 0; font-size: 16px; line-height: 1.2;">${name.toUpperCase()}</strong>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div style="flex-grow: 1; padding-right: 12px; max-width: 75%;">
+                    <strong style="display: block; margin: 0 0 8px 0; font-size: 16px; line-height: 1.2;">${name.toUpperCase()}</strong>
                     Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp<br>
                     Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp
                 </div>
-                ${iconUrl ? `<img src="${iconUrl}" class="item-icon" style="max-width: 48px; max-height: 48px; object-fit: contain;">` : ''}
+                ${iconUrl ? `<img src="${iconUrl}" style="max-width: 48px; max-height: 48px; object-fit: contain;">` : ''}
             </div>
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
-                <span class="timestamp" style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
-                <a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(name)}" target="_blank" class="wiki-btn">
-                    <span>Wiki</span>
+                <span style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
+                <a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(name)}" target="_blank" style="color: #a8c7fa; text-decoration: none; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                    Wiki
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a8c7fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>
                     </svg>
