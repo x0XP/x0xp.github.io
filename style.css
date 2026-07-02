@@ -140,6 +140,7 @@ body::after {
     z-index: 999; display: none; max-height: 180px; overflow-y: auto; border-radius: 0 0 5px 5px; 
 }
 
+/* --- Interactive Suggestion Items (dropdown, boss uniques, history) --- */
 .suggested-item {
     display: flex;
     align-items: center;
@@ -148,11 +149,16 @@ body::after {
     cursor: pointer;
     color: #ddd;
     font-size: 12px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    border-left: 3px solid transparent;               /* hidden until hover */
+    transition: background-color 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease;
 }
-.suggested-item:hover { 
-    background: #2a2e3a; 
-    transform: translateX(2px);
+
+.suggested-item:hover {
+    background-color: #2a2e3a;
+    border-left-color: #ffae00;                       /* gold glow stripe */
+    transform: translateX(2px) scale(1.02);           /* slight nudge + subtle scale */
 }
 
 .suggest-icon {
