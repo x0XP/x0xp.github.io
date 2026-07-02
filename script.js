@@ -1,7 +1,7 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
 let bossNames = [];
-let bossTradeableMap = {};   // boss page name -> array of tradeable item names
+let bossCollectionCache = {};   // boss -> array of tradeable item names
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -9,20 +9,6 @@ const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
-
-const FALLBACK_BOSSES = [
-    "Abyssal Sire", "Alchemical Hydra", "Araxxor", "Artio", "Callisto", "Cerberus",
-    "Chaos Elemental", "Chaos Fanatic", "Commander Zilyana", "Corporeal Beast",
-    "Crazy Archaeologist", "Dagannoth Kings", "Duke Sucellus", "General Graardor",
-    "Giant Mole", "Grotesque Guardians", "Kalphite Queen", "King Black Dragon",
-    "Kraken", "Kree'arra", "K'ril Tsutsaroth", "Leviathan", "Muspah", "Nex",
-    "Nightmare", "Obor", "Phantom Muspah", "Sarachnis", "Scorpia", "Scurrius",
-    "Skotizo", "Spindel", "Tempoross", "The Gauntlet", "Corrupted Gauntlet",
-    "Thermonuclear smoke devil", "Vardorvis", "Venenatis", "Vet'ion", "Vorkath",
-    "Whisperer", "Zalcano", "Zulrah", "Barrows", "Chambers of Xeric",
-    "Theatre of Blood", "Tombs of Amascut", "Dagannoth Rex", "Dagannoth Prime",
-    "Dagannoth Supreme", "The Mimic", "TzTok-Jad", "Hespori", "Bryophyta"
-];
 
 searchInput.addEventListener('click', () => {
     searchInput.value = '';
@@ -53,7 +39,6 @@ async function initTracker() {
         });
 
         await loadBossNames();
-        await loadBossTradeables();   // NEW: preload all tradeable boss uniques
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -68,49 +53,11 @@ async function loadBossNames() {
         const data = await res.json();
         if (data.query && data.query.categorymembers) {
             bossNames = data.query.categorymembers.map(m => m.title);
-            console.log(`Loaded ${bossNames.length} boss names from API`);
-            return;
+            console.log(`Loaded ${bossNames.length} boss names`);
         }
     } catch (e) {
-        console.warn('Boss category API failed, using hardcoded list', e);
+        console.error('Failed to load boss names', e);
     }
-    bossNames = [...FALLBACK_BOSSES];
-    console.log(`Using ${bossNames.length} hardcoded boss names`);
-}
-
-// NEW: fetch all collection log items and build boss -> tradeable items map
-async function loadBossTradeables() {
-    bossTradeableMap = {};
-    let offset = 0;
-    const limit = 500;
-    let hasMore = true;
-
-    while (hasMore) {
-        try {
-            const url = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Page,Item&limit=${limit}&offset=${offset}&format=json&origin=*`;
-            const res = await fetch(url, { headers });
-            const data = await res.json();
-            const rows = data.cargoquery || [];
-            if (rows.length === 0) break;
-
-            rows.forEach(row => {
-                const page = row.title.Page;
-                const item = row.title.Item;
-                if (!bossTradeableMap[page]) bossTradeableMap[page] = [];
-                // only add if the item is tradeable (exists in itemMap)
-                if (itemMap[item.toLowerCase()]) {
-                    bossTradeableMap[page].push(item);
-                }
-            });
-
-            offset += limit;
-            if (rows.length < limit) hasMore = false;
-        } catch (e) {
-            console.warn('Cargo fetch error, stopping pagination', e);
-            hasMore = false;
-        }
-    }
-    console.log(`Preloaded tradeable uniques for ${Object.keys(bossTradeableMap).length} bosses`);
 }
 
 function saveHistory(name) {
@@ -222,7 +169,89 @@ function getClosestMatch(target) {
     return null;
 }
 
-// MODIFIED: generates HTML for boss unique items as well
+// Fetch all tradeable items from the boss's Collection Log (or Unique section as fallback)
+async function fetchBossTradeables(bossPage) {
+    if (bossCollectionCache[bossPage]) return bossCollectionCache[bossPage];
+
+    try {
+        const wikitext = await fetchWikitext(bossPage);
+        if (!wikitext) {
+            bossCollectionCache[bossPage] = [];
+            return [];
+        }
+
+        let items = [];
+        // 1. Try to parse the "Collection log" section
+        const logSection = extractSection(wikitext, /==\s*Collection log\s*==/i);
+        if (logSection) {
+            items = parseItemLinks(logSection);
+        } else {
+            // 2. Fallback: parse "Unique drops" (old behaviour)
+            const uniqueSection = extractSection(wikitext, /==\s*Unique\s*(?:drops)?\s*==/i);
+            if (uniqueSection) {
+                items = parseDropsLineItems(uniqueSection); // Use the gemw filter
+            }
+        }
+
+        // Keep only items that are tradeable (exist in itemMap)
+        const tradeable = [...new Set(items)]
+            .filter(item => itemMap[item.toLowerCase()])
+            .sort();
+
+        bossCollectionCache[bossPage] = tradeable;
+        return tradeable;
+    } catch (e) {
+        console.error(`Failed to fetch tradeables for ${bossPage}`, e);
+        return [];
+    }
+}
+
+// Extract a section of wikitext between a heading and the next one
+function extractSection(wikitext, headingRegex) {
+    const match = wikitext.match(headingRegex);
+    if (!match) return null;
+    const startIndex = match.index + match[0].length;
+    const rest = wikitext.substring(startIndex);
+    const nextSection = rest.match(/\n==[^=]/);   // next heading
+    const endIndex = nextSection ? startIndex + nextSection.index : wikitext.length;
+    return wikitext.substring(startIndex, endIndex);
+}
+
+// Parse [[Item name]] links from wikitext
+function parseItemLinks(text) {
+    const regex = /\[\[([^\]|]+?)(?:\|[^\]]*)?\]\]/g;
+    const items = [];
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+        const name = m[1].trim();
+        if (name && !name.startsWith('File:') && !name.startsWith('Image:')) {
+            items.push(name);
+        }
+    }
+    return items;
+}
+
+// Parse {{DropsLine|...}} templates, only items with gemw=Yes (old method)
+function parseDropsLineItems(text) {
+    const drops = [];
+    const dropRegex = /\{\{DropsLine\s*\|([^|}]*?)\s*(?:\|.*?gemw\s*=\s*Yes[^|}]*)?\}\}/gi;
+    let dm;
+    while ((dm = dropRegex.exec(text)) !== null) {
+        const rawParams = dm[1] + (dm[0].match(/gemw\s*=\s*Yes/i) ? '|gemw=Yes' : '');
+        if (!/gemw\s*=\s*Yes/i.test(rawParams)) continue;
+
+        let itemName;
+        const nameMatch = rawParams.match(/Name\s*=\s*(.*?)(?:\||$)/);
+        if (nameMatch) {
+            itemName = nameMatch[1].trim();
+        } else {
+            itemName = rawParams.split('|')[0].trim();
+        }
+        if (itemName) drops.push(itemName);
+    }
+    return drops;
+}
+
 function generateDropdownHTML(entries, query) {
     return entries.map((entry, index) => {
         const safeName = entry.name.replace(/'/g, "\\'");
@@ -230,7 +259,6 @@ function generateDropdownHTML(entries, query) {
         const highlightedName = entry.name.replace(regex, `<strong style="color: #00ff00;">$1</strong>`);
         
         if (entry.isBoss) {
-            // boss page suggestion (shown when multiple bosses match)
             return `
                 <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
                     <img src="https://oldschool.runescape.wiki/images/Collection_log_icon.png" class="suggest-icon" style="width:16px; height:16px;">
@@ -240,7 +268,6 @@ function generateDropdownHTML(entries, query) {
         }
 
         if (entry.isBossDrop) {
-            // tradeable unique item from a boss
             const filename = entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
             const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
             return `
@@ -251,7 +278,6 @@ function generateDropdownHTML(entries, query) {
             `;
         }
         
-        // normal tradeable item
         const filename = entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
         const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         return `
@@ -270,16 +296,14 @@ searchInput.addEventListener('input', () => {
     selectedIndex = -1;
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
-    debounceTimer = setTimeout(() => {
+    debounceTimer = setTimeout(async () => {
         let combinedResults = [];
 
-        // 1. Check if the input matches any boss names
         const matchedBosses = bossNames.filter(boss => boss.toLowerCase().includes(valLower));
 
         if (matchedBosses.length === 1) {
-            // Exactly one boss matched: show its tradeable uniques directly
             const boss = matchedBosses[0];
-            const items = bossTradeableMap[boss] || [];
+            const items = await fetchBossTradeables(boss);
             if (items.length > 0) {
                 combinedResults = items.map(item => ({
                     name: item,
@@ -287,15 +311,12 @@ searchInput.addEventListener('input', () => {
                     boss: boss
                 }));
             } else {
-                // No tradeable uniques known? fallback to the boss page suggestion
                 combinedResults.push({ name: boss, isBoss: true });
             }
         } else if (matchedBosses.length > 1) {
-            // Multiple bosses match: show the boss names so user can pick one
             combinedResults = matchedBosses.map(boss => ({ name: boss, isBoss: true }));
         }
 
-        // 2. If no boss suggestions were generated, fall back to standard item search
         if (combinedResults.length === 0) {
             Object.keys(itemMap).forEach(name => {
                 if (name.includes(valLower)) {
@@ -310,7 +331,6 @@ searchInput.addEventListener('input', () => {
             return;
         }
 
-        // 3. Spellcheck fallback (now includes bosses and items)
         const closest = getClosestMatch(valLower);
         if (closest) {
             const safeName = closest.name.replace(/'/g, "\\'");
@@ -382,35 +402,40 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // If the name matches a boss, try to show its collection log as before
+        // Display full collection log for a boss (all items from the Collection Log section)
         try {
-            const formatQuery = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            const logUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Item&where=Page%20LIKE%20%22%25${encodeURIComponent(formatQuery)}%25%22&limit=50&format=json&origin=*`;
-            const logRes = await fetch(logUrl, { headers });
-            const logData = await logRes.json();
-            const results = logData.cargoquery || [];
-            
-            if (results.length === 0) {
-                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No item or collection log found.</div>`;
+            const wikitext = await fetchWikitext(name);
+            if (!wikitext) {
+                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No data found for ${name}.</div>`;
+                return;
+            }
+            // Try collection log section first, else unique
+            const logSection = extractSection(wikitext, /==\s*Collection log\s*==/i) ||
+                               extractSection(wikitext, /==\s*Unique\s*(?:drops)?\s*==/i);
+            if (!logSection) {
+                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No collection log found.</div>`;
+                return;
+            }
+
+            const items = parseItemLinks(logSection);
+            if (items.length === 0) {
+                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No items found in log.</div>`;
                 return;
             }
 
             let uniquesHtml = '';
-            results.forEach(row => {
-                const itemTitle = row.title.Item;
+            items.forEach(itemTitle => {
                 const lowerTitle = itemTitle.toLowerCase();
-                const match = itemMap[lowerTitle];
-                
+                const matchItem = itemMap[lowerTitle];
                 const filename = itemTitle.charAt(0).toUpperCase() + itemTitle.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
                 const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-                
-                const valueText = match ? 'Tradeable' : '<span style="color:#7a8294;">Untradeable</span>';
+                const valueText = matchItem ? 'Tradeable' : '<span style="color:#7a8294;">Untradeable</span>';
 
                 uniquesHtml += `
                     <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
                             <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
-                            <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ${match ? 'cursor:pointer; text-decoration:underline;' : ''}" ${match ? `onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')"` : ''}>${itemTitle}</span>
+                            <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ${matchItem ? 'cursor:pointer; text-decoration:underline;' : ''}" ${matchItem ? `onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')"` : ''}>${itemTitle}</span>
                         </div>
                         <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">${valueText}</span>
                     </div>
@@ -421,20 +446,20 @@ async function getPrice(name, skipHistory = false) {
             priceBox.classList.add('fade-in');
             priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} LOG LOGISTICS</strong>
-                    <div style="max-height:180px; overflow-y:auto; padding-right:2px;">
+                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} COLLECTION LOG</strong>
+                    <div style="max-height:250px; overflow-y:auto; padding-right:2px;">
                         ${uniquesHtml}
                     </div>
                 </div>
             `;
             return;
         } catch (err) {
-            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Collection Log sync error.</div>`;
+            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Error fetching boss data.</div>`;
             return;
         }
     }
 
-    // Standard tradeable item display
+    // Standard item price display
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
@@ -476,6 +501,17 @@ async function getPrice(name, skipHistory = false) {
         `;
     } catch(err) {
         priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed fetching live values.</div>`;
+    }
+}
+
+async function fetchWikitext(pageTitle) {
+    try {
+        const url = `https://oldschool.runescape.wiki/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=wikitext&format=json&origin=*`;
+        const res = await fetch(url, { headers });
+        const data = await res.json();
+        return data.parse?.wikitext?.['*'] || null;
+    } catch (e) {
+        return null;
     }
 }
 
