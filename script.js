@@ -81,32 +81,37 @@ function levenshtein(a, b) {
     return tmp[alen];
 }
 
+// Fixed Matcher to instantly link variants like "scyther" -> Scythe profiles
 function getClosestMatch(target) {
     const keys = Object.keys(itemMap);
     
-    // Stricter checking: does target completely contain an item first word or vice-versa?
+    // 1. Core substring lookup (Catches "scyther" -> containing "scythe")
+    const cleanTarget = target.replace(/er$/, '').replace(/s$/, ''); 
     for (let i = 0; i < keys.length; i++) {
-        const itemName = keys[i];
-        const firstWord = itemName.split(' ')[0];
-        if (target.startsWith(firstWord) || firstWord.startsWith(target.split(' ')[0])) {
-            return itemMap[itemName];
+        if (keys[i].includes(cleanTarget)) {
+            return itemMap[keys[i]];
+        }
+    }
+
+    // 2. Head-prefix match
+    for (let i = 0; i < keys.length; i++) {
+        if (keys[i].startsWith(target.substring(0, 4))) {
+            return itemMap[keys[i]];
         }
     }
     
+    // 3. Fallback Math Math
     let minDistance = Infinity;
     let closestItem = null;
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
-        if (Math.abs(key.length - target.length) > 2) continue; // Tightened threshold
-        if (key.substring(0, 2) !== target.substring(0, 2)) continue; // Keep letter prefix anchor
-        
         const dist = levenshtein(target, key);
         if (dist < minDistance) {
             minDistance = dist;
             closestItem = itemMap[key];
         }
     }
-    return (minDistance <= 2 && closestItem) ? closestItem : null;
+    return closestItem;
 }
 
 function generateItemsHTML(itemsArray, query) {
@@ -191,12 +196,24 @@ async function getPrice(name, skipHistory = false) {
     if (!skipHistory) saveHistory(name);
     sessionStorage.setItem('lastSearchedItem', name);
     
-    // Reset animations state cleanly on price box trigger
     priceBox.classList.remove('fade-in');
     priceBox.style.display = 'block';
     
-    // Inject the physical shimmering skeleton div loader (No text!)
-    priceBox.innerHTML = `<div class="skeleton" style="height: 115px;"></div>`;
+    // Detailed layout breakdown matching item structure precisely
+    priceBox.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
+                <div class="skeleton" style="height: 16px; width: 95%; border-radius: 4px;"></div>
+                <div class="skeleton" style="height: 13px; width: 65%; border-radius: 4px;"></div>
+                <div class="skeleton" style="height: 13px; width: 55%; border-radius: 4px;"></div>
+            </div>
+            <div class="skeleton" style="width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; margin-left: 15px;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; width: 100%;">
+            <div class="skeleton" style="height: 11px; width: 90px; border-radius: 3px;"></div>
+            <div class="skeleton" style="height: 22px; width: 54px; border-radius: 4px;"></div>
+        </div>
+    `;
     
     const itemData = itemMap[name.toLowerCase()];
     if (!itemData) { 
@@ -221,7 +238,6 @@ async function getPrice(name, skipHistory = false) {
         
         const relativeTime = formatTimeAgo(p.highTime ? Math.round((Date.now()/1000 - p.highTime) / 60) : NaN);
         
-        // Render content and trigger animation frame repaint cleanly
         void priceBox.offsetWidth;
         priceBox.classList.add('fade-in');
 
