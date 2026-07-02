@@ -81,6 +81,9 @@ async function initTracker() {
       }
     }
 
+    // Reset embed to default if no hash
+    updateEmbedMeta("default", "");
+
     const savedItem = sessionStorage.getItem("lastSearchedItem");
     if (savedItem) getPrice(savedItem, true);
   } catch (e) {
@@ -109,6 +112,41 @@ function updateUrlHash(type, name) {
   if (window.location.hash !== hash) {
     history.replaceState(null, "", hash);
   }
+}
+
+// ------------------------------------------------------------
+// Open Graph / Discord embed updater
+// ------------------------------------------------------------
+function updateEmbedMeta(type, name) {
+  let title, description, image;
+
+  if (type === "item") {
+    title = name;
+    description = `Live Grand Exchange price for ${name}.`;
+    const filename =
+      name.charAt(0).toUpperCase() +
+      name.slice(1).replace(/ /g, "_").replace(/'/g, "%27");
+    image = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+  } else if (type === "boss") {
+    title = `${name} Boss Uniques`;
+    description = `Tradeable collection log drops for ${name} with current prices.`;
+    image = "https://oldschool.runescape.wiki/images/Collection_log_icon.png";
+  } else {
+    // default
+    title = "x0XP OSRS Price Tracker";
+    description = "Instant GE prices and boss collection log uniques.";
+    image = "https://oldschool.runescape.wiki/images/Coins_10000.png";
+  }
+
+  const titleMeta = document.querySelector('meta[property="og:title"]');
+  const descMeta = document.querySelector('meta[property="og:description"]');
+  const imageMeta = document.querySelector('meta[property="og:image"]');
+  const urlMeta = document.querySelector('meta[property="og:url"]');
+
+  if (titleMeta) titleMeta.setAttribute("content", title);
+  if (descMeta) descMeta.setAttribute("content", description);
+  if (imageMeta) imageMeta.setAttribute("content", image);
+  if (urlMeta) urlMeta.setAttribute("content", window.location.href);
 }
 
 // ------------------------------------------------------------
@@ -430,9 +468,7 @@ function shareButtonHTML(url) {
   return `<button onclick="copyShareLink('${url.replace(/'/g, "\\'")}')"
                 class="icon-btn"
                 data-tooltip="Copy share link"
-                style="background: none; border: none; cursor: pointer; padding: 2px 4px;
-                       color: #a8c7fa; display: inline-flex; align-items: center;
-                       transition: color 0.2s ease;"
+                style="${iconButtonStyle}"
                 onmouseover="this.style.color='#ffae00'"
                 onmouseout="this.style.color='#a8c7fa'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -447,9 +483,7 @@ function wikiButtonHTML(pageName) {
   return `<a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(pageName)}" target="_blank"
                 class="icon-btn"
                 data-tooltip="Open Wiki page"
-                style="background: none; border: none; cursor: pointer; padding: 2px 4px;
-                       color: #a8c7fa; display: inline-flex; align-items: center;
-                       transition: color 0.2s ease; text-decoration: none;"
+                style="${iconButtonStyle} text-decoration: none;"
                 onmouseover="this.style.color='#ffae00'"
                 onmouseout="this.style.color='#a8c7fa'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -464,9 +498,7 @@ function wikiButtonHTML(pageName) {
 window.copyShareLink = function (url) {
   navigator.clipboard
     .writeText(url)
-    .then(() => {
-      // Briefly change icon (optional visual feedback)
-    })
+    .then(() => {})
     .catch(console.error);
 };
 
@@ -491,9 +523,8 @@ function showTooltip(event, text) {
     .querySelector(".ge-tracker")
     .getBoundingClientRect();
 
-  // Center the tooltip horizontally above the target, relative to .ge-tracker
   const tooltipX = targetRect.left - trackerRect.left + targetRect.width / 2;
-  const tooltipY = targetRect.top - trackerRect.top - 32; // 32px above the button
+  const tooltipY = targetRect.top - trackerRect.top - 32;
 
   tooltip.style.left = tooltipX + "px";
   tooltip.style.top = tooltipY + "px";
@@ -758,7 +789,7 @@ async function getPrice(name, skipHistory = false) {
                         <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
                         <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
                     </div>
-                    <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">${priceStr}</span>
+                    <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
                 </div>
             `;
     });
@@ -772,20 +803,20 @@ async function getPrice(name, skipHistory = false) {
     animateCardHeight(() => {
       priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
-                      <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
-                    <span style="position:relative; right:-4px;">${shareButtonHTML(shareUrl)}</span>
-                  </div>
-                    <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:2px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
+                        <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
+                        <span style="position:relative; top:-2px; right:-4px;">${shareButtonHTML(shareUrl)}</span>
+                    </div>
+                    <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:10px;">
                         ${uniquesHtml}
                     </div>
                 </div>
             `;
-      // Attach tooltips to the newly inserted share button
       attachTooltips(priceBox);
     });
     if (!skipHistory) saveHistory(bossKey);
     updateUrlHash("boss", bossKey);
+    updateEmbedMeta("boss", bossKey); // ← update Discord embed
     return;
   }
 
@@ -837,10 +868,10 @@ async function getPrice(name, skipHistory = false) {
                     </div>
                 </div>
             `;
-      // Attach tooltips to both buttons
       attachTooltips(priceBox);
     });
     updateUrlHash("item", name);
+    updateEmbedMeta("item", name); // ← update Discord embed
   } catch (err) {
     priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed fetching live values.</div>`;
   }
