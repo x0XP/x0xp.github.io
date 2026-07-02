@@ -1,7 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let bossNames = [];
-let bossCollectionCache = {};   // boss -> array of tradeable item names
+let bossCollectionCache = {};   // boss name (from heading) -> array of tradeable items
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -39,7 +38,6 @@ async function initTracker() {
         });
         console.log(`Loaded ${Object.keys(itemMap).length} tradeable items`);
 
-        await loadBossNames();
         await loadCollectionLogData();   // Fetches & parses the Collection Log page
         loadHistory();
         
@@ -48,22 +46,8 @@ async function initTracker() {
     } catch (e) { console.error("Initialization failed", e); }
 }
 
-async function loadBossNames() {
-    try {
-        const url = 'https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle=Category:Bosses&cmnamespace=0&cmlimit=max&format=json&origin=*';
-        const res = await fetch(url, { headers });
-        const data = await res.json();
-        if (data.query && data.query.categorymembers) {
-            bossNames = data.query.categorymembers.map(m => m.title);
-            console.log(`Loaded ${bossNames.length} boss names`);
-        }
-    } catch (e) {
-        console.error('Failed to load boss names', e);
-    }
-}
-
 // ------------------------------------------------------------
-// Fetch the Collection Log page as HTML and parse the tables
+// Fetch the Collection Log page and extract every boss section
 // ------------------------------------------------------------
 async function loadCollectionLogData() {
     console.log('Fetching Collection Log page HTML...');
@@ -76,44 +60,28 @@ async function loadCollectionLogData() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Normalise: remove [edit], curly apostrophes, and trim
-    const normalize = str =>
+    // Helper: remove [edit] and curly apostrophes, then trim
+    const cleanText = str =>
         str.replace(/\[edit\]/g, '')
            .replace(/’/g, "'")
            .replace(/‘/g, "'")
-           .trim()
-           .toLowerCase();
-
-    // Map normalised name → original boss name (from our bossNames)
-    const bossNamesNorm = new Map();
-    bossNames.forEach(b => {
-        bossNamesNorm.set(normalize(b), b);
-    });
-    const bossNamesNormSet = new Set(bossNamesNorm.keys());
+           .trim();
 
     const headings = doc.querySelectorAll('h3');
     const tables = Array.from(doc.querySelectorAll('table.wikitable')); // all tables in document order
 
     const bossMap = {};
-    let matchedBosses = 0;
-    let totalBossHeadings = 0;
+    let bossesWithItems = 0;
 
     console.log(`Found ${headings.length} h3 headings on the page`);
 
     headings.forEach(heading => {
-        const headingNorm = normalize(heading.textContent);
-        if (!headingNorm) return;
+        const headingText = cleanText(heading.textContent);
+        if (!headingText) return;
 
-        if (!bossNamesNormSet.has(headingNorm)) return;
-        totalBossHeadings++;
-
-        const originalName = bossNamesNorm.get(headingNorm);
-        console.log(`Matched boss heading: "${originalName}"`);
-
-        // Find the next table that appears after this heading (in document order)
+        // Find the first table that appears after this heading (in document order)
         let targetTable = null;
         for (let table of tables) {
-            // compareDocumentPosition returns 0 if same, 2 if heading is before table (following)
             const pos = heading.compareDocumentPosition(table);
             if (pos & Node.DOCUMENT_POSITION_FOLLOWING) {
                 targetTable = table;
@@ -121,7 +89,7 @@ async function loadCollectionLogData() {
             }
         }
         if (!targetTable) {
-            console.warn(`  No following wikitable found for ${originalName}`);
+            console.log(`No table after heading: "${headingText}"`);
             return;
         }
 
@@ -142,24 +110,20 @@ async function loadCollectionLogData() {
         });
 
         if (items.length > 0) {
-            bossMap[originalName] = items;
-            matchedBosses++;
-            console.log(`  Items for ${originalName}: [${items.join(', ')}]`);
+            bossMap[headingText] = [...new Set(items)]; // deduplicate
+            bossesWithItems++;
+            console.log(`✅ ${headingText}: [${bossMap[headingText].join(', ')}]`);
         } else {
-            console.log(`  No tradeable items found for ${originalName}`);
+            console.log(`❌ ${headingText}: no tradeable items`);
         }
     });
 
-    console.log(`Boss headings matched: ${totalBossHeadings}, bosses with items: ${matchedBosses}`);
-    if (Object.keys(bossMap).length > 0) {
-        console.log('Sample:', Object.entries(bossMap).slice(0, 3).map(([k,v]) => `${k}: [${v.join(', ')}]`));
-        if (bossMap['Vorkath']) {
-            console.log('✅ Vorkath items:', bossMap['Vorkath']);
-        } else {
-            console.warn('⚠️ Vorkath not found in parsed data!');
-        }
-    } else {
-        console.warn('No bosses matched.');
+    console.log(`Bosses with tradeable uniques: ${bossesWithItems}`);
+    if (bossMap['Barrows Chests']) {
+        console.log('Barrows Chests items:', bossMap['Barrows Chests']);
+    }
+    if (bossMap['Vorkath']) {
+        console.log('Vorkath items:', bossMap['Vorkath']);
     }
 
     bossCollectionCache = bossMap;
@@ -181,7 +145,7 @@ async function fetchHTML(pageTitle) {
 }
 
 // ------------------------------------------------------------
-// History & UI helpers
+// History & UI helpers (unchanged)
 // ------------------------------------------------------------
 function saveHistory(name) {
     if (!itemMap[name.toLowerCase()]) return; 
@@ -276,19 +240,6 @@ function getClosestMatch(target) {
         }
     }
     if (closestItem && minDistItem <= 2) return closestItem;
-
-    for (let boss of bossNames) {
-        if (boss.toLowerCase().includes(cleanTarget)) return { name: boss };
-    }
-    let minDistBoss = Infinity, closestBoss = null;
-    for (let boss of bossNames) {
-        const dist = levenshtein(target, boss.toLowerCase());
-        if (dist < minDistBoss) {
-            minDistBoss = dist;
-            closestBoss = boss;
-        }
-    }
-    if (closestBoss && minDistBoss <= 2) return { name: closestBoss };
     return null;
 }
 
@@ -329,6 +280,9 @@ function generateDropdownHTML(entries, query) {
     }).join('');
 }
 
+// ------------------------------------------------------------
+// Search input handler – now uses bossCollectionCache keys
+// ------------------------------------------------------------
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const val = searchInput.value.trim();
@@ -339,7 +293,9 @@ searchInput.addEventListener('input', () => {
     debounceTimer = setTimeout(() => {
         let combinedResults = [];
 
-        const matchedBosses = bossNames.filter(boss => boss.toLowerCase().includes(valLower));
+        // Get all boss names that have tradeable items
+        const allBossNames = Object.keys(bossCollectionCache);
+        const matchedBosses = allBossNames.filter(boss => boss.toLowerCase().includes(valLower));
 
         if (matchedBosses.length === 1) {
             const boss = matchedBosses[0];
@@ -351,12 +307,15 @@ searchInput.addEventListener('input', () => {
                     boss: boss
                 }));
             } else {
+                // Should never happen (we only keep bosses with items), but fallback
                 combinedResults.push({ name: boss, isBoss: true });
             }
         } else if (matchedBosses.length > 1) {
+            // Multiple bosses match – show their names so the user can pick one
             combinedResults = matchedBosses.map(boss => ({ name: boss, isBoss: true }));
         }
 
+        // If no boss suggestions, fall back to standard item search
         if (combinedResults.length === 0) {
             Object.keys(itemMap).forEach(name => {
                 if (name.includes(valLower)) {
