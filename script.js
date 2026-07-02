@@ -1,6 +1,5 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let dynamicBossList = []; // Filled dynamically from the wiki database on load
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -24,31 +23,18 @@ document.addEventListener('click', (e) => {
 
 async function initTracker() {
     try {
-        // Fetch prices, item mapping, and the dynamic list of monsters with uniques simultaneously
-        const bossCargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Monster&group_by=Monster&where=Rarity%20LIKE%20%22%25Unique%25%22&limit=500&format=json&origin=*`;
-        
-        const [priceRes, mapRes, bossRes] = await Promise.all([
+        const [priceRes, mapRes] = await Promise.all([
             fetch('https://prices.runescape.wiki/api/v1/osrs/latest', { headers }),
-            fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers }),
-            fetch(bossCargoUrl, { headers })
+            fetch('https://prices.runescape.wiki/api/v1/osrs/mapping', { headers })
         ]);
-        
         const prices = await priceRes.json();
         const mappings = await mapRes.json();
-        const bossData = await bossRes.json();
         
-        // 1. Populate standard item dictionary
         mappings.forEach(item => { 
             if (prices.data[item.id]) {
                 itemMap[item.name.toLowerCase()] = { id: item.id, name: item.name };
             }
         });
-
-        // 2. Populate our dynamic boss array from the Wiki Cargo result
-        if (bossData.cargoquery) {
-            dynamicBossList = bossData.cargoquery.map(row => row.title.Monster);
-        }
-        
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -182,54 +168,66 @@ searchInput.addEventListener('input', () => {
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
     debounceTimer = setTimeout(async () => {
-        // Cross-examine text inputs against the dynamic monster database fetched on load
-        const matchedBoss = dynamicBossList.find(boss => boss.toLowerCase().includes(val));
+        let combinedResults = [];
+
+        // 1. Gather any regular tradeable items containing this search string
+        const itemMatches = Object.keys(itemMap)
+            .filter(name => name.includes(val))
+            .map(m => itemMap[m]);
         
-        if (matchedBoss) {
-            resultsDiv.innerHTML = `<div class="suggested-item" style="color:#ffae00; justify-content:center; font-size:11px;">Loading ${matchedBoss} uniques...</div>`;
-            resultsDiv.style.display = 'block';
+        // 2. Query the Wiki Cargo database live to see if this string maps to a Boss Name
+        try {
+            const formattedQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            const checkBossUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Monster&where=Monster%20LIKE%20%22%25${encodeURIComponent(formattedQuery)}%25%22&group_by=Monster&limit=1&format=json&origin=*`;
             
-            try {
+            const bossRes = await fetch(checkBossUrl, { headers });
+            const bossData = await bossRes.json();
+            
+            if (bossData.cargoquery && bossData.cargoquery.length > 0) {
+                const matchedBoss = bossData.cargoquery[0].title.Monster;
+                
+                // Fetch the unique drops for this boss monster
                 const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(matchedBoss)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
                 const cargoRes = await fetch(cargoUrl, { headers });
                 const cargoData = await cargoRes.json();
                 const results = cargoData.cargoquery || [];
                 
-                const validDrops = [];
+                // Append tradeable uniques straight to the temporary list
                 results.forEach(row => {
                     const match = itemMap[row.title.Item.toLowerCase()];
-                    if (match && !validDrops.some(d => d.name === match.name)) {
-                        validDrops.push(match);
+                    if (match) {
+                        combinedResults.push(match);
                     }
                 });
-
-                if (validDrops.length > 0) {
-                    resultsDiv.innerHTML = generateItemsHTML(validDrops, val);
-                } else {
-                    resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; justify-content: center;"><span>No tradeable drops found</span></div>`;
-                }
-            } catch (err) {
-                resultsDiv.innerHTML = `<div class="suggested-item" style="color: #ff5555; justify-content: center;"><span>Error loading drops</span></div>`;
             }
+        } catch (err) {
+            console.error("Live boss lookup failed", err);
+        }
+
+        // 3. Merge regular item matches into the array, avoiding duplicates
+        itemMatches.forEach(item => {
+            if (!combinedResults.some(d => d.id === item.id)) {
+                combinedResults.push(item);
+            }
+        });
+
+        // 4. Render unified list framework or trigger spillover search rules
+        if (combinedResults.length > 0) {
+            resultsDiv.innerHTML = generateItemsHTML(combinedResults.slice(0, 15), val);
+            resultsDiv.style.display = 'block';
             return;
         }
 
-        // Fallback layout filtering for standard items
-        const itemMatches = Object.keys(itemMap).filter(name => name.includes(val)).slice(0, 10);
-        if (itemMatches.length > 0) {
-            resultsDiv.innerHTML = generateItemsHTML(itemMatches.map(m => itemMap[m]), val);
-            resultsDiv.style.display = 'block';
+        // 5. Fallback spellchecker if everything returned blank
+        const closest = getClosestMatch(val);
+        if (closest) {
+            const safeName = closest.name.replace(/'/g, "\\'");
+            resultsDiv.innerHTML = `<div class="suggested-item" onclick="getPrice('${safeName}')" style="justify-content: center; cursor: pointer;"><span>Did you mean: <strong style="color: #00ff00;">${closest.name}</strong>?</span></div>`;
         } else {
-            const closest = getClosestMatch(val);
-            if (closest) {
-                const safeName = closest.name.replace(/'/g, "\\'");
-                resultsDiv.innerHTML = `<div class="suggested-item" onclick="getPrice('${safeName}')" style="justify-content: center; cursor: pointer;"><span>Did you mean: <strong style="color: #00ff00;">${closest.name}</strong>?</span></div>`;
-            } else {
-                resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; cursor: default; justify-content: center;"><span>No items found</span></div>`;
-            }
-            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; cursor: default; justify-content: center;"><span>No items found</span></div>`;
         }
-    }, 200);
+        resultsDiv.style.display = 'block';
+    }, 250);
 });
 
 searchInput.addEventListener('keydown', (e) => {
@@ -299,9 +297,8 @@ async function getPrice(name, skipHistory = false) {
     
     if (!itemData) {
         try {
-            // Locate precise string spacing format matching dynamic list
-            const matchedBoss = dynamicBossList.find(b => b.toLowerCase() === name.toLowerCase()) || name;
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(matchedBoss)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
+            const formattedQuery = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%20LIKE%20%22%25${encodeURIComponent(formattedQuery)}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&group_by=Item&format=json&origin=*`;
             
             const cargoRes = await fetch(cargoUrl, { headers });
             const cargoData = await cargoRes.json();
@@ -341,7 +338,7 @@ async function getPrice(name, skipHistory = false) {
             priceBox.classList.add('fade-in');
             priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${matchedBoss.toUpperCase()} DROP LOG</strong>
+                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} DROP LOG</strong>
                     <div style="max-height:160px; overflow-y:auto; padding-right:2px;">
                         ${uniquesHtml}
                     </div>
