@@ -43,7 +43,7 @@ async function initTracker() {
 }
 
 function saveHistory(name) {
-    // 1. Record positions before the DOM structure shifts (FLIP Technique)
+    // 1. Record layout bounds before modifying DOM tree (FLIP Technique)
     const oldButtons = Array.from(historyDiv.children);
     const oldPositions = oldButtons.map(btn => {
         const rect = btn.getBoundingClientRect();
@@ -54,10 +54,10 @@ function saveHistory(name) {
     hist = [name, ...hist.filter(i => i !== name)].slice(0, 3);
     localStorage.setItem('osrsHistory', JSON.stringify(hist));
     
-    // 2. Instantly render the new positions
+    // 2. Refresh active UI nodes
     loadHistory();
 
-    // 3. Apply the FLIP transition smoothly animate backwards
+    // 3. Complete FLIP execution vector calculations to slide elements smoothly
     const newButtons = Array.from(historyDiv.children);
     newButtons.forEach(btn => {
         const btnName = btn.textContent.trim();
@@ -69,18 +69,15 @@ function saveHistory(name) {
             const deltaY = oldPos.top - newRect.top;
             
             if (deltaX !== 0 || deltaY !== 0) {
-                // Invert element back to its start location instantly
                 btn.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
                 btn.style.transition = 'none';
                 
-                // Play animation forward over a hardware-accelerated paint layer
                 requestAnimationFrame(() => {
                     btn.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
                     btn.style.transform = 'none';
                 });
             }
         } else {
-            // New items fading in gracefully
             btn.style.opacity = '0';
             btn.style.transform = 'scale(0.85)';
             requestAnimationFrame(() => {
@@ -235,6 +232,7 @@ async function getPrice(name, skipHistory = false) {
     priceBox.classList.remove('fade-in');
     priceBox.style.display = 'block';
     
+    // Structured Multi-Part Skeleton Layout Frame
     priceBox.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
             <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
@@ -249,17 +247,73 @@ async function getPrice(name, skipHistory = false) {
             <div class="skeleton" style="height: 22px; width: 54px; border-radius: 4px;"></div>
         </div>
     `;
-    
+
     const itemData = itemMap[name.toLowerCase()];
-    if (!itemData) { 
-        priceBox.innerHTML = `<div style="padding:10px; text-align:center;">Item mapping missing.</div>`; 
-        return; 
-    }
     
+    // Code Path A: Target parameter is NOT a tradeable item -> Run Boss Query against Cargo Engine
+    if (!itemData) {
+        try {
+            // Capitalize structural bounds to perfectly fit DB indices
+            const formattedBossName = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(formattedBossName)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
+            
+            const cargoRes = await fetch(cargoUrl, { headers });
+            const cargoData = await cargoRes.json();
+            const results = cargoData.cargoquery || [];
+            
+            if (results.length === 0) {
+                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No item or boss entry found.</div>`;
+                return;
+            }
+
+            let uniquesHtml = '';
+            results.forEach(row => {
+                const drop = row.title;
+                const match = itemMap[drop.Item.toLowerCase()];
+                // Verify entry exists in real-time pricing array to instantly filter out untradeable drop configurations
+                if (match) { 
+                    const filename = drop.Item.charAt(0).toUpperCase() + drop.Item.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
+                    const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+                    
+                    uniquesHtml += `
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div style="display:flex; align-items:center; gap:8px; min-width: 0;">
+                                <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
+                                <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor:pointer;" onclick="getPrice('${drop.Item.replace(/'/g, "\\'")}')">${drop.Item}</span>
+                            </div>
+                            <span style="color:#00ff00; font-size:11px; flex-shrink:0; margin-left:10px;">${drop.Rarity.replace('Unique, ', '')}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!uniquesHtml) {
+                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#7a8294;">Boss found, but contains no tradeable unique items.</div>`;
+                return;
+            }
+
+            void priceBox.offsetWidth;
+            priceBox.classList.add('fade-in');
+            priceBox.innerHTML = `
+                <div style="text-align:left; width:100%;">
+                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} DROP LOG</strong>
+                    <div style="max-height:160px; overflow-y:auto; padding-right:2px;">
+                        ${uniquesHtml}
+                    </div>
+                </div>
+            `;
+            return;
+        } catch (err) {
+            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Database tracking error.</div>`;
+            return;
+        }
+    }
+
+    // Code Path B: Target matches an internal Item -> Fetch live market economics
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
-            fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=500&redirects=1`)
+            fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=500&redirects=1&origin=*`)
         ]);
         
         const priceData = await priceRes.json();
