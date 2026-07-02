@@ -333,6 +333,7 @@ body::after {
     text-align: left;
 }
 
+/* Wiki button (icon only) - kept minimal, mostly overridden by inline styles */
 .wiki-btn {
     display: inline-flex;
     align-items: center;
@@ -353,13 +354,12 @@ body::after {
     height: 22px;
     box-sizing: border-box;
 }
-
+/* (Hover is handled inline, but we keep a fallback for any non-inline situation) */
 .wiki-btn:hover {
     background: #383f52;
-    color: #ffffff;
+    color: #ffae00;
     border-color: #626b7e;
 }
-
 .wiki-btn svg {
     display: inline-block;
     flex-shrink: 0;
@@ -367,10 +367,18 @@ body::after {
         stroke 0.2s,
         transform 0.2s;
 }
-
 .wiki-btn:hover svg {
-    stroke: #ffffff;
+    stroke: #ffae00;
     transform: translate(0.5px, -0.5px);
+}
+
+/* Share button (icon-only) */
+.share-btn {
+    color: #a8c7fa;
+    transition: color 0.2s;
+}
+.share-btn:hover {
+    color: #ffae00;
 }
 
 /* --- History --- */
@@ -432,4 +440,31 @@ body::after {
 /* Info icon hover */
 #infoIcon:hover {
     color: #ffae00;
+}
+
+/* ------------------------------------------------------------
+   Floating Tooltip (above share/wiki buttons)
+------------------------------------------------------------ */
+.tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(10, 14, 23, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #ccc;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, 0);
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    z-index: 20;
+}
+
+.tooltip.visible {
+    opacity: 1;
+    transform: translate(-50%, -2px);
 }

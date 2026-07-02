@@ -1,6 +1,6 @@
 const headers = { "User-Agent": "x0XP-Item-Price-Checker - .x0xp on Discord" };
 let itemMap = {};
-let bossCollectionCache = {}; // boss name -> array of tradeable item names
+let bossCollectionCache = {};
 let selectedIndex = -1;
 let debounceTimer;
 let suppressDropdown = false;
@@ -9,7 +9,7 @@ const searchInput = document.getElementById("itemSearch"),
   resultsDiv = document.getElementById("results"),
   priceBox = document.getElementById("priceDisplay"),
   historyDiv = document.getElementById("history"),
-  card = document.querySelector(".card"), // main container for height animation
+  card = document.querySelector(".card"),
   infoIcon = document.getElementById("infoIcon"),
   helpBox = document.getElementById("helpBox");
 
@@ -30,7 +30,6 @@ document.addEventListener("click", (e) => {
     resultsDiv.style.display = "none";
     selectedIndex = -1;
   }
-  // Close help box if clicking outside
   if (helpBox && !helpBox.contains(e.target) && e.target !== infoIcon) {
     helpVisible = false;
     helpBox.classList.remove("visible");
@@ -69,10 +68,46 @@ async function initTracker() {
     await loadCollectionLogData();
     loadHistory();
 
+    const hash = window.location.hash;
+    if (hash) {
+      const hashParams = parseHash(hash);
+      if (hashParams.item) {
+        getPrice(hashParams.item, true);
+        return;
+      }
+      if (hashParams.boss) {
+        getPrice(hashParams.boss, true);
+        return;
+      }
+    }
+
     const savedItem = sessionStorage.getItem("lastSearchedItem");
     if (savedItem) getPrice(savedItem, true);
   } catch (e) {
     console.error("Initialization failed", e);
+  }
+}
+
+// ------------------------------------------------------------
+// URL hash helpers
+// ------------------------------------------------------------
+function parseHash(hash) {
+  const params = {};
+  const parts = hash.substring(1).split("&");
+  parts.forEach((part) => {
+    const [key, value] = part.split("=");
+    if (key && value) {
+      params[key] = decodeURIComponent(value.replace(/\+/g, " "));
+    }
+  });
+  return params;
+}
+
+function updateUrlHash(type, name) {
+  const encoded = encodeURIComponent(name).replace(/%20/g, "+");
+  const hash = `#${type}=${encoded}`;
+  if (window.location.hash !== hash) {
+    history.replaceState(null, "", hash);
   }
 }
 
@@ -95,7 +130,6 @@ function animateCardHeight(updateCallback) {
     card.style.height = "auto";
     const endHeight = card.offsetHeight;
     card.style.height = startHeight + "px";
-    // force reflow
     card.offsetHeight;
     card.style.height = endHeight + "px";
 
@@ -133,8 +167,6 @@ async function loadCollectionLogData() {
 
   const bossMap = {};
   let bossesWithItems = 0;
-
-  console.log(`Found ${headings.length} h3 headings on the page`);
 
   headings.forEach((heading) => {
     const headingText = cleanText(heading.textContent);
@@ -192,7 +224,6 @@ async function fetchHTML(pageTitle) {
   }
 }
 
-// Helper: find boss key case‑insensitively
 function findBossKey(name) {
   const lower = name.toLowerCase();
   return (
@@ -380,6 +411,101 @@ async function fetchPricesForItemNames(itemNames) {
 }
 
 // ------------------------------------------------------------
+// Inline buttons (icon only) + tooltip support
+// ------------------------------------------------------------
+const iconButtonStyle = `
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    color: #a8c7fa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    transition: color 0.2s ease;
+`;
+
+function shareButtonHTML(url) {
+  return `<button onclick="copyShareLink('${url.replace(/'/g, "\\'")}')"
+                class="icon-btn"
+                data-tooltip="Copy share link"
+                style="${iconButtonStyle}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+            </button>`;
+}
+
+function wikiButtonHTML(pageName) {
+  return `<a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(pageName)}" target="_blank"
+                class="icon-btn"
+                data-tooltip="Open Wiki page"
+                style="${iconButtonStyle} text-decoration: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+            </a>`;
+}
+
+// Global copy function
+window.copyShareLink = function (url) {
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      // Briefly change icon (optional visual feedback)
+    })
+    .catch(console.error);
+};
+
+// ------------------------------------------------------------
+// Tooltip logic
+// ------------------------------------------------------------
+let tooltipEl = null;
+function getTooltip() {
+  if (!tooltipEl) tooltipEl = document.getElementById("tooltip");
+  return tooltipEl;
+}
+
+function showTooltip(event, text) {
+  const tooltip = getTooltip();
+  if (!tooltip) return;
+  tooltip.textContent = text;
+  tooltip.classList.add("visible");
+
+  const target = event.currentTarget;
+  const targetRect = target.getBoundingClientRect();
+  const trackerRect = document
+    .querySelector(".ge-tracker")
+    .getBoundingClientRect();
+
+  // Center the tooltip horizontally above the target, relative to .ge-tracker
+  const tooltipX = targetRect.left - trackerRect.left + targetRect.width / 2;
+  const tooltipY = targetRect.top - trackerRect.top - 32; // 32px above the button
+
+  tooltip.style.left = tooltipX + "px";
+  tooltip.style.top = tooltipY + "px";
+}
+
+function hideTooltip() {
+  const tooltip = getTooltip();
+  if (tooltip) tooltip.classList.remove("visible");
+}
+
+function attachTooltips(container) {
+  container.querySelectorAll(".icon-btn").forEach((btn) => {
+    const text = btn.getAttribute("data-tooltip");
+    if (!text) return;
+    btn.addEventListener("mouseenter", (e) => showTooltip(e, text));
+    btn.addEventListener("mouseleave", hideTooltip);
+  });
+}
+
+// ------------------------------------------------------------
 // Dropdown HTML
 // ------------------------------------------------------------
 function generateDropdownHTML(entries, query) {
@@ -522,30 +648,25 @@ searchInput.addEventListener("keydown", (e) => {
       items[selectedIndex].click();
     } else {
       const val = searchInput.value.trim().toLowerCase();
-      // 1. try boss
       const bossKey = findBossKey(val);
       if (bossKey) {
         getPrice(bossKey);
         return;
       }
-      // 2. try exact item
       if (itemMap[val]) {
         getPrice(itemMap[val].name);
         return;
       }
-      // 3. use the same "did you mean" logic (getClosestMatch)
       const closest = getClosestMatch(val);
       if (closest) {
         getPrice(closest.name);
         return;
       }
-      // 4. fallback: first item that starts with input
       const prefixMatch = findClosestItem(val);
       if (prefixMatch) {
         getPrice(prefixMatch.name);
         return;
       }
-      // 5. nothing found
       getPrice(val);
     }
   }
@@ -559,7 +680,7 @@ function updateVisualSelection(elements) {
 }
 
 // ------------------------------------------------------------
-// Price display (with smooth card height animation)
+// Price display (single item or boss list with live prices)
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
   resultsDiv.style.display = "none";
@@ -571,7 +692,6 @@ async function getPrice(name, skipHistory = false) {
   priceBox.classList.remove("fade-in");
   priceBox.style.display = "block";
 
-  // Skeleton loader
   priceBox.innerHTML = `
         <div style="display: flex; justify-content: center; padding: 20px;">
             <div class="skeleton" style="height: 80px; width: 90%; border-radius: 8px;"></div>
@@ -580,7 +700,6 @@ async function getPrice(name, skipHistory = false) {
 
   let itemData = itemMap[name.toLowerCase()];
 
-  // Resolution chain for partial matches
   if (!itemData) {
     const val = name.toLowerCase();
     const closest = getClosestMatch(val);
@@ -606,9 +725,7 @@ async function getPrice(name, skipHistory = false) {
       !bossCollectionCache[bossKey] ||
       bossCollectionCache[bossKey].length === 0
     ) {
-      animateCardHeight(() => {
-        priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
-      });
+      priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
       return;
     }
 
@@ -638,17 +755,29 @@ async function getPrice(name, skipHistory = false) {
             `;
     });
 
+    const shareUrl =
+      window.location.origin +
+      window.location.pathname +
+      "#boss=" +
+      encodeURIComponent(bossKey).replace(/%20/g, "+");
+
     animateCardHeight(() => {
       priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${bossKey.toUpperCase()} UNIQUES</strong>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:8px;">
+                        <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
+                        ${shareButtonHTML(shareUrl)}
+                    </div>
                     <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:12px;">
                         ${uniquesHtml}
                     </div>
                 </div>
             `;
+      // Attach tooltips to the newly inserted share button
+      attachTooltips(priceBox);
     });
     if (!skipHistory) saveHistory(bossKey);
+    updateUrlHash("boss", bossKey);
     return;
   }
 
@@ -676,6 +805,11 @@ async function getPrice(name, skipHistory = false) {
     const relativeTime = formatTimeAgo(
       p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN,
     );
+    const shareUrl =
+      window.location.origin +
+      window.location.pathname +
+      "#item=" +
+      encodeURIComponent(name).replace(/%20/g, "+");
 
     animateCardHeight(() => {
       priceBox.innerHTML = `
@@ -689,19 +823,18 @@ async function getPrice(name, skipHistory = false) {
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
                     <span style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
-                    <a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(name)}" target="_blank" style="color: #a8c7fa; text-decoration: none; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-                        Wiki
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a8c7fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                    </a>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        ${shareButtonHTML(shareUrl)}
+                        ${wikiButtonHTML(name)}
+                    </div>
                 </div>
             `;
+      // Attach tooltips to both buttons
+      attachTooltips(priceBox);
     });
+    updateUrlHash("item", name);
   } catch (err) {
-    animateCardHeight(() => {
-      priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed fetching live values.</div>`;
-    });
+    priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed fetching live values.</div>`;
   }
 }
 
