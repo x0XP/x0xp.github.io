@@ -472,7 +472,7 @@ async function getPrice(name, skipHistory = false) {
         priceBox.innerHTML = `
             <div style="text-align:left; width:100%;">
                 <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${bossKey.toUpperCase()} UNIQUES</strong>
-                <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:2px;">
+                <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:12px;">
                     ${uniquesHtml}
                 </div>
             </div>
