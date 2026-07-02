@@ -38,7 +38,7 @@ async function initTracker() {
         });
         console.log(`Loaded ${Object.keys(itemMap).length} tradeable items`);
 
-        await loadCollectionLogData();   // Fetches & parses the Collection Log page
+        await loadCollectionLogData();
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -245,48 +245,7 @@ function getClosestMatch(target) {
 }
 
 // ------------------------------------------------------------
-// Fetch prices for multiple items
-// ------------------------------------------------------------
-async function fetchPricesForItems(itemNames) {
-    const ids = itemNames.map(n => itemMap[n.toLowerCase()]?.id).filter(id => id != null);
-    if (ids.length === 0) return {};
-    const url = `https://prices.runescape.wiki/api/v1/osrs/latest?id=${ids.join(',')}`;
-    const res = await fetch(url, { headers });
-    const data = await res.json();
-    return data.data || {};
-}
-
-// ------------------------------------------------------------
-// Generate item card HTML (same as single item view)
-// ------------------------------------------------------------
-function generateItemCard(itemName, priceData, iconUrl) {
-    const p = priceData || {};
-    const relativeTime = formatTimeAgo(p.highTime ? Math.round((Date.now()/1000 - p.highTime) / 60) : NaN);
-    return `
-        <div class="item-card" style="background: #1e2233; border: 1px solid #2a2e3a; border-radius: 8px; padding: 12px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                ${iconUrl ? `<img src="${iconUrl}" style="width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;">` : ''}
-                <strong style="font-size: 14px; color: #fff; word-break: break-word;">${itemName}</strong>
-            </div>
-            <div style="font-size: 12px; line-height: 1.5; color: #a8c7fa;">
-                Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp<br>
-                Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
-                <span style="font-size: 10px; color: #7a8294;">Updated: ${relativeTime}</span>
-                <a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(itemName)}" target="_blank" style="color: #a8c7fa; text-decoration: none; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-                    Wiki
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a8c7fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>
-                    </svg>
-                </a>
-            </div>
-        </div>
-    `;
-}
-
-// ------------------------------------------------------------
-// Dropdown HTML (unchanged)
+// Dropdown HTML
 // ------------------------------------------------------------
 function generateDropdownHTML(entries, query) {
     return entries.map((entry, index) => {
@@ -418,7 +377,7 @@ function updateVisualSelection(elements) {
 }
 
 // ------------------------------------------------------------
-// Price display (single item or boss collection with cards)
+// Price display (single item or boss list with icons)
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
@@ -439,7 +398,7 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // Boss view – show cards for all tradeable uniques
+        // Boss view – show simple list with icons
         const bossKey = findBossKey(name);
         if (!bossKey || !bossCollectionCache[bossKey] || bossCollectionCache[bossKey].length === 0) {
             priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
@@ -447,46 +406,31 @@ async function getPrice(name, skipHistory = false) {
         }
 
         const items = bossCollectionCache[bossKey];
-        try {
-            // Fetch prices for all items in parallel
-            const priceData = await fetchPricesForItems(items);
-
-            // Fetch icons for all items in parallel (using Wiki API's pageimages)
-            const iconPromises = items.map(item => 
-                fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(item)}&pithumbsize=48&redirects=1&origin=*`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const pages = data.query?.pages || {};
-                        const page = Object.values(pages)[0];
-                        return page?.thumbnail?.source || '';
-                    })
-                    .catch(() => '')
-            );
-            const icons = await Promise.all(iconPromises);
-
-            // Build cards HTML
-            let cardsHtml = '';
-            items.forEach((item, idx) => {
-                const p = priceData[itemMap[item.toLowerCase()]?.id] || {};
-                const iconUrl = icons[idx] || '';
-                cardsHtml += generateItemCard(item, p, iconUrl);
-            });
-
-            void priceBox.offsetWidth;
-            priceBox.classList.add('fade-in');
-            priceBox.innerHTML = `
-                <div style="text-align:left; width:100%;">
-                    <strong style="display:block; margin-bottom:12px; font-size:16px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:8px;">
-                        ${bossKey.toUpperCase()} UNIQUES
-                    </strong>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px;">
-                        ${cardsHtml}
+        let uniquesHtml = '';
+        items.forEach(itemTitle => {
+            const filename = itemTitle.charAt(0).toUpperCase() + itemTitle.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
+            const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+            uniquesHtml += `
+                <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
+                    <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
+                        <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
+                        <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
                     </div>
+                    <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">Tradeable</span>
                 </div>
             `;
-        } catch (err) {
-            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed loading boss data.</div>`;
-        }
+        });
+
+        void priceBox.offsetWidth;
+        priceBox.classList.add('fade-in');
+        priceBox.innerHTML = `
+            <div style="text-align:left; width:100%;">
+                <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${bossKey.toUpperCase()} UNIQUES</strong>
+                <div style="max-height:250px; overflow-y:auto; padding-right:2px;">
+                    ${uniquesHtml}
+                </div>
+            </div>
+        `;
         return;
     }
 
