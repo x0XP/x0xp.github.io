@@ -1,6 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let bossNames = [];           // NEW: cache of all collection-log page titles
+let bossNames = [];           // all boss page names
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -8,6 +8,22 @@ const searchInput = document.getElementById('itemSearch'),
       resultsDiv = document.getElementById('results'),
       priceBox = document.getElementById('priceDisplay'),
       historyDiv = document.getElementById('history');
+
+// Hardcoded fallback list of every boss (and some popular collection-log pages)
+// Used only if the live API fails completely.
+const FALLBACK_BOSSES = [
+    "Abyssal Sire", "Alchemical Hydra", "Araxxor", "Artio", "Callisto", "Cerberus",
+    "Chaos Elemental", "Chaos Fanatic", "Commander Zilyana", "Corporeal Beast",
+    "Crazy Archaeologist", "Dagannoth Kings", "Duke Sucellus", "General Graardor",
+    "Giant Mole", "Grotesque Guardians", "Kalphite Queen", "King Black Dragon",
+    "Kraken", "Kree'arra", "K'ril Tsutsaroth", "Leviathan", "Muspah", "Nex",
+    "Nightmare", "Obor", "Phantom Muspah", "Sarachnis", "Scorpia", "Scurrius",
+    "Skotizo", "Spindel", "Tempoross", "The Gauntlet", "Corrupted Gauntlet",
+    "Thermonuclear smoke devil", "Vardorvis", "Venenatis", "Vet'ion", "Vorkath",
+    "Whisperer", "Zalcano", "Zulrah", "Barrows", "Chambers of Xeric",
+    "Theatre of Blood", "Tombs of Amascut", "Dagannoth Rex", "Dagannoth Prime",
+    "Dagannoth Supreme", "The Mimic", "TzTok-Jad", "Hespori", "Bryophyta"
+];
 
 searchInput.addEventListener('click', () => {
     searchInput.value = '';
@@ -37,25 +53,31 @@ async function initTracker() {
             }
         });
 
-        // NEW: preload all distinct boss/collection-log page names
-        try {
-            const cargoRes = await fetch(
-                'https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Page&group_by=Page&limit=500&format=json&origin=*',
-                { headers }
-            );
-            const cargoData = await cargoRes.json();
-            if (cargoData.cargoquery) {
-                bossNames = cargoData.cargoquery.map(row => row.title.Page);
-            }
-        } catch (e) {
-            console.error('Failed to load boss names', e);
-        }
+        // Load boss names from a more reliable API endpoint
+        await loadBossNames();
 
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
         if (savedItem) getPrice(savedItem, true);
     } catch (e) { console.error("Initialization failed", e); }
+}
+
+async function loadBossNames() {
+    try {
+        const url = 'https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle=Category:Bosses&cmlimit=max&format=json&origin=*';
+        const res = await fetch(url, { headers });
+        const data = await res.json();
+        if (data.query && data.query.categorymembers) {
+            bossNames = data.query.categorymembers.map(m => m.title);
+            console.log(`Loaded ${bossNames.length} boss names from API`);
+            return;
+        }
+    } catch (e) {
+        console.warn('Boss category API failed, using hardcoded list', e);
+    }
+    bossNames = [...FALLBACK_BOSSES]; // always available
+    console.log(`Using ${bossNames.length} hardcoded boss names`);
 }
 
 function saveHistory(name) {
@@ -136,7 +158,6 @@ function levenshtein(a, b) {
     return tmp[alen];
 }
 
-// UPDATED: now searches both items and bosses
 function getClosestMatch(target) {
     const keys = Object.keys(itemMap);
     const cleanTarget = target.replace(/er$/, '').replace(/s$/, '');
@@ -153,12 +174,11 @@ function getClosestMatch(target) {
             closestItem = itemMap[key];
         }
     }
-    // If we have a very good item match, return it
     if (closestItem && minDistItem <= 2) return closestItem;
 
     // 3. Substring match among bosses
     for (let boss of bossNames) {
-        if (boss.toLowerCase().includes(cleanTarget)) return { name: boss }; // boss pseudo-item
+        if (boss.toLowerCase().includes(cleanTarget)) return { name: boss };
     }
     // 4. Levenshtein among bosses
     let minDistBoss = Infinity, closestBoss = null;
@@ -170,7 +190,7 @@ function getClosestMatch(target) {
         }
     }
     if (closestBoss && minDistBoss <= 2) return { name: closestBoss };
-    return null; // no good match
+    return null;
 }
 
 function generateDropdownHTML(combinedList, query) {
@@ -210,17 +230,16 @@ searchInput.addEventListener('input', () => {
     debounceTimer = setTimeout(async () => {
         let combinedResults = [];
 
-        // 1. LOCAL BOSS MATCH: filter preloaded bossNames (no network call needed)
+        // 1. LOCAL BOSS MATCH from preloaded/fullback bossNames
         bossNames.forEach(boss => {
             if (boss.toLowerCase().includes(valLower)) {
                 combinedResults.push({ name: boss, isBoss: true });
             }
         });
 
-        // 2. LOCAL ITEM MATCH: filter itemMap keys
+        // 2. LOCAL ITEM MATCH from itemMap
         Object.keys(itemMap).forEach(name => {
             if (name.includes(valLower)) {
-                // Avoid duplicates if a boss name also matches an item name (rare)
                 if (!combinedResults.some(r => r.name === itemMap[name].name)) {
                     combinedResults.push({ name: itemMap[name].name, isBoss: false });
                 }
@@ -304,7 +323,6 @@ async function getPrice(name, skipHistory = false) {
 
     const itemData = itemMap[name.toLowerCase()];
     
-    // Process Collection Log request dynamically if target string isn't an item
     if (!itemData) {
         try {
             const formatQuery = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
@@ -357,7 +375,6 @@ async function getPrice(name, skipHistory = false) {
         }
     }
 
-    // Normal tradeable item flow
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
