@@ -43,10 +43,53 @@ async function initTracker() {
 }
 
 function saveHistory(name) {
+    // 1. Record positions before the DOM structure shifts (FLIP Technique)
+    const oldButtons = Array.from(historyDiv.children);
+    const oldPositions = oldButtons.map(btn => {
+        const rect = btn.getBoundingClientRect();
+        return { name: btn.textContent.trim(), left: rect.left, top: rect.top };
+    });
+
     let hist = JSON.parse(localStorage.getItem('osrsHistory') || '[]');
     hist = [name, ...hist.filter(i => i !== name)].slice(0, 3);
     localStorage.setItem('osrsHistory', JSON.stringify(hist));
+    
+    // 2. Instantly render the new positions
     loadHistory();
+
+    // 3. Apply the FLIP transition smoothly animate backwards
+    const newButtons = Array.from(historyDiv.children);
+    newButtons.forEach(btn => {
+        const btnName = btn.textContent.trim();
+        const oldPos = oldPositions.find(p => p.name === btnName);
+        
+        if (oldPos) {
+            const newRect = btn.getBoundingClientRect();
+            const deltaX = oldPos.left - newRect.left;
+            const deltaY = oldPos.top - newRect.top;
+            
+            if (deltaX !== 0 || deltaY !== 0) {
+                // Invert element back to its start location instantly
+                btn.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                btn.style.transition = 'none';
+                
+                // Play animation forward over a hardware-accelerated paint layer
+                requestAnimationFrame(() => {
+                    btn.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+                    btn.style.transform = 'none';
+                });
+            }
+        } else {
+            // New items fading in gracefully
+            btn.style.opacity = '0';
+            btn.style.transform = 'scale(0.85)';
+            requestAnimationFrame(() => {
+                btn.style.transition = 'all 0.4s ease';
+                btn.style.opacity = '1';
+                btn.style.transform = 'none';
+            });
+        }
+    });
 }
 
 function loadHistory() {
@@ -81,26 +124,19 @@ function levenshtein(a, b) {
     return tmp[alen];
 }
 
-// Fixed Matcher to instantly link variants like "scyther" -> Scythe profiles
 function getClosestMatch(target) {
     const keys = Object.keys(itemMap);
-    
-    // 1. Core substring lookup (Catches "scyther" -> containing "scythe")
     const cleanTarget = target.replace(/er$/, '').replace(/s$/, ''); 
     for (let i = 0; i < keys.length; i++) {
         if (keys[i].includes(cleanTarget)) {
             return itemMap[keys[i]];
         }
     }
-
-    // 2. Head-prefix match
     for (let i = 0; i < keys.length; i++) {
         if (keys[i].startsWith(target.substring(0, 4))) {
             return itemMap[keys[i]];
         }
     }
-    
-    // 3. Fallback Math Math
     let minDistance = Infinity;
     let closestItem = null;
     for (let i = 0; i < keys.length; i++) {
@@ -199,7 +235,6 @@ async function getPrice(name, skipHistory = false) {
     priceBox.classList.remove('fade-in');
     priceBox.style.display = 'block';
     
-    // Detailed layout breakdown matching item structure precisely
     priceBox.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
             <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
