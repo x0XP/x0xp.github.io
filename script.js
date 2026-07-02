@@ -430,7 +430,11 @@ function shareButtonHTML(url) {
   return `<button onclick="copyShareLink('${url.replace(/'/g, "\\'")}')"
                 class="icon-btn"
                 data-tooltip="Copy share link"
-                style="${iconButtonStyle}">
+                style="background: none; border: none; cursor: pointer; padding: 2px 4px;
+                       color: #a8c7fa; display: inline-flex; align-items: center;
+                       transition: color 0.2s ease;"
+                onmouseover="this.style.color='#ffae00'"
+                onmouseout="this.style.color='#a8c7fa'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -443,7 +447,11 @@ function wikiButtonHTML(pageName) {
   return `<a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(pageName)}" target="_blank"
                 class="icon-btn"
                 data-tooltip="Open Wiki page"
-                style="${iconButtonStyle} text-decoration: none;">
+                style="background: none; border: none; cursor: pointer; padding: 2px 4px;
+                       color: #a8c7fa; display: inline-flex; align-items: center;
+                       transition: color 0.2s ease; text-decoration: none;"
+                onmouseover="this.style.color='#ffae00'"
+                onmouseout="this.style.color='#a8c7fa'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"></line>
