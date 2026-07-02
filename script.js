@@ -43,10 +43,7 @@ async function initTracker() {
 }
 
 function saveHistory(name) {
-    // Only save to history if it's a real tradeable Grand Exchange item
-    if (!itemMap[name.toLowerCase()]) {
-        return; 
-    }
+    if (!itemMap[name.toLowerCase()]) return; 
 
     const oldButtons = Array.from(historyDiv.children);
     const oldPositions = oldButtons.map(btn => {
@@ -127,14 +124,7 @@ function getClosestMatch(target) {
     const keys = Object.keys(itemMap);
     const cleanTarget = target.replace(/er$/, '').replace(/s$/, ''); 
     for (let i = 0; i < keys.length; i++) {
-        if (keys[i].includes(cleanTarget)) {
-            return itemMap[keys[i]];
-        }
-    }
-    for (let i = 0; i < keys.length; i++) {
-        if (keys[i].startsWith(target.substring(0, 4))) {
-            return itemMap[keys[i]];
-        }
+        if (keys[i].includes(cleanTarget)) return itemMap[keys[i]];
     }
     let minDistance = Infinity;
     let closestItem = null;
@@ -149,13 +139,23 @@ function getClosestMatch(target) {
     return closestItem;
 }
 
-function generateItemsHTML(itemsArray, query) {
-    return itemsArray.map((item, index) => {
-        const safeName = item.name.replace(/'/g, "\\'");
-        const filename = item.name.charAt(0).toUpperCase() + item.name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
-        const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+function generateDropdownHTML(combinedList, query) {
+    return combinedList.map((entry, index) => {
+        const safeName = entry.name.replace(/'/g, "\\'");
         const regex = new RegExp(`(${query})`, 'gi');
-        const highlightedName = item.name.replace(regex, `<strong style="color: #00ff00;">$1</strong>`);
+        const highlightedName = entry.name.replace(regex, `<strong style="color: #00ff00;">$1</strong>`);
+        
+        if (entry.isBoss) {
+            return `
+                <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
+                    <img src="https://oldschool.runescape.wiki/images/Collection_log_icon.png" class="suggest-icon" style="width:16px; height:16px;">
+                    <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(Collection Log)</span></span>
+                </div>
+            `;
+        }
+        
+        const filename = entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
+        const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
         
         return `
             <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')">
@@ -168,58 +168,47 @@ function generateItemsHTML(itemsArray, query) {
 
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
-    const val = searchInput.value.toLowerCase().trim();
+    const val = searchInput.value.trim();
+    const valLower = val.toLowerCase();
     selectedIndex = -1;
     if (val.length < 3) { resultsDiv.style.display = 'none'; return; }
     
     debounceTimer = setTimeout(async () => {
         let combinedResults = [];
 
-        // 1. Gather tradeable items containing the text string
-        const itemMatches = Object.keys(itemMap)
-            .filter(name => name.includes(val))
-            .map(m => itemMap[m]);
-        
-        // 2. Fallback query structure to reliably fetch drops if string hints at a boss profile
+        // 1. DYNAMIC LOOKUP: Dynamic lookup against the structural Collection Logs index
         try {
-            const titleCaseQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item&where=Monster%20LIKE%20%22%25${encodeURIComponent(titleCaseQuery)}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Subpage&where=Subpage%20LIKE%20%22%25${encodeURIComponent(val)}%25%22&group_by=Subpage&limit=5&format=json&origin=*`;
+            const checkRes = await fetch(cargoUrl, { headers });
+            const checkData = await checkRes.json();
             
-            const cargoRes = await fetch(cargoUrl, { headers });
-            const cargoData = await cargoRes.json();
-            const results = cargoData.cargoquery || [];
-            
-            results.forEach(row => {
-                const match = itemMap[row.title.Item.toLowerCase()];
-                if (match && !combinedResults.some(d => d.id === match.id)) {
-                    combinedResults.push(match);
-                }
-            });
-        } catch (err) {
-            console.error("Boss drop mapping check failed", err);
-        }
+            if (checkData.cargoquery) {
+                checkData.cargoquery.forEach(row => {
+                    combinedResults.push({ name: row.title.Subpage, isBoss: true });
+                });
+            }
+        } catch (e) { console.error("Collection log verification issue", e); }
 
-        // 3. Merge regular items into list configuration
-        itemMatches.forEach(item => {
-            if (!combinedResults.some(d => d.id === item.id)) {
-                combinedResults.push(item);
+        // 2. Gather matched standard items from live local cache
+        Object.keys(itemMap).forEach(name => {
+            if (name.includes(valLower)) {
+                combinedResults.push({ name: itemMap[name].name, isBoss: false });
             }
         });
 
-        // 4. Render results if matches found
         if (combinedResults.length > 0) {
-            resultsDiv.innerHTML = generateItemsHTML(combinedResults.slice(0, 15), val);
+            resultsDiv.innerHTML = generateDropdownHTML(combinedResults.slice(0, 15), val);
             resultsDiv.style.display = 'block';
             return;
         }
 
-        // 5. Fallback spellchecker
-        const closest = getClosestMatch(val);
+        // 3. Spellcheck fallback safeguard
+        const closest = getClosestMatch(valLower);
         if (closest) {
             const safeName = closest.name.replace(/'/g, "\\'");
             resultsDiv.innerHTML = `<div class="suggested-item" onclick="getPrice('${safeName}')" style="justify-content: center; cursor: pointer;"><span>Did you mean: <strong style="color: #00ff00;">${closest.name}</strong>?</span></div>`;
         } else {
-            resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; cursor: default; justify-content: center;"><span>No items found</span></div>`;
+            resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; cursor: default; justify-content: center;"><span>No results located</span></div>`;
         }
         resultsDiv.style.display = 'block';
     }, 250);
@@ -227,7 +216,7 @@ searchInput.addEventListener('input', () => {
 
 searchInput.addEventListener('keydown', (e) => {
     const items = resultsDiv.getElementsByClassName('suggested-item');
-    if (!items.length || items[0].innerText === "No items found") return;
+    if (!items.length || items[0].innerText === "No results located") return;
     if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
         selectedIndex = (selectedIndex < items.length - 1) ? selectedIndex + 1 : 0;
@@ -258,9 +247,7 @@ function formatTimeAgo(totalMinutes) {
     if (totalMinutes < 60) return `${totalMinutes} mins ago`;
     const totalHours = Math.round(totalMinutes / 60);
     if (totalHours < 24) return `${totalHours} hours ago`;
-    const totalDays = Math.round(totalHours / 24);
-    if (totalDays < 30) return `${totalDays} days ago`;
-    return `${Math.round(totalDays / 30.4)} months ago`;
+    return `${Math.round(totalHours / 24)} days ago`;
 }
 
 async function getPrice(name, skipHistory = false) {
@@ -282,74 +269,68 @@ async function getPrice(name, skipHistory = false) {
             </div>
             <div class="skeleton" style="width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; margin-left: 15px;"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; width: 100%;">
-            <div class="skeleton" style="height: 11px; width: 90px; border-radius: 3px;"></div>
-            <div class="skeleton" style="height: 22px; width: 54px; border-radius: 4px;"></div>
-        </div>
     `;
 
     const itemData = itemMap[name.toLowerCase()];
     
+    // Process Collection Log request dynamically if target string isn't an item
     if (!itemData) {
         try {
-            const titleCaseBoss = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%20LIKE%20%22%25${encodeURIComponent(titleCaseBoss)}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&group_by=Item&format=json&origin=*`;
-            
-            const cargoRes = await fetch(cargoUrl, { headers });
-            const cargoData = await cargoRes.json();
-            const results = cargoData.cargoquery || [];
+            const logUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Item&where=Subpage%20LIKE%20%22%25${encodeURIComponent(name)}%25%22&limit=50&format=json&origin=*`;
+            const logRes = await fetch(logUrl, { headers });
+            const logData = await logRes.json();
+            const results = logData.cargoquery || [];
             
             if (results.length === 0) {
-                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No item or boss entry found.</div>`;
+                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No item or collection log found.</div>`;
                 return;
             }
 
             let uniquesHtml = '';
             results.forEach(row => {
-                const drop = row.title;
-                const match = itemMap[drop.Item.toLowerCase()];
-                if (match) { 
-                    const filename = drop.Item.charAt(0).toUpperCase() + drop.Item.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
-                    const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-                    
-                    uniquesHtml += `
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                            <div style="display:flex; align-items:center; gap:8px; min-width: 0;">
-                                <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
-                                <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor:pointer;" onclick="getPrice('${drop.Item.replace(/'/g, "\\'")}')">${drop.Item}</span>
-                            </div>
-                            <span style="color:#00ff00; font-size:11px; flex-shrink:0; margin-left:10px;">${drop.Rarity.replace('Unique, ', '')}</span>
-                        </div>
-                    `;
-                }
-            });
+                const itemTitle = row.title.Item;
+                const lowerTitle = itemTitle.toLowerCase();
+                const match = itemMap[lowerTitle];
+                
+                const filename = itemTitle.charAt(0).toUpperCase() + itemTitle.slice(1).replace(/ /g, '_').replace(/'/g, "%27");
+                const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+                
+                // Fetch the live Grand Exchange price if it's tradeable, else mark untradeable
+                const valueText = match ? 'Tradeable' : '<span style="color:#7a8294;">Untradeable</span>';
 
-            if (!uniquesHtml) {
-                priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#7a8294;">Boss found, but contains no tradeable unique items.</div>`;
-                return;
-            }
+                uniquesHtml += `
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
+                            <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
+                            <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ${match ? 'cursor:pointer; text-decoration:underline;' : ''}" ${match ? `onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')"` : ''}>${itemTitle}</span>
+                        </div>
+                        <span style="font-size:11px; color:#00ff00; margin-left:10px; flex-shrink:0;">${valueText}</span>
+                    </div>
+                `;
+            });
 
             void priceBox.offsetWidth;
             priceBox.classList.add('fade-in');
             priceBox.innerHTML = `
                 <div style="text-align:left; width:100%;">
-                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} DROP LOG</strong>
-                    <div style="max-height:160px; overflow-y:auto; padding-right:2px;">
+                    <strong style="display:block; margin-bottom:8px; font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px;">${name.toUpperCase()} LOG LOGISTICS</strong>
+                    <div style="max-height:180px; overflow-y:auto; padding-right:2px;">
                         ${uniquesHtml}
                     </div>
                 </div>
             `;
             return;
         } catch (err) {
-            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Database tracking error.</div>`;
+            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Collection Log sync error.</div>`;
             return;
         }
     }
 
+    // Normal tradeable item flow code block remains unchanged
     try {
         const [priceRes, wikiRes] = await Promise.all([
             fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers }),
-            fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=500&redirects=1&origin=*`)
+            fetch(`https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=100&redirects=1&origin=*`)
         ]);
         
         const priceData = await priceRes.json();
@@ -373,7 +354,7 @@ async function getPrice(name, skipHistory = false) {
                     Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp<br>
                     Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp
                 </div>
-                ${iconUrl ? `<img src="${iconUrl}" class="item-icon" style="max-width: 50px; max-height: 50px; object-fit: contain;">` : ''}
+                ${iconUrl ? `<img src="${iconUrl}" class="item-icon" style="max-width: 48px; max-height: 48px; object-fit: contain;">` : ''}
             </div>
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
                 <span class="timestamp" style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
