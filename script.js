@@ -1,7 +1,7 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
 let bossNames = [];
-let bossCollectionCache = {};   // boss -> array of tradeable unique item names
+let bossCollectionCache = {};   // boss -> array of tradeable item names
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -40,7 +40,7 @@ async function initTracker() {
         console.log(`Loaded ${Object.keys(itemMap).length} tradeable items`);
 
         await loadBossNames();
-        await loadCollectionLogData();   // NEW: fetch & parse the Collection Log page
+        await loadCollectionLogData();   // NEW: parse the rendered HTML page
         loadHistory();
         
         const savedItem = sessionStorage.getItem('lastSearchedItem');
@@ -62,102 +62,99 @@ async function loadBossNames() {
     }
 }
 
-// ------------------------------------------------------------------
-// NEW: Fetch and parse the central Collection Log page
-// ------------------------------------------------------------------
+// ------------------------------------------------------------
+// Fetch the Collection Log page as HTML and parse the tables
+// ------------------------------------------------------------
 async function loadCollectionLogData() {
-    console.log('Fetching Collection Log page...');
-    const wikitext = await fetchWikitext('Collection_log');
-    if (!wikitext) {
-        console.error('Failed to load Collection Log page');
+    console.log('Fetching Collection Log page HTML...');
+    const html = await fetchHTML('Collection_log');
+    if (!html) {
+        console.error('Failed to load Collection Log HTML');
         return;
     }
 
-    console.log('Wikitext length:', wikitext.length);
-    // Log a small snippet (first 500 chars) for diagnosis
-    console.log('Wikitext snippet:', wikitext.substring(0, 500));
-
-    // Split the whole page by table row markers. The first element is everything
-    // before the first |- (usually table header). We ignore that, then process
-    // every subsequent element as a row.
-    const rows = wikitext.split('|-');
-    if (rows.length < 2) {
-        console.error('No table rows found in Collection Log page (no "|-" markers)');
-        return;
-    }
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const tables = doc.querySelectorAll('table.wikitable');
+    console.log(`Found ${tables.length} tables on Collection Log page`);
 
     const bossMap = {};
-    let processedRows = 0;
+    let rowsProcessed = 0;
 
-    // Start from index 1 (skip header)
-    for (let i = 1; i < rows.length; i++) {
-        const rowText = rows[i];
+    // Build a Set of lowercased boss names for quick matching
+    const bossNamesLower = new Set(bossNames.map(b => b.toLowerCase()));
 
-        // A row may start with a newline, then has "| " or "||" separators.
-        // Remove trailing table end "|}" if present.
-        let cleaned = rowText.replace(/\n?\|\}\s*$/, '');
+    tables.forEach(table => {
+        // Each row in the table: first cell contains the boss link, rest are item links
+        const rows = table.querySelectorAll('tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td, th');
+            if (cells.length < 2) return;   // need at least boss + one item
 
-        // Split by cell separators: either "||" or a standalone "|"
-        // First split by "||", then by "|" for the first cell if needed
-        let cells = cleaned.split('||').map(c => c.trim());
-        // The very first cell may still have a leading "|" (e.g., "| BossName"), remove it
-        cells = cells.map(c => c.replace(/^\|/, '').trim()).filter(c => c.length > 0);
+            const firstCellLink = cells[0].querySelector('a');
+            if (!firstCellLink) return;
+            const bossName = firstCellLink.textContent.trim();
+            // Ensure this is one of our known boss names (case‑insensitive)
+            if (!bossNamesLower.has(bossName.toLowerCase())) return;
 
-        // The first non‑empty cell should be the boss name (a wiki link)
-        const bossMatch = cells.length > 0 ? cells[0].match(/\[\[([^\]|]+)/) : null;
-        if (!bossMatch) continue;
-
-        const boss = bossMatch[1].trim();
-        const items = [];
-
-        // Process remaining cells (item links)
-        for (let j = 1; j < cells.length; j++) {
-            const itemMatch = cells[j].match(/\[\[([^\]|]+)/);
-            if (itemMatch) {
-                const itemName = itemMatch[1].trim();
-                // Only include if it's a tradeable item (exists in itemMap)
-                if (itemMap[itemName.toLowerCase()]) {
-                    items.push(itemName);
-                }
+            const items = [];
+            for (let i = 1; i < cells.length; i++) {
+                const itemLinks = cells[i].querySelectorAll('a');
+                itemLinks.forEach(a => {
+                    const itemName = a.textContent.trim();
+                    // Only add if the item is tradeable (exists in itemMap)
+                    if (itemMap[itemName.toLowerCase()]) {
+                        items.push(itemName);
+                    }
+                });
             }
-        }
 
-        if (items.length > 0) {
-            // Deduplicate (though the log shouldn't have duplicates)
-            bossMap[boss] = [...new Set(items)];
-        }
-        processedRows++;
-    }
+            if (items.length > 0) {
+                // Some bosses appear in multiple tables (e.g., sub‑bosses) – merge them
+                if (!bossMap[bossName]) bossMap[bossName] = [];
+                items.forEach(item => {
+                    if (!bossMap[bossName].includes(item)) bossMap[bossName].push(item);
+                });
+            }
+            rowsProcessed++;
+        });
+    });
 
-    console.log(`Processed ${processedRows} rows, found ${Object.keys(bossMap).length} bosses with tradeable uniques`);
+    console.log(`Processed ${rowsProcessed} rows, found ${Object.keys(bossMap).length} bosses with tradeable uniques`);
     if (Object.keys(bossMap).length > 0) {
-        console.log('Sample:', Object.entries(bossMap).slice(0, 3).map(([k,v]) => `${k}: [${v.join(', ')}]`));
+        const sample = Object.entries(bossMap).slice(0, 3).map(([k,v]) => `${k}: [${v.join(', ')}]`);
+        console.log('Sample:', sample);
+        // For Vorkath specifically, verify it's included
+        if (bossMap['Vorkath']) {
+            console.log('Vorkath items:', bossMap['Vorkath']);
+        } else {
+            console.warn('Vorkath not found in parsed collection log!');
+        }
     } else {
-        console.warn('No bosses found with tradeable items. Check wikitext snippet above for format.');
+        console.warn('No bosses found with tradeable items. Check page structure.');
     }
 
     bossCollectionCache = bossMap;
 }
 
-// ------------------------------------------------------------------
-// Wiki API helper
-// ------------------------------------------------------------------
-async function fetchWikitext(pageTitle) {
+async function fetchHTML(pageTitle) {
     try {
-        const url = `https://oldschool.runescape.wiki/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=wikitext&format=json&origin=*`;
+        const url = `https://oldschool.runescape.wiki/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=text&format=json&origin=*`;
         const res = await fetch(url, { headers });
         const data = await res.json();
-        if (!data.parse || !data.parse.wikitext) return null;
-        return data.parse.wikitext['*'];
+        if (data.parse && data.parse.text) {
+            return data.parse.text['*'];
+        }
+        return null;
     } catch (e) {
-        console.error(`Failed to fetch ${pageTitle}`, e);
+        console.error(`Failed to fetch HTML for ${pageTitle}`, e);
         return null;
     }
 }
 
-// ------------------------------------------------------------------
-// History / UI helpers (unchanged)
-// ------------------------------------------------------------------
+// ------------------------------------------------------------
+// History & UI helpers (unchanged)
+// ------------------------------------------------------------
 function saveHistory(name) {
     if (!itemMap[name.toLowerCase()]) return; 
 
@@ -304,9 +301,6 @@ function generateDropdownHTML(entries, query) {
     }).join('');
 }
 
-// ------------------------------------------------------------------
-// Search input handler
-// ------------------------------------------------------------------
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const val = searchInput.value.trim();
@@ -321,7 +315,7 @@ searchInput.addEventListener('input', () => {
 
         if (matchedBosses.length === 1) {
             const boss = matchedBosses[0];
-            const items = bossCollectionCache[boss] || [];   // directly from preloaded cache
+            const items = bossCollectionCache[boss] || [];   // preloaded cache
             if (items.length > 0) {
                 combinedResults = items.map(item => ({
                     name: item,
@@ -396,9 +390,9 @@ function formatTimeAgo(totalMinutes) {
     return `${Math.round(totalHours / 24)} days ago`;
 }
 
-// ------------------------------------------------------------------
-// Price display (unchanged for items, now also shows boss collection log)
-// ------------------------------------------------------------------
+// ------------------------------------------------------------
+// Price display (unchanged for items; boss view uses cached data)
+// ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
     searchInput.value = name;
@@ -423,10 +417,10 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // Boss collection log view (fallback for direct boss name click)
+        // Boss collection log view
         const items = bossCollectionCache[name] || [];
         if (items.length === 0) {
-            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No collection log found for ${name}.</div>`;
+            priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
             return;
         }
 
