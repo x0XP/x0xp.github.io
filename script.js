@@ -43,7 +43,7 @@ async function initTracker() {
 }
 
 function saveHistory(name) {
-    // Only save to history if it's a real tradeable item in our dictionary
+    // Only save to history if it's a real tradeable Grand Exchange item
     if (!itemMap[name.toLowerCase()]) {
         return; 
     }
@@ -175,54 +175,45 @@ searchInput.addEventListener('input', () => {
     debounceTimer = setTimeout(async () => {
         let combinedResults = [];
 
-        // 1. Gather any regular tradeable items containing this search string
+        // 1. Gather tradeable items containing the text string
         const itemMatches = Object.keys(itemMap)
             .filter(name => name.includes(val))
             .map(m => itemMap[m]);
         
-        // 2. Query the Wiki Cargo database live with case-insensitive LOWER() matching
+        // 2. Fallback query structure to reliably fetch drops if string hints at a boss profile
         try {
-            const checkBossUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Monster&where=LOWER(Monster)%20LIKE%20%22%25${encodeURIComponent(val)}%25%22&group_by=Monster&limit=1&format=json&origin=*`;
+            const titleCaseQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item&where=Monster%20LIKE%20%22%25${encodeURIComponent(titleCaseQuery)}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
             
-            const bossRes = await fetch(checkBossUrl, { headers });
-            const bossData = await bossRes.json();
+            const cargoRes = await fetch(cargoUrl, { headers });
+            const cargoData = await cargoRes.json();
+            const results = cargoData.cargoquery || [];
             
-            if (bossData.cargoquery && bossData.cargoquery.length > 0) {
-                const matchedBoss = bossData.cargoquery[0].title.Monster;
-                
-                // Fetch unique drops for the resolved boss configuration name
-                const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%3D%22${encodeURIComponent(matchedBoss)}%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&format=json&origin=*`;
-                const cargoRes = await fetch(cargoUrl, { headers });
-                const cargoData = await cargoRes.json();
-                const results = cargoData.cargoquery || [];
-                
-                // Append tradeable uniquely structured boss drops
-                results.forEach(row => {
-                    const match = itemMap[row.title.Item.toLowerCase()];
-                    if (match) {
-                        combinedResults.push(match);
-                    }
-                });
-            }
+            results.forEach(row => {
+                const match = itemMap[row.title.Item.toLowerCase()];
+                if (match && !combinedResults.some(d => d.id === match.id)) {
+                    combinedResults.push(match);
+                }
+            });
         } catch (err) {
-            console.error("Live boss lookup failed", err);
+            console.error("Boss drop mapping check failed", err);
         }
 
-        // 3. Merge regular item matches into the array, avoiding duplicates
+        // 3. Merge regular items into list configuration
         itemMatches.forEach(item => {
             if (!combinedResults.some(d => d.id === item.id)) {
                 combinedResults.push(item);
             }
         });
 
-        // 4. Render unified list framework
+        // 4. Render results if matches found
         if (combinedResults.length > 0) {
             resultsDiv.innerHTML = generateItemsHTML(combinedResults.slice(0, 15), val);
             resultsDiv.style.display = 'block';
             return;
         }
 
-        // 5. Fallback spellchecker if everything returned completely empty
+        // 5. Fallback spellchecker
         const closest = getClosestMatch(val);
         if (closest) {
             const safeName = closest.name.replace(/'/g, "\\'");
@@ -301,7 +292,8 @@ async function getPrice(name, skipHistory = false) {
     
     if (!itemData) {
         try {
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=LOWER(Monster)%20LIKE%20%22%25${encodeURIComponent(name.toLowerCase())}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&group_by=Item&format=json&origin=*`;
+            const titleCaseBoss = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Drops&fields=Item,Rarity&where=Monster%20LIKE%20%22%25${encodeURIComponent(titleCaseBoss)}%25%22%20AND%20Rarity%20LIKE%20%22%25Unique%25%22&group_by=Item&format=json&origin=*`;
             
             const cargoRes = await fetch(cargoUrl, { headers });
             const cargoData = await cargoRes.json();
