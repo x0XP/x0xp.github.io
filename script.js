@@ -1,6 +1,6 @@
 const headers = { 'User-Agent': 'x0XP-Site-Tracker' };
 let itemMap = {};
-let bossCollectionCache = {};   // boss name -> array of tradeable items
+let bossCollectionCache = {};   // boss name -> array of tradeable item names
 let selectedIndex = -1;
 let debounceTimer;
 
@@ -200,15 +200,9 @@ function formatGP(num) {
 
 function formatShortGP(num) {
     if (num == null) return 'N/A';
-    if (num >= 1e9) {
-        return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
-    }
-    if (num >= 1e6) {
-        return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-    }
-    if (num >= 1e3) {
-        return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
-    }
+    if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
     return num.toLocaleString();
 }
 
@@ -259,36 +253,33 @@ function getClosestMatch(target) {
 }
 
 // ------------------------------------------------------------
-// Reliable bulk price fetch
+// Fetch prices: now ALWAYS fetches one per request, in parallel
 // ------------------------------------------------------------
 async function fetchPricesForItemNames(itemNames) {
     const ids = itemNames.map(n => itemMap[n.toLowerCase()]?.id).filter(id => id != null);
     if (ids.length === 0) return {};
 
-    console.log(`Fetching prices for IDs: ${ids.join(',')}`);
-    const url = `https://prices.runescape.wiki/api/v1/osrs/latest?id=${ids.join(',')}`;
-    try {
-        const res = await fetch(url, { headers });
-        const data = await res.json();
-        console.log('Received price data:', Object.keys(data.data).length, 'items');
-        return data.data || {};
-    } catch (e) {
-        console.error('Bulk price fetch failed, fetching individually...', e);
-        // Fallback: fetch one by one
-        const results = {};
-        for (const id of ids) {
-            try {
-                const singleRes = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers });
-                const singleData = await singleRes.json();
-                if (singleData.data && singleData.data[id]) {
-                    results[id] = singleData.data[id];
-                }
-            } catch (err) {
+    console.log(`Fetching prices individually for ${ids.length} items...`);
+
+    // Build a single promise for each ID
+    const promises = ids.map(id =>
+        fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers })
+            .then(res => res.json())
+            .then(data => ({ id, data: data.data?.[id] || null }))
+            .catch(err => {
                 console.error(`Failed to fetch price for id ${id}`, err);
-            }
-        }
-        return results;
-    }
+                return { id, data: null };
+            })
+    );
+
+    const results = await Promise.all(promises);
+    const priceMap = {};
+    results.forEach(({ id, data }) => {
+        if (data) priceMap[id] = data;
+    });
+
+    console.log(`Received prices for ${Object.keys(priceMap).length} items`);
+    return priceMap;
 }
 
 // ------------------------------------------------------------
