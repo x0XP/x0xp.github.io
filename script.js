@@ -81,9 +81,6 @@ async function initTracker() {
       }
     }
 
-    // Reset embed to default if no hash
-    updateEmbedMeta("default", "");
-
     const savedItem = sessionStorage.getItem("lastSearchedItem");
     if (savedItem) getPrice(savedItem, true);
   } catch (e) {
@@ -112,41 +109,6 @@ function updateUrlHash(type, name) {
   if (window.location.hash !== hash) {
     history.replaceState(null, "", hash);
   }
-}
-
-// ------------------------------------------------------------
-// Open Graph / Discord embed updater
-// ------------------------------------------------------------
-function updateEmbedMeta(type, name) {
-  let title, description, image;
-
-  if (type === "item") {
-    title = name;
-    description = `Live Grand Exchange price for ${name}.`;
-    const filename =
-      name.charAt(0).toUpperCase() +
-      name.slice(1).replace(/ /g, "_").replace(/'/g, "%27");
-    image = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-  } else if (type === "boss") {
-    title = `${name} Boss Uniques`;
-    description = `Tradeable collection log drops for ${name} with current prices.`;
-    image = "https://oldschool.runescape.wiki/images/Collection_log_icon.png";
-  } else {
-    // default
-    title = "x0XP OSRS Price Tracker";
-    description = "Instant GE prices and boss collection log uniques.";
-    image = "https://oldschool.runescape.wiki/images/Coins_10000.png";
-  }
-
-  const titleMeta = document.querySelector('meta[property="og:title"]');
-  const descMeta = document.querySelector('meta[property="og:description"]');
-  const imageMeta = document.querySelector('meta[property="og:image"]');
-  const urlMeta = document.querySelector('meta[property="og:url"]');
-
-  if (titleMeta) titleMeta.setAttribute("content", title);
-  if (descMeta) descMeta.setAttribute("content", description);
-  if (imageMeta) imageMeta.setAttribute("content", image);
-  if (urlMeta) urlMeta.setAttribute("content", window.location.href);
 }
 
 // ------------------------------------------------------------
@@ -794,11 +756,8 @@ async function getPrice(name, skipHistory = false) {
             `;
     });
 
-    const shareUrl =
-      window.location.origin +
-      window.location.pathname +
-      "#boss=" +
-      encodeURIComponent(bossKey).replace(/%20/g, "+");
+    // *** UPDATED: Use Cloudflare Worker for share links ***
+    const shareUrl = `https://x0xp-embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
 
     animateCardHeight(() => {
       priceBox.innerHTML = `
@@ -816,7 +775,6 @@ async function getPrice(name, skipHistory = false) {
     });
     if (!skipHistory) saveHistory(bossKey);
     updateUrlHash("boss", bossKey);
-    updateEmbedMeta("boss", bossKey); // ← update Discord embed
     return;
   }
 
@@ -844,11 +802,9 @@ async function getPrice(name, skipHistory = false) {
     const relativeTime = formatTimeAgo(
       p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN,
     );
-    const shareUrl =
-      window.location.origin +
-      window.location.pathname +
-      "#item=" +
-      encodeURIComponent(name).replace(/%20/g, "+");
+
+    // *** UPDATED: Use Cloudflare Worker for share links ***
+    const shareUrl = `https://x0xp-embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}`;
 
     animateCardHeight(() => {
       priceBox.innerHTML = `
@@ -871,7 +827,6 @@ async function getPrice(name, skipHistory = false) {
       attachTooltips(priceBox);
     });
     updateUrlHash("item", name);
-    updateEmbedMeta("item", name); // ← update Discord embed
   } catch (err) {
     priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed fetching live values.</div>`;
   }
