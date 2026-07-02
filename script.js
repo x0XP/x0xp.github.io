@@ -92,6 +92,8 @@ async function loadCollectionLogData() {
     const bossNamesNormSet = new Set(bossNamesNorm.keys());
 
     const headings = doc.querySelectorAll('h3');
+    const tables = Array.from(doc.querySelectorAll('table.wikitable')); // all tables in document order
+
     const bossMap = {};
     let matchedBosses = 0;
     let totalBossHeadings = 0;
@@ -108,22 +110,26 @@ async function loadCollectionLogData() {
         const originalName = bossNamesNorm.get(headingNorm);
         console.log(`Matched boss heading: "${originalName}"`);
 
-        // Find the next wikitable sibling
-        let nextElem = heading.nextElementSibling;
-        while (nextElem && nextElem.tagName !== 'TABLE') {
-            nextElem = nextElem.nextElementSibling;
+        // Find the next table that appears after this heading (in document order)
+        let targetTable = null;
+        for (let table of tables) {
+            // compareDocumentPosition returns 0 if same, 2 if heading is before table (following)
+            const pos = heading.compareDocumentPosition(table);
+            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) {
+                targetTable = table;
+                break;
+            }
         }
-        if (!nextElem || !nextElem.classList.contains('wikitable')) {
-            console.warn(`  No wikitable found after heading for ${originalName}`);
+        if (!targetTable) {
+            console.warn(`  No following wikitable found for ${originalName}`);
             return;
         }
 
         const items = [];
-        const rows = nextElem.querySelectorAll('tr');
+        const rows = targetTable.querySelectorAll('tr');
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length === 0) return; // skip header row
-            // Loop through ALL cells, not just the first one
             cells.forEach(cell => {
                 const links = cell.querySelectorAll('a');
                 links.forEach(link => {
@@ -153,14 +159,7 @@ async function loadCollectionLogData() {
             console.warn('⚠️ Vorkath not found in parsed data!');
         }
     } else {
-        console.warn('No bosses matched. Dumping first 20 normalised headings and expected boss names for diagnosis:');
-        const sampleHeadings = [];
-        headings.forEach(h => {
-            const n = normalize(h.textContent);
-            if (n) sampleHeadings.push(n);
-        });
-        console.log('First 20 headings:', sampleHeadings.slice(0, 20));
-        console.log('Expected boss names (normalised):', [...bossNamesNormSet].slice(0, 20));
+        console.warn('No bosses matched.');
     }
 
     bossCollectionCache = bossMap;
