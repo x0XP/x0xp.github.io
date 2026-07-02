@@ -73,49 +73,70 @@ async function loadCollectionLogData() {
         return;
     }
 
-    // The page consists of tables like:
-    // {| class="wikitable"
-    // |-
-    // | [[Boss]] || [[Item1]] || [[Item2]] || ...
-    // |-
-    // ...
-    // |}
-    // We extract each table row that starts with "| " and has items.
-    const rows = wikitext.match(/\|-\s*\n\|\s*\[\[.+?\]\].*/g);
-    if (!rows) {
-        console.error('No table rows found in Collection Log page');
+    console.log('Wikitext length:', wikitext.length);
+    // Log a small snippet (first 500 chars) for diagnosis
+    console.log('Wikitext snippet:', wikitext.substring(0, 500));
+
+    // Split the whole page by table row markers. The first element is everything
+    // before the first |- (usually table header). We ignore that, then process
+    // every subsequent element as a row.
+    const rows = wikitext.split('|-');
+    if (rows.length < 2) {
+        console.error('No table rows found in Collection Log page (no "|-" markers)');
         return;
     }
 
     const bossMap = {};
-    rows.forEach(row => {
-        // Split by || or |
-        // Row format: | [[Boss]] || [[Item1]] || [[Item2]] || ...
-        const cells = row.split(/\|\|?/).map(c => c.trim()).filter(c => c.length > 0);
-        if (cells.length < 2) return;
+    let processedRows = 0;
 
-        const bossMatch = cells[0].match(/\[\[([^\]|]+)/);
-        if (!bossMatch) return;
+    // Start from index 1 (skip header)
+    for (let i = 1; i < rows.length; i++) {
+        const rowText = rows[i];
+
+        // A row may start with a newline, then has "| " or "||" separators.
+        // Remove trailing table end "|}" if present.
+        let cleaned = rowText.replace(/\n?\|\}\s*$/, '');
+
+        // Split by cell separators: either "||" or a standalone "|"
+        // First split by "||", then by "|" for the first cell if needed
+        let cells = cleaned.split('||').map(c => c.trim());
+        // The very first cell may still have a leading "|" (e.g., "| BossName"), remove it
+        cells = cells.map(c => c.replace(/^\|/, '').trim()).filter(c => c.length > 0);
+
+        // The first non‑empty cell should be the boss name (a wiki link)
+        const bossMatch = cells.length > 0 ? cells[0].match(/\[\[([^\]|]+)/) : null;
+        if (!bossMatch) continue;
+
         const boss = bossMatch[1].trim();
-
         const items = [];
-        for (let i = 1; i < cells.length; i++) {
-            const itemMatch = cells[i].match(/\[\[([^\]|]+)/);
+
+        // Process remaining cells (item links)
+        for (let j = 1; j < cells.length; j++) {
+            const itemMatch = cells[j].match(/\[\[([^\]|]+)/);
             if (itemMatch) {
                 const itemName = itemMatch[1].trim();
-                if (itemMap[itemName.toLowerCase()]) {   // only tradeable
+                // Only include if it's a tradeable item (exists in itemMap)
+                if (itemMap[itemName.toLowerCase()]) {
                     items.push(itemName);
                 }
             }
         }
+
         if (items.length > 0) {
-            bossMap[boss] = [...new Set(items)];  // deduplicate
+            // Deduplicate (though the log shouldn't have duplicates)
+            bossMap[boss] = [...new Set(items)];
         }
-    });
+        processedRows++;
+    }
+
+    console.log(`Processed ${processedRows} rows, found ${Object.keys(bossMap).length} bosses with tradeable uniques`);
+    if (Object.keys(bossMap).length > 0) {
+        console.log('Sample:', Object.entries(bossMap).slice(0, 3).map(([k,v]) => `${k}: [${v.join(', ')}]`));
+    } else {
+        console.warn('No bosses found with tradeable items. Check wikitext snippet above for format.');
+    }
 
     bossCollectionCache = bossMap;
-    console.log(`Loaded collection log data for ${Object.keys(bossMap).length} bosses`);
-    console.log('Sample:', Object.entries(bossMap).slice(0, 3).map(([k,v]) => `${k}: [${v.join(', ')}]`));
 }
 
 // ------------------------------------------------------------------
