@@ -176,15 +176,16 @@ searchInput.addEventListener('input', () => {
     debounceTimer = setTimeout(async () => {
         let combinedResults = [];
 
-        // 1. DYNAMIC LOOKUP: Dynamic lookup against the structural Collection Logs index
+        // 1. DYNAMIC LOOKUP: Dynamic lookup against the correct Page field in Cargo with proper Title Case translation
         try {
-            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Subpage&where=Subpage%20LIKE%20%22%25${encodeURIComponent(val)}%25%22&group_by=Subpage&limit=5&format=json&origin=*`;
+            const formatQuery = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            const cargoUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Page&where=Page%20LIKE%20%22%25${encodeURIComponent(formatQuery)}%25%22&group_by=Page&limit=5&format=json&origin=*`;
             const checkRes = await fetch(cargoUrl, { headers });
             const checkData = await checkRes.json();
             
             if (checkData.cargoquery) {
                 checkData.cargoquery.forEach(row => {
-                    combinedResults.push({ name: row.title.Subpage, isBoss: true });
+                    combinedResults.push({ name: row.title.Page, isBoss: true });
                 });
             }
         } catch (e) { console.error("Collection log verification issue", e); }
@@ -276,7 +277,8 @@ async function getPrice(name, skipHistory = false) {
     // Process Collection Log request dynamically if target string isn't an item
     if (!itemData) {
         try {
-            const logUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Item&where=Subpage%20LIKE%20%22%25${encodeURIComponent(name)}%25%22&limit=50&format=json&origin=*`;
+            const formatQuery = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            const logUrl = `https://oldschool.runescape.wiki/api.php?action=cargoquery&tables=Collection_log_items&fields=Item&where=Page%20LIKE%20%22%25${encodeURIComponent(formatQuery)}%25%22&limit=50&format=json&origin=*`;
             const logRes = await fetch(logUrl, { headers });
             const logData = await logRes.json();
             const results = logData.cargoquery || [];
