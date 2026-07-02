@@ -198,7 +198,6 @@ function formatGP(num) {
     return num.toLocaleString();
 }
 
-// NEW: short format for k/m/b
 function formatShortGP(num) {
     if (num == null) return 'N/A';
     if (num >= 1e9) {
@@ -260,18 +259,35 @@ function getClosestMatch(target) {
 }
 
 // ------------------------------------------------------------
-// Fetch live prices for a list of item names (used in boss view)
+// Reliable bulk price fetch
 // ------------------------------------------------------------
 async function fetchPricesForItemNames(itemNames) {
     const ids = itemNames.map(n => itemMap[n.toLowerCase()]?.id).filter(id => id != null);
     if (ids.length === 0) return {};
+
+    console.log(`Fetching prices for IDs: ${ids.join(',')}`);
     const url = `https://prices.runescape.wiki/api/v1/osrs/latest?id=${ids.join(',')}`;
     try {
         const res = await fetch(url, { headers });
         const data = await res.json();
+        console.log('Received price data:', Object.keys(data.data).length, 'items');
         return data.data || {};
     } catch (e) {
-        return {};
+        console.error('Bulk price fetch failed, fetching individually...', e);
+        // Fallback: fetch one by one
+        const results = {};
+        for (const id of ids) {
+            try {
+                const singleRes = await fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, { headers });
+                const singleData = await singleRes.json();
+                if (singleData.data && singleData.data[id]) {
+                    results[id] = singleData.data[id];
+                }
+            } catch (err) {
+                console.error(`Failed to fetch price for id ${id}`, err);
+            }
+        }
+        return results;
     }
 }
 
@@ -408,7 +424,7 @@ function updateVisualSelection(elements) {
 }
 
 // ------------------------------------------------------------
-// Price display (single item or boss list with prices)
+// Price display (single item or boss list with live prices)
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
     resultsDiv.style.display = 'none';
@@ -429,7 +445,7 @@ async function getPrice(name, skipHistory = false) {
     const itemData = itemMap[name.toLowerCase()];
     
     if (!itemData) {
-        // Boss view – show list with icons and live average prices
+        // Boss view – fetch prices for all tradeable uniques
         const bossKey = findBossKey(name);
         if (!bossKey || !bossCollectionCache[bossKey] || bossCollectionCache[bossKey].length === 0) {
             priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
@@ -437,7 +453,6 @@ async function getPrice(name, skipHistory = false) {
         }
 
         const items = bossCollectionCache[bossKey];
-        // Fetch live prices for all items
         const priceData = await fetchPricesForItemNames(items);
 
         let uniquesHtml = '';
@@ -447,7 +462,7 @@ async function getPrice(name, skipHistory = false) {
 
             const id = itemMap[itemTitle.toLowerCase()]?.id;
             const p = id && priceData[id] ? priceData[id] : {};
-            const avg = (p.high && p.low) ? (p.high + p.low) / 2 : null;
+            const avg = (p.high != null && p.low != null) ? (p.high + p.low) / 2 : null;
             const priceStr = avg != null ? formatShortGP(avg) : 'N/A';
 
             uniquesHtml += `
