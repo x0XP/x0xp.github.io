@@ -172,6 +172,36 @@ body::after {
     width: 100%; position: relative;
 }
 
+/* ----- Dark Theme Scrollbar ----- */
+.results-list::-webkit-scrollbar,
+.price-box .scrollable-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.results-list::-webkit-scrollbar-track,
+.price-box .scrollable-list::-webkit-scrollbar-track {
+    background: #14171f;               /* darkest background */
+    border-radius: 3px;
+}
+
+.results-list::-webkit-scrollbar-thumb,
+.price-box .scrollable-list::-webkit-scrollbar-thumb {
+    background: #2a2e3a;               /* matches your card borders */
+    border-radius: 3px;
+}
+
+.results-list::-webkit-scrollbar-thumb:hover,
+.price-box .scrollable-list::-webkit-scrollbar-thumb:hover {
+    background: #3a3f4e;
+}
+
+/* Firefox */
+.results-list,
+.price-box .scrollable-list {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2e3a #14171f;
+}
+
 .price-container { 
     display: flex; justify-content: space-between; align-items: center; width: 100%; 
 }
