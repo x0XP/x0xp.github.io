@@ -21,10 +21,249 @@ const searchInput = document.getElementById("itemSearch"),
   infoIcon = document.getElementById("infoIcon"),
   helpBox = document.getElementById("helpBox"),
   updatesIcon = document.getElementById("updatesIcon"),
-  changelogBox = document.getElementById("changelogBox");
+  changelogBox = document.getElementById("changelogBox"),
+  floatingContainer = document.getElementById("floatingContainer"),
+  clearAllBtn = document.getElementById("clearAllFloating");
 
 let helpVisible = false;
 let changelogVisible = false;
+
+// ---------- Floating card storage ----------
+let floatingCards = [];
+let floatingCardCounter = 0;
+
+function saveFloatingCards() {
+  const data = floatingCards.map(f => ({ type: f.type, name: f.name, x: f.x, y: f.y }));
+  localStorage.setItem("floatingCards", JSON.stringify(data));
+  if (clearAllBtn) clearAllBtn.style.display = floatingCards.length ? "inline-block" : "none";
+}
+
+function buildFloatingCardElement(type, name, x, y, cardId) {
+  const div = document.createElement("div");
+  div.className = "floating-card";
+  div.style.left = x + "px";
+  div.style.top = y + "px";
+  div.dataset.id = cardId;
+
+  const header = document.createElement("div");
+  header.className = "floating-header";
+  header.innerHTML = `
+    <span class="floating-drag-handle">⋮⋮</span>
+    <span class="floating-title">${name}</span>
+    <span class="floating-close" data-id="${cardId}">×</span>
+  `;
+
+  const content = document.createElement("div");
+  content.className = "floating-content";
+  content.innerHTML = '<div class="skeleton" style="height: 60px; width: 100%; border-radius: 4px;"></div>';
+
+  div.appendChild(header);
+  div.appendChild(content);
+  floatingContainer.appendChild(div);
+
+  header.querySelector(".floating-close").addEventListener("click", (e) => {
+    e.stopPropagation();
+    removeFloatingCard(cardId);
+  });
+
+  let isDragging = false, startX, startY, origX, origY;
+  header.addEventListener("mousedown", (e) => {
+    if (e.target.classList.contains("floating-close")) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    origX = div.offsetLeft;
+    origY = div.offsetTop;
+    div.style.transition = "none";
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    div.style.left = (origX + dx) + "px";
+    div.style.top = (origY + dy) + "px";
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!isDragging) return;
+    isDragging = false;
+    div.style.transition = "";
+    const id = div.dataset.id;
+    const fc = floatingCards.find(f => f.id == id);
+    if (fc) {
+      fc.x = parseInt(div.style.left);
+      fc.y = parseInt(div.style.top);
+      saveFloatingCards();
+    }
+  });
+
+  return { div, content };
+}
+
+function createFloatingCard(type, name, x, y) {
+  const id = ++floatingCardCounter;
+  const fc = { id, type, name, x, y };
+  floatingCards.push(fc);
+  saveFloatingCards();
+
+  const { div, content } = buildFloatingCardElement(type, name, x, y, id);
+
+  if (type === "item") {
+    const itemData = itemMap[name.toLowerCase()];
+    if (itemData) {
+      fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`, { headers })
+        .then(res => res.json())
+        .then(data => {
+          const p = data.data[itemData.id] || {};
+          const iconHtml = fallbackItemIcon(resolveWikiName(name), name + " (item)", 32);
+          content.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              ${iconHtml}
+              <strong style="color:#ffae00;">${name}</strong>
+            </div>
+            <div>Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp</div>
+            <div>Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp</div>
+            <div style="font-size:10px; color:#7a8294; margin-top:4px;">Updated: ${formatTimeAgo(p.highTime ? Math.round((Date.now()/1000 - p.highTime)/60) : NaN)}</div>
+          `;
+        })
+        .catch(() => { content.innerHTML = "Failed to load price."; });
+    }
+  } else if (type === "boss") {
+    const bossKey = findBossKey(name) || name;
+    const items = bossCollectionCache[bossKey] || [];
+    if (items.length > 0) {
+      fetchPricesForItemNames(items).then(priceData => {
+        let html = `<strong style="color:#ffae00;">${bossKey} Uniques</strong><div style="max-height:200px; overflow-y:auto;">`;
+        items.forEach(itemTitle => {
+          const id = itemMap[itemTitle.toLowerCase()]?.id;
+          const p = id && priceData[id] ? priceData[id] : {};
+          const avg = p.high != null && p.low != null ? (p.high + p.low) / 2 : null;
+          html += `<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span>${fallbackItemIcon(resolveWikiName(itemTitle), itemTitle + " (item)", 16)} ${itemTitle}</span>
+            <span style="color:#00ff00;">${avg != null ? formatShortGP(avg) : "N/A"}</span>
+          </div>`;
+        });
+        html += "</div>";
+        content.innerHTML = html;
+      }).catch(() => { content.innerHTML = "Failed to load boss data."; });
+    } else {
+      content.innerHTML = "No tradeable uniques found.";
+    }
+  }
+}
+
+function removeFloatingCard(id) {
+  const div = floatingContainer.querySelector(`[data-id="${id}"]`);
+  if (div) {
+    div.style.opacity = "0";
+    div.style.transform = "scale(0.9)";
+    setTimeout(() => div.remove(), 200);
+  }
+  floatingCards = floatingCards.filter(f => f.id != id);
+  saveFloatingCards();
+}
+
+function clearAllFloating() {
+  floatingContainer.querySelectorAll(".floating-card").forEach(card => {
+    card.style.opacity = "0";
+    card.style.transform = "scale(0.9)";
+    setTimeout(() => card.remove(), 200);
+  });
+  floatingCards = [];
+  saveFloatingCards();
+}
+
+function restoreFloatingCards() {
+  try {
+    const data = JSON.parse(localStorage.getItem("floatingCards") || "[]");
+    data.forEach(fc => {
+      createFloatingCard(fc.type, fc.name, fc.x, fc.y);
+    });
+  } catch (e) {
+    console.error("Failed to restore floating cards", e);
+  }
+}
+
+// ---------- NEW: Drag-to-duplicate from main price box (top‑edge grab) ----------
+let dragState = null;
+let dragPreview = null;
+
+function startDrag(e) {
+    const type = priceBox.dataset.type;
+    const name = priceBox.dataset.name;
+    if (!type || !name) return;
+
+    // Only start if the click is near the top edge (within 40px)
+    if (e.offsetY > 40) return;
+
+    e.preventDefault();
+    document.body.style.userSelect = "none";
+
+    dragPreview = document.createElement("div");
+    dragPreview.className = "drag-preview";
+    dragPreview.style.display = "block";
+    dragPreview.style.left = (e.clientX - 150) + "px";
+    dragPreview.style.top = (e.clientY - 50) + "px";
+    document.body.appendChild(dragPreview);
+
+    dragState = {
+        type,
+        name,
+        previewEl: dragPreview,
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: 150,
+        offsetY: 50
+    };
+
+    priceBox.style.cursor = "grabbing";
+}
+
+function moveDrag(e) {
+    if (!dragState) return;
+    dragPreview.style.left = (e.clientX - dragState.offsetX) + "px";
+    dragPreview.style.top = (e.clientY - dragState.offsetY) + "px";
+}
+
+function endDrag(e) {
+    if (!dragState) return;
+
+    document.body.style.userSelect = "";
+    if (dragPreview) {
+        dragPreview.remove();
+        dragPreview = null;
+    }
+    priceBox.style.cursor = "";
+
+    const cardRect = card.getBoundingClientRect();
+    if (
+        e.clientX < cardRect.left ||
+        e.clientX > cardRect.right ||
+        e.clientY < cardRect.top ||
+        e.clientY > cardRect.bottom
+    ) {
+        createFloatingCard(
+            dragState.type,
+            dragState.name,
+            e.clientX - 150,
+            e.clientY - 50
+        );
+    }
+
+    dragState = null;
+}
+
+// Attach the new drag listeners
+priceBox.addEventListener("mousedown", startDrag);
+document.addEventListener("mousemove", moveDrag);
+document.addEventListener("mouseup", endDrag);
+
+// ---------- Attach clear all button ----------
+if (clearAllBtn) {
+  clearAllBtn.addEventListener("click", clearAllFloating);
+}
 
 // ---------- Right‑click (desktop) + long‑press (mobile) pin / unpin ----------
 let longPressTimer = null;
@@ -45,7 +284,6 @@ function attachPinListeners() {
     }
   }
 
-  // --- Attach to history items ---
   historyDiv.addEventListener("contextmenu", (e) => {
     const btn = e.target.closest(".hist-btn");
     if (!btn) return;
@@ -67,7 +305,6 @@ function attachPinListeners() {
   historyDiv.addEventListener("pointerleave", cancelLongPress);
   historyDiv.addEventListener("pointercancel", cancelLongPress);
 
-  // --- Attach to pinned items (for unpinning) ---
   if (pinnedDiv) {
     pinnedDiv.addEventListener("contextmenu", (e) => {
       const btn = e.target.closest(".hist-btn");
@@ -101,7 +338,7 @@ searchInput.addEventListener("click", () => {
   selectedIndex = -1;
 });
 
-// Close dropdown on outside click / close help box / close changelog
+// Close dropdown / close help box / close changelog
 document.addEventListener("click", (e) => {
   if (
     e.target !== searchInput &&
@@ -116,11 +353,7 @@ document.addEventListener("click", (e) => {
     helpBox.classList.remove("visible");
     if (infoIcon) infoIcon.style.color = "#7a8294";
   }
-  if (
-    changelogBox &&
-    !changelogBox.contains(e.target) &&
-    e.target !== updatesIcon
-  ) {
+  if (changelogBox && !changelogBox.contains(e.target) && e.target !== updatesIcon) {
     changelogVisible = false;
     changelogBox.classList.remove("visible");
     if (updatesIcon) updatesIcon.style.color = "#7a8294";
@@ -136,7 +369,6 @@ if (infoIcon) {
     helpVisible = !helpVisible;
     helpBox.classList.toggle("visible", helpVisible);
     infoIcon.style.color = helpVisible ? "#ffae00" : "#7a8294";
-    // Close changelog if open
     if (changelogVisible) {
       changelogVisible = false;
       changelogBox.classList.remove("visible");
@@ -154,19 +386,14 @@ if (updatesIcon) {
     changelogVisible = !changelogVisible;
     changelogBox.classList.toggle("visible", changelogVisible);
     updatesIcon.style.color = changelogVisible ? "#ffae00" : "#7a8294";
-
     if (changelogVisible) {
       const iconRect = updatesIcon.getBoundingClientRect();
       const cardRect = card.getBoundingClientRect();
-      // Panel is now a child of .card, so we can position it relative to the card
-      changelogBox.style.left = iconRect.right - cardRect.left + 15 + "px";
-      changelogBox.style.top = iconRect.top - cardRect.top + "px";
-      // Clear any right/bottom that might interfere
+      changelogBox.style.left = (iconRect.right - cardRect.left + 15) + "px";
+      changelogBox.style.top = (iconRect.top - cardRect.top) + "px";
       changelogBox.style.right = "auto";
       changelogBox.style.bottom = "auto";
     }
-
-    // Close help box if open
     if (helpVisible) {
       helpVisible = false;
       helpBox.classList.remove("visible");
