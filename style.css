@@ -119,6 +119,7 @@ body::after {
     flex-direction: column;
     align-items: center;
     transition: box-shadow 0.3s ease;
+    position: relative; /* NEW – changelog panel is positioned relative to this */
 }
 .card:hover,
 .card.glow {
@@ -578,7 +579,8 @@ body::after {
 }
 
 /* Info icon hover */
-#infoIcon:hover {
+#infoIcon:hover,
+#updatesIcon:hover {
     color: #ffae00;
 }
 
@@ -628,6 +630,7 @@ body::after {
 .icon-btn:active,
 .wiki-btn:active,
 #infoIcon:active,
+#updatesIcon:active,
 .hist-btn:active {
     transform: scale(0.92);
     transition: transform 0.1s;
@@ -642,6 +645,11 @@ body::after {
     );
     border-radius: 6px;
     padding-right: 10px;
+}
+
+/* Dance animation for Easter egg */
+.dance-animation {
+    animation: dance 0.5s ease;
 }
 
 @keyframes dance {
@@ -662,6 +670,6 @@ body::after {
     }
 }
 
-.dance-animation {
-    animation: dance 0.5s ease;
+#changelogBox {
+    text-align: left;
 }

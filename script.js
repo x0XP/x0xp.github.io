@@ -19,9 +19,12 @@ const searchInput = document.getElementById("itemSearch"),
   pinnedDiv = document.getElementById("pinned"),
   card = document.querySelector(".card"),
   infoIcon = document.getElementById("infoIcon"),
-  helpBox = document.getElementById("helpBox");
+  helpBox = document.getElementById("helpBox"),
+  updatesIcon = document.getElementById("updatesIcon"),
+  changelogBox = document.getElementById("changelogBox");
 
 let helpVisible = false;
+let changelogVisible = false;
 
 // ---------- Right‑click (desktop) + long‑press (mobile) pin / unpin ----------
 let longPressTimer = null;
@@ -98,7 +101,7 @@ searchInput.addEventListener("click", () => {
   selectedIndex = -1;
 });
 
-// Close dropdown on outside click / close help box
+// Close dropdown on outside click / close help box / close changelog
 document.addEventListener("click", (e) => {
   if (
     e.target !== searchInput &&
@@ -113,10 +116,19 @@ document.addEventListener("click", (e) => {
     helpBox.classList.remove("visible");
     if (infoIcon) infoIcon.style.color = "#7a8294";
   }
+  if (
+    changelogBox &&
+    !changelogBox.contains(e.target) &&
+    e.target !== updatesIcon
+  ) {
+    changelogVisible = false;
+    changelogBox.classList.remove("visible");
+    if (updatesIcon) updatesIcon.style.color = "#7a8294";
+  }
 });
 
 // ------------------------------------------------------------
-// Info icon toggle
+// Info icon toggle (with mutual exclusion)
 // ------------------------------------------------------------
 if (infoIcon) {
   infoIcon.addEventListener("click", (e) => {
@@ -124,7 +136,76 @@ if (infoIcon) {
     helpVisible = !helpVisible;
     helpBox.classList.toggle("visible", helpVisible);
     infoIcon.style.color = helpVisible ? "#ffae00" : "#7a8294";
+    // Close changelog if open
+    if (changelogVisible) {
+      changelogVisible = false;
+      changelogBox.classList.remove("visible");
+      if (updatesIcon) updatesIcon.style.color = "#7a8294";
+    }
   });
+}
+
+// ------------------------------------------------------------
+// Updates icon toggle (changelog) with mutual exclusion
+// ------------------------------------------------------------
+if (updatesIcon) {
+  updatesIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    changelogVisible = !changelogVisible;
+    changelogBox.classList.toggle("visible", changelogVisible);
+    updatesIcon.style.color = changelogVisible ? "#ffae00" : "#7a8294";
+
+    if (changelogVisible) {
+      const iconRect = updatesIcon.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      // Panel is now a child of .card, so we can position it relative to the card
+      changelogBox.style.left = iconRect.right - cardRect.left + 15 + "px";
+      changelogBox.style.top = iconRect.top - cardRect.top + "px";
+      // Clear any right/bottom that might interfere
+      changelogBox.style.right = "auto";
+      changelogBox.style.bottom = "auto";
+    }
+
+    // Close help box if open
+    if (helpVisible) {
+      helpVisible = false;
+      helpBox.classList.remove("visible");
+      infoIcon.style.color = "#7a8294";
+    }
+  });
+}
+
+// ------------------------------------------------------------
+// Fetch changelog from GitHub commits
+// ------------------------------------------------------------
+async function loadChangelog() {
+  try {
+    const res = await fetch(
+      "https://api.github.com/repos/x0XP/x0xp.github.io/commits?per_page=10",
+    );
+    const commits = await res.json();
+
+    const content = document.getElementById("changelogContent");
+    if (!content) return;
+
+    if (!Array.isArray(commits) || commits.length === 0) {
+      content.innerHTML = "No updates yet.";
+      return;
+    }
+
+    let html = "";
+    commits.forEach((commit) => {
+      const msg = commit.commit.message.split("\n")[0];
+      const date = new Date(commit.commit.author.date).toLocaleDateString();
+      html += `<div>${date} – ${msg}</div>`;
+    });
+
+    content.innerHTML = html;
+  } catch (e) {
+    console.error("Failed to load changelog", e);
+    const content = document.getElementById("changelogContent");
+    if (content) content.innerHTML = "Failed to load updates.";
+  }
 }
 
 // ------------------------------------------------------------
@@ -187,6 +268,7 @@ async function initTracker() {
   attachPinListeners();
   loadPinned();
   loadHistory();
+  loadChangelog(); // <-- fetch latest commits
 
   // Remove the fade‑in class after its animation ends (no more accidental re‑trigger)
   if (card) {

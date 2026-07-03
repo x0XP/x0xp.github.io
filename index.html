@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>x0XP</title>
 
-        <!-- Open Graph / Discord embed (dynamic tags are managed by the Cloudflare Worker) -->
+        <!-- Open Graph / Discord embed -->
         <meta property="og:title" content="x0XP OSRS Price Checker" />
         <meta
             property="og:description"
@@ -41,7 +41,47 @@
             <h1 id="username">
                 <span>x</span><span>0</span><span>X</span><span>P</span>
             </h1>
-            <p>OSRS Price Checker</p>
+
+            <!-- Subtitle with changelog icon -->
+            <p
+                style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                "
+            >
+                OSRS Price Checker
+                <span
+                    id="updatesIcon"
+                    style="
+                        cursor: pointer;
+                        display: inline-flex;
+                        align-items: center;
+                        color: #7a8294;
+                        transition: color 0.2s;
+                    "
+                >
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+                        />
+                        <rect x="9" y="3" width="6" height="4" rx="1" />
+                        <path d="M9 12h6" />
+                        <path d="M9 16h6" />
+                    </svg>
+                </span>
+            </p>
 
             <div class="button-container">
                 <div class="button-row">
@@ -67,7 +107,7 @@
             </div>
 
             <div class="ge-tracker">
-                <!-- Search bar with info icon inside -->
+                <!-- Search bar with only the info icon -->
                 <div style="position: relative">
                     <input
                         type="text"
@@ -134,7 +174,25 @@
                 <!-- Tooltip for share/wiki buttons -->
                 <div id="tooltip" class="tooltip"></div>
             </div>
+
+            <!-- Changelog panel – placed directly inside the card, outside the tracker -->
+            <div id="changelogBox" class="help-box" style="width: 260px">
+                <strong>Changelog</strong><br />
+                <div
+                    style="
+                        max-height: 150px;
+                        overflow-y: auto;
+                        margin-top: 6px;
+                        font-size: 10px;
+                        line-height: 1.4;
+                    "
+                    id="changelogContent"
+                >
+                    Loading…
+                </div>
+            </div>
         </div>
+
         <script src="script.js"></script>
     </body>
 </html>
