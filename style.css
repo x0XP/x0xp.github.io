@@ -468,3 +468,24 @@ body::after {
     opacity: 1;
     transform: translate(-50%, -2px);
 }
+
+/* --- Mobile fallback: show help box above instead of to the right --- */
+@media (max-width: 767px) {
+    .help-box {
+        /* Reset the right‑side positioning */
+        left: 50% !important;
+        top: auto !important;
+        right: auto !important;
+
+        /* Place it above the search bar (relative to .ge-tracker) */
+        bottom: calc(100% + 10px) !important;
+
+        /* Center it horizontally */
+        transform: translateX(-50%) !important;
+    }
+
+    .help-box.visible {
+        /* Keep it centered when visible (overrides the original translateX(0)) */
+        transform: translateX(-50%) !important;
+    }
+}
