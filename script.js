@@ -5,22 +5,101 @@ let selectedIndex = -1;
 let debounceTimer;
 let suppressDropdown = false;
 
+// DOM elements
 const searchInput = document.getElementById("itemSearch"),
   resultsDiv = document.getElementById("results"),
   priceBox = document.getElementById("priceDisplay"),
   historyDiv = document.getElementById("history"),
+  pinnedDiv = document.getElementById("pinned"),
   card = document.querySelector(".card"),
   infoIcon = document.getElementById("infoIcon"),
   helpBox = document.getElementById("helpBox");
 
 let helpVisible = false;
 
+// ------------------------------------------------------------
+// Right‑click pin / unpin
+// ------------------------------------------------------------
+// ---------- Right‑click (desktop) + long‑press (mobile) pin / unpin ----------
+let longPressTimer = null;
+
+function attachPinListeners() {
+  // Helper: start a long‑press timer
+  function startLongPress(e, name, action) {
+    // Prevent the default long‑press behaviour (e.g., text selection, magnifier)
+    e.preventDefault();
+    longPressTimer = setTimeout(() => {
+      togglePin(name, action);
+      longPressTimer = null;
+    }, 500); // 500 ms hold
+  }
+
+  // Helper: cancel any active long‑press
+  function cancelLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  // --- Attach to history items ---
+  historyDiv.addEventListener("contextmenu", (e) => {
+    const btn = e.target.closest(".hist-btn");
+    if (!btn) return;
+    e.preventDefault();
+    const name = btn.textContent.trim();
+    togglePin(name, "pin");
+  });
+
+  historyDiv.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest(".hist-btn");
+    if (!btn) return;
+    const name = btn.textContent.trim();
+    // Only trigger long‑press for touch / pen input (pointerType === "touch" or "pen")
+    if (e.pointerType === "touch" || e.pointerType === "pen") {
+      startLongPress(e, name, "pin");
+    }
+  });
+
+  historyDiv.addEventListener("pointerup", cancelLongPress);
+  historyDiv.addEventListener("pointerleave", cancelLongPress);
+  historyDiv.addEventListener("pointercancel", cancelLongPress);
+
+  // --- Attach to pinned items (for unpinning) ---
+  if (pinnedDiv) {
+    pinnedDiv.addEventListener("contextmenu", (e) => {
+      const btn = e.target.closest(".hist-btn");
+      if (!btn) return;
+      e.preventDefault();
+      const name = btn.textContent.trim();
+      togglePin(name, "unpin");
+    });
+
+    pinnedDiv.addEventListener("pointerdown", (e) => {
+      const btn = e.target.closest(".hist-btn");
+      if (!btn) return;
+      const name = btn.textContent.trim();
+      if (e.pointerType === "touch" || e.pointerType === "pen") {
+        startLongPress(e, name, "unpin");
+      }
+    });
+
+    pinnedDiv.addEventListener("pointerup", cancelLongPress);
+    pinnedDiv.addEventListener("pointerleave", cancelLongPress);
+    pinnedDiv.addEventListener("pointercancel", cancelLongPress);
+  }
+}
+
+// ------------------------------------------------------------
+// Search input click – clear and close dropdown
+// ------------------------------------------------------------
 searchInput.addEventListener("click", () => {
   searchInput.value = "";
   resultsDiv.style.display = "none";
   selectedIndex = -1;
 });
 
+// Close dropdown on outside click / close help box
 document.addEventListener("click", (e) => {
   if (
     e.target !== searchInput &&
@@ -49,24 +128,28 @@ if (infoIcon) {
   });
 }
 
-async function initTracker() {
-  // Helper to fetch with one retry
-  const fetchWithRetry = async (url, options, retries = 1) => {
-    for (let i = 0; i <= retries; i++) {
-      try {
-        const res = await fetch(url, options);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res;
-      } catch (e) {
-        if (i === retries) throw e;
-        console.warn(`Retry ${i + 1} for ${url}`);
-        await new Promise((r) => setTimeout(r, 1000)); // small delay before retry
-      }
+// ------------------------------------------------------------
+// Fetch with retry helper
+// ------------------------------------------------------------
+async function fetchWithRetry(url, options, retries = 1) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (e) {
+      if (i === retries) throw e;
+      console.warn(`Retry ${i + 1} for ${url}`);
+      await new Promise((r) => setTimeout(r, 1000));
     }
-  };
+  }
+}
 
+// ------------------------------------------------------------
+// Initialisation
+// ------------------------------------------------------------
+async function initTracker() {
   try {
-    // Critical: prices and mapping – retry once if needed
     const priceRes = await fetchWithRetry(
       "https://prices.runescape.wiki/api/v1/osrs/latest",
       { headers },
@@ -90,10 +173,8 @@ async function initTracker() {
       "Failed to load essential price data – the app may not work correctly.",
       e,
     );
-    // itemMap stays empty – the UI will show "No results"
   }
 
-  // Non‑critical: collection log can fail without breaking the app
   try {
     await loadCollectionLogData();
   } catch (e) {
@@ -101,13 +182,13 @@ async function initTracker() {
       "Collection log loading failed – boss searches won't work.",
       e,
     );
-    bossCollectionCache = {}; // ensure it's defined
+    bossCollectionCache = {};
   }
 
-  // Always load history, regardless of above errors
+  attachPinListeners();
+  loadPinned();
   loadHistory();
 
-  // Handle hash or saved item as before
   const hash = window.location.hash;
   if (hash) {
     const hashParams = parseHash(hash);
@@ -167,7 +248,7 @@ function animateCardHeight(updateCallback) {
     card.style.height = "auto";
     const endHeight = card.offsetHeight;
     card.style.height = startHeight + "px";
-    card.offsetHeight;
+    card.offsetHeight; // force reflow
     card.style.height = endHeight + "px";
 
     setTimeout(() => {
@@ -189,16 +270,13 @@ async function loadCollectionLogData() {
     return;
   }
 
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-
+  const doc = new DOMParser().parseFromString(html, "text/html");
   const cleanText = (str) =>
     str
       .replace(/\[edit\]/g, "")
       .replace(/’/g, "'")
       .replace(/‘/g, "'")
       .trim();
-
   const headings = doc.querySelectorAll("h3");
   const tables = Array.from(doc.querySelectorAll("table.wikitable"));
 
@@ -210,32 +288,10 @@ async function loadCollectionLogData() {
       const headingText = cleanText(heading.textContent);
       if (!headingText) return;
 
-      let targetTable = null;
-      for (let table of tables) {
-        const pos = heading.compareDocumentPosition(table);
-        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) {
-          targetTable = table;
-          break;
-        }
-      }
-      if (!targetTable) return;
+      const table = findNextTable(heading, tables);
+      if (!table) return;
 
-      const items = [];
-      const rows = targetTable.querySelectorAll("tr");
-      rows.forEach((row) => {
-        const cells = row.querySelectorAll("td");
-        if (cells.length === 0) return;
-        cells.forEach((cell) => {
-          const links = cell.querySelectorAll("a");
-          links.forEach((link) => {
-            const itemName = link.textContent.trim();
-            if (itemMap[itemName.toLowerCase()]) {
-              items.push(itemName);
-            }
-          });
-        });
-      });
-
+      const items = extractTradeableItems(table);
       if (items.length > 0) {
         bossMap[headingText] = [...new Set(items)];
         bossesWithItems++;
@@ -250,15 +306,40 @@ async function loadCollectionLogData() {
   bossCollectionCache = bossMap;
 }
 
+/** Find the next table after a heading element */
+function findNextTable(heading, tables) {
+  for (const table of tables) {
+    if (
+      heading.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING
+    ) {
+      return table;
+    }
+  }
+  return null;
+}
+
+/** Extract tradeable item names from a table (collection log format) */
+function extractTradeableItems(table) {
+  const items = [];
+  table.querySelectorAll("tr").forEach((row) => {
+    row.querySelectorAll("td").forEach((cell) => {
+      cell.querySelectorAll("a").forEach((link) => {
+        const name = link.textContent.trim();
+        if (itemMap[name.toLowerCase()]) {
+          items.push(name);
+        }
+      });
+    });
+  });
+  return items;
+}
+
 async function fetchHTML(pageTitle) {
   try {
     const url = `https://oldschool.runescape.wiki/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=text&format=json&origin=*`;
     const res = await fetch(url, { headers });
     const data = await res.json();
-    if (data.parse && data.parse.text) {
-      return data.parse.text["*"];
-    }
-    return null;
+    return data.parse?.text?.["*"] || null;
   } catch (e) {
     console.error(`Failed to fetch HTML for ${pageTitle}`, e);
     return null;
@@ -318,7 +399,6 @@ function saveHistory(name) {
       if (deltaX !== 0 || deltaY !== 0) {
         btn.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
         btn.style.transition = "none";
-
         requestAnimationFrame(() => {
           btn.style.transition = "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
           btn.style.transform = "none";
@@ -336,17 +416,107 @@ function saveHistory(name) {
   });
 }
 
+// ------------- Animated pinning (FLIP movement) -------------
+function loadPinned() {
+  const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
+  if (!pinnedDiv) return;
+  pinnedDiv.style.display = pinned.length ? "flex" : "none";
+  pinnedDiv.innerHTML = pinned
+    .map(
+      (n) => `
+        <span class="hist-btn pinned-item" style="color:#ffae00; cursor:pointer; transition: all 0.3s ease;"
+              onclick="getPrice('${n.replace(/'/g, "\\'")}')">
+          ${n}
+        </span>`,
+    )
+    .join("");
+}
+
 function loadHistory() {
   const hist = JSON.parse(localStorage.getItem("osrsHistory") || "[]");
   historyDiv.innerHTML = hist
     .map(
       (n) => `
-        <span class="hist-btn" onclick="getPrice('${n.replace(/'/g, "\\'")}')">${n}</span>
-    `,
+        <span class="hist-btn" style="cursor:pointer; transition: all 0.3s ease;"
+              onclick="getPrice('${n.replace(/'/g, "\\'")}')">
+          ${n}
+        </span>`,
     )
     .join("");
 }
 
+/**
+ * Toggle pinned state and animate movement between rows.
+ * @param {string} name - Item / boss name
+ * @param {"pin"|"unpin"} action
+ */
+window.togglePin = function (name, action) {
+  let pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
+  let history = JSON.parse(localStorage.getItem("osrsHistory") || "[]");
+
+  if (action === "pin") {
+    history = history.filter((n) => n !== name);
+    if (!pinned.includes(name)) pinned = [name, ...pinned].slice(0, 10);
+  } else {
+    pinned = pinned.filter((n) => n !== name);
+    if (!history.includes(name)) history = [name, ...history].slice(0, 5);
+  }
+  localStorage.setItem("osrsPinned", JSON.stringify(pinned));
+  localStorage.setItem("osrsHistory", JSON.stringify(history));
+
+  // 1. Capture old positions of all visible buttons
+  const oldButtons = [
+    ...pinnedDiv.querySelectorAll(".hist-btn"),
+    ...historyDiv.querySelectorAll(".hist-btn"),
+  ];
+  const oldPositions = oldButtons.map((btn) => {
+    const rect = btn.getBoundingClientRect();
+    return { name: btn.textContent.trim(), left: rect.left, top: rect.top };
+  });
+
+  // 2. Rebuild the lists
+  loadPinned();
+  loadHistory();
+
+  // 3. FLIP animation – move new elements from old positions to new positions
+  requestAnimationFrame(() => {
+    const newButtons = [
+      ...pinnedDiv.querySelectorAll(".hist-btn"),
+      ...historyDiv.querySelectorAll(".hist-btn"),
+    ];
+    newButtons.forEach((newBtn) => {
+      const btnName = newBtn.textContent.trim();
+      const oldPos = oldPositions.find((p) => p.name === btnName);
+      if (!oldPos) {
+        // New button – fade in
+        newBtn.style.opacity = "0";
+        newBtn.style.transform = "scale(0.9)";
+        requestAnimationFrame(() => {
+          newBtn.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+          newBtn.style.opacity = "1";
+          newBtn.style.transform = "none";
+        });
+        return;
+      }
+      const newRect = newBtn.getBoundingClientRect();
+      const deltaX = oldPos.left - newRect.left;
+      const deltaY = oldPos.top - newRect.top;
+      if (deltaX === 0 && deltaY === 0) return;
+
+      newBtn.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+      newBtn.style.transition = "none";
+      requestAnimationFrame(() => {
+        newBtn.style.transition =
+          "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)";
+        newBtn.style.transform = "none";
+      });
+    });
+  });
+};
+
+// ------------------------------------------------------------
+// Formatting helpers
+// ------------------------------------------------------------
 function formatGP(num) {
   if (!num && num !== 0) return "N/A";
   return num.toLocaleString();
@@ -419,6 +589,40 @@ function findClosestItem(text) {
 }
 
 // ------------------------------------------------------------
+// Resolve exact wiki page name (handles disambiguations)
+// ------------------------------------------------------------
+function resolveWikiName(itemName) {
+  const lower = itemName.toLowerCase();
+  if (itemMap[lower]) return itemMap[lower].name;
+  const withItem = lower + " (item)";
+  if (itemMap[withItem]) return itemMap[withItem].name;
+  for (const key of Object.keys(itemMap)) {
+    if (key.startsWith(lower + " (")) {
+      return itemMap[key].name;
+    }
+  }
+  return itemName;
+}
+
+// ------------------------------------------------------------
+// Build an <img> tag with automatic fallback to NAME_(item).png
+// ------------------------------------------------------------
+function fallbackItemIcon(primaryName, fallbackName, size = 20) {
+  const coinIcon = "https://oldschool.runescape.wiki/images/Coins_10000.png";
+
+  function safeFilename(str) {
+    return str.replace(/ /g, "_").replace(/'/g, "%27");
+  }
+
+  const primarySrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeFilename(primaryName)}.png`;
+  const fallbackSrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeFilename(fallbackName)}.png`;
+
+  return `<img src="${primarySrc}"
+       style="width:${size}px; height:${size}px; object-fit:contain; flex-shrink:0;"
+       onerror="this.onerror=null; this.src='${fallbackSrc}'; this.onerror=()=>this.src='${coinIcon}';">`;
+}
+
+// ------------------------------------------------------------
 // Fetch prices individually for each item (fully parallel)
 // ------------------------------------------------------------
 async function fetchPricesForItemNames(itemNames) {
@@ -452,7 +656,7 @@ async function fetchPricesForItemNames(itemNames) {
 }
 
 // ------------------------------------------------------------
-// Inline buttons (icon only) + tooltip support
+// Common icon button style
 // ------------------------------------------------------------
 const iconButtonStyle = `
     background: none;
@@ -474,8 +678,7 @@ function shareButtonHTML(url) {
                 style="${iconButtonStyle}"
                 onmouseover="this.style.color='#ffae00'"
                 onmouseout="this.style.color='#a8c7fa'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                 </svg>
@@ -489,20 +692,15 @@ function wikiButtonHTML(pageName) {
                 style="${iconButtonStyle} text-decoration: none;"
                 onmouseover="this.style.color='#ffae00'"
                 onmouseout="this.style.color='#a8c7fa'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"></line>
                     <polyline points="7 7 17 7 17 17"></polyline>
                 </svg>
             </a>`;
 }
 
-// Global copy function
 window.copyShareLink = function (url) {
-  navigator.clipboard
-    .writeText(url)
-    .then(() => {})
-    .catch(console.error);
+  navigator.clipboard.writeText(url).catch(console.error);
 };
 
 // ------------------------------------------------------------
@@ -525,7 +723,6 @@ function showTooltip(event, text) {
   const trackerRect = document
     .querySelector(".ge-tracker")
     .getBoundingClientRect();
-
   const tooltipX = targetRect.left - trackerRect.left + targetRect.width / 2;
   const tooltipY = targetRect.top - trackerRect.top - 32;
 
@@ -562,42 +759,35 @@ function generateDropdownHTML(entries, query) {
 
       if (entry.isBoss) {
         return `
-                <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
-                    <img src="https://oldschool.runescape.wiki/images/Collection_log_icon.png" class="suggest-icon" style="width:16px; height:16px;">
-                    <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(Collection Log)</span></span>
-                </div>
-            `;
+          <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
+              <img src="https://oldschool.runescape.wiki/images/Collection_log_icon.png" class="suggest-icon" style="width:16px; height:16px;">
+              <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(Collection Log)</span></span>
+          </div>`;
       }
 
       if (entry.isBossDrop) {
-        const filename =
-          entry.name.charAt(0).toUpperCase() +
-          entry.name.slice(1).replace(/ /g, "_").replace(/'/g, "%27");
-        const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+        const wikiName = resolveWikiName(entry.name);
+        const fallbackName = entry.name + " (item)";
         return `
-                <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
-                    <img src="${imgUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
-                    <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(${entry.boss} drop)</span></span>
-                </div>
-            `;
+          <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
+              ${fallbackItemIcon(wikiName, fallbackName)}
+              <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(${entry.boss} drop)</span></span>
+          </div>`;
       }
 
-      const filename =
-        entry.name.charAt(0).toUpperCase() +
-        entry.name.slice(1).replace(/ /g, "_").replace(/'/g, "%27");
-      const fastIconUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
+      const wikiName = resolveWikiName(entry.name);
+      const fallbackName = entry.name + " (item)";
       return `
-            <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')">
-                <img src="${fastIconUrl}" class="suggest-icon" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png'; this.onerror=null;">
-                <span>${highlightedName}</span>
-            </div>
-        `;
+        <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')">
+            ${fallbackItemIcon(wikiName, fallbackName)}
+            <span>${highlightedName}</span>
+        </div>`;
     })
     .join("");
 }
 
 // ------------------------------------------------------------
-// Search input handler
+// Search input handler (debounced suggestions)
 // ------------------------------------------------------------
 searchInput.addEventListener("input", () => {
   if (suppressDropdown) {
@@ -614,45 +804,9 @@ searchInput.addEventListener("input", () => {
   }
 
   debounceTimer = setTimeout(() => {
-    let combinedResults = [];
-
-    const allBossNames = Object.keys(bossCollectionCache);
-    const matchedBosses = allBossNames.filter((boss) =>
-      boss.toLowerCase().includes(valLower),
-    );
-
-    if (matchedBosses.length === 1) {
-      const boss = matchedBosses[0];
-      const items = bossCollectionCache[boss] || [];
-      if (items.length > 0) {
-        combinedResults = items.map((item) => ({
-          name: item,
-          isBossDrop: true,
-          boss: boss,
-        }));
-      } else {
-        combinedResults.push({ name: boss, isBoss: true });
-      }
-    } else if (matchedBosses.length > 1) {
-      combinedResults = matchedBosses.map((boss) => ({
-        name: boss,
-        isBoss: true,
-      }));
-    }
-
-    if (combinedResults.length === 0) {
-      Object.keys(itemMap).forEach((name) => {
-        if (name.includes(valLower)) {
-          combinedResults.push({ name: itemMap[name].name, isBoss: false });
-        }
-      });
-    }
-
-    if (combinedResults.length > 0) {
-      resultsDiv.innerHTML = generateDropdownHTML(
-        combinedResults.slice(0, 15),
-        val,
-      );
+    const results = buildSearchResults(valLower);
+    if (results.length > 0) {
+      resultsDiv.innerHTML = generateDropdownHTML(results.slice(0, 15), val);
       resultsDiv.style.display = "block";
       return;
     }
@@ -668,6 +822,45 @@ searchInput.addEventListener("input", () => {
   }, 250);
 });
 
+/**
+ * Build the array of suggestion entries for a given search term.
+ */
+function buildSearchResults(valLower) {
+  let results = [];
+  const allBossNames = Object.keys(bossCollectionCache);
+  const matchedBosses = allBossNames.filter((boss) =>
+    boss.toLowerCase().includes(valLower),
+  );
+
+  if (matchedBosses.length === 1) {
+    const boss = matchedBosses[0];
+    const items = bossCollectionCache[boss] || [];
+    if (items.length > 0) {
+      results = items.map((item) => ({
+        name: itemMap[item.toLowerCase()]?.name || item,
+        isBossDrop: true,
+        boss: boss,
+      }));
+    } else {
+      results.push({ name: boss, isBoss: true });
+    }
+  } else if (matchedBosses.length > 1) {
+    results = matchedBosses.map((boss) => ({ name: boss, isBoss: true }));
+  }
+
+  // Standard item matches
+  Object.keys(itemMap).forEach((name) => {
+    if (name.includes(valLower)) {
+      results.push({ name: itemMap[name].name, isBoss: false });
+    }
+  });
+
+  return results;
+}
+
+// ------------------------------------------------------------
+// Keyboard navigation + Enter to search
+// ------------------------------------------------------------
 searchInput.addEventListener("keydown", (e) => {
   const items = resultsDiv.getElementsByClassName("suggested-item");
   if (!items.length || items[0].innerText === "No results located") return;
@@ -722,6 +915,102 @@ function updateVisualSelection(elements) {
 }
 
 // ------------------------------------------------------------
+// Skeleton loader
+// ------------------------------------------------------------
+function skeletonLoader() {
+  return `
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
+            <div class="skeleton" style="height: 16px; width: 95%; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 13px; width: 65%; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 13px; width: 55%; border-radius: 4px;"></div>
+        </div>
+        <div class="skeleton" style="width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; margin-left: 15px;"></div>
+    </div>`;
+}
+
+// ------------------------------------------------------------
+// Icon resolver for the single item card (with thumbnail fallback)
+// ------------------------------------------------------------
+async function resolveItemIcon(itemData) {
+  const fetchThumbnail = async (pageName) => {
+    try {
+      const res = await fetch(
+        `https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(pageName)}&pithumbsize=200&redirects=1&origin=*`,
+      );
+      const data = await res.json();
+      const page = Object.values(data.query?.pages || {})[0];
+      return page?.thumbnail?.source || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  try {
+    let thumb = await fetchThumbnail(itemData.name);
+    if (!thumb) thumb = await fetchThumbnail(itemData.name + " (item)");
+
+    if (thumb) {
+      return `<img src="${thumb}" style="width:48px; height:48px; object-fit:contain; flex-shrink:0;">`;
+    }
+  } catch (e) {
+    /* fall through to fallback */
+  }
+
+  const wikiName = resolveWikiName(itemData.name);
+  const fallbackName = itemData.name + " (item)";
+  return fallbackItemIcon(wikiName, fallbackName, 48);
+}
+
+// ------------------------------------------------------------
+// Build a single item price card
+// ------------------------------------------------------------
+function buildItemCard(
+  name,
+  buy,
+  sell,
+  iconHtml,
+  relativeTime,
+  shareUrl,
+  wikiName,
+) {
+  return `
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div style="flex-grow: 1; padding-right: 12px; max-width: 75%;">
+            <strong style="display: block; margin: 0 0 8px 0; font-size: 16px; line-height: 1.2;">${name.toUpperCase()}</strong>
+            Buy: <span style="color:#00ff00">${formatGP(buy)}</span> gp<br>
+            Sell: <span style="color:#ff0000">${formatGP(sell)}</span> gp
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 8px;">
+          ${iconHtml}
+        </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
+        <span style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            ${shareButtonHTML(shareUrl)}
+            ${wikiButtonHTML(wikiName)}
+        </div>
+    </div>`;
+}
+
+// ------------------------------------------------------------
+// Build the boss unique list card
+// ------------------------------------------------------------
+function buildBossCard(bossKey, uniquesHtml, shareUrl) {
+  return `
+    <div style="text-align:left; width:100%;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
+            <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
+            <span style="position:relative; top:-2px; right:-4px;">${shareButtonHTML(shareUrl)}</span>
+        </div>
+        <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:10px;">
+            ${uniquesHtml}
+        </div>
+    </div>`;
+}
+
+// ------------------------------------------------------------
 // Price display (single item or boss list with live prices)
 // ------------------------------------------------------------
 async function getPrice(name, skipHistory = false) {
@@ -733,15 +1022,11 @@ async function getPrice(name, skipHistory = false) {
 
   priceBox.classList.remove("fade-in");
   priceBox.style.display = "block";
-
-  priceBox.innerHTML = `
-        <div style="display: flex; justify-content: center; padding: 20px;">
-            <div class="skeleton" style="height: 80px; width: 90%; border-radius: 8px;"></div>
-        </div>
-    `;
+  priceBox.innerHTML = skeletonLoader();
 
   let itemData = itemMap[name.toLowerCase()];
 
+  // Resolution chain for partial matches
   if (!itemData) {
     const val = name.toLowerCase();
     const closest = getClosestMatch(val);
@@ -759,8 +1044,8 @@ async function getPrice(name, skipHistory = false) {
     }
   }
 
+  // --- Boss view ---
   if (!itemData) {
-    // Boss view
     const bossKey = findBossKey(name);
     if (
       !bossKey ||
@@ -776,42 +1061,27 @@ async function getPrice(name, skipHistory = false) {
 
     let uniquesHtml = "";
     items.forEach((itemTitle) => {
-      const filename =
-        itemTitle.charAt(0).toUpperCase() +
-        itemTitle.slice(1).replace(/ /g, "_").replace(/'/g, "%27");
-      const imgUrl = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${filename}.png`;
-
+      const wikiName = resolveWikiName(itemTitle);
+      const fallbackName = itemTitle + " (item)";
       const id = itemMap[itemTitle.toLowerCase()]?.id;
       const p = id && priceData[id] ? priceData[id] : {};
       const avg = p.high != null && p.low != null ? (p.high + p.low) / 2 : null;
       const priceStr = avg != null ? formatShortGP(avg) : "N/A";
 
       uniquesHtml += `
-                <div class="suggested-item" style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
-                    <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
-                        <img src="${imgUrl}" style="width:20px; height:20px; object-fit:contain; flex-shrink:0;" onerror="this.src='https://oldschool.runescape.wiki/images/Coins_10000.png';">
-                        <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
-                    </div>
-                    <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
-                </div>
-            `;
+        <div class="suggested-item" style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
+            <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
+                ${fallbackItemIcon(wikiName, fallbackName)}
+                <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
+            </div>
+            <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+        </div>`;
     });
 
-    // *** UPDATED: Use Cloudflare Worker for share links ***
     const shareUrl = `https://embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
 
     animateCardHeight(() => {
-      priceBox.innerHTML = `
-                <div style="text-align:left; width:100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
-                        <strong style="font-size:14px; color:#ffae00; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
-                        <span style="position:relative; top:-2px; right:-4px;">${shareButtonHTML(shareUrl)}</span>
-                    </div>
-                    <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:10px;">
-                        ${uniquesHtml}
-                    </div>
-                </div>
-            `;
+      priceBox.innerHTML = buildBossCard(bossKey, uniquesHtml, shareUrl);
       attachTooltips(priceBox);
     });
     if (!skipHistory) saveHistory(bossKey);
@@ -819,52 +1089,35 @@ async function getPrice(name, skipHistory = false) {
     return;
   }
 
-  // Normal item price display
+  // --- Single item view ---
   try {
-    const [priceRes, wikiRes] = await Promise.all([
+    const [priceRes] = await Promise.all([
       fetch(
         `https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`,
         { headers },
       ),
-      fetch(
-        `https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=100&redirects=1&origin=*`,
-      ),
     ]);
 
     const priceData = await priceRes.json();
-    const wikiData = await wikiRes.json();
     const p = priceData.data[itemData.id] || {};
-    let iconUrl = "";
-    if (wikiData.query?.pages) {
-      const page = Object.values(wikiData.query.pages)[0];
-      iconUrl = page.thumbnail?.source || "";
-    }
-
     const relativeTime = formatTimeAgo(
       p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN,
     );
-
-    // *** UPDATED: Use Cloudflare Worker for share links ***
     const shareUrl = `https://embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}&ts=${Date.now()}`;
 
+    const iconHtml = await resolveItemIcon(itemData);
+    const cardHtml = buildItemCard(
+      name,
+      p.high,
+      p.low,
+      iconHtml,
+      relativeTime,
+      shareUrl,
+      name,
+    );
+
     animateCardHeight(() => {
-      priceBox.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                    <div style="flex-grow: 1; padding-right: 12px; max-width: 75%;">
-                        <strong style="display: block; margin: 0 0 8px 0; font-size: 16px; line-height: 1.2;">${name.toUpperCase()}</strong>
-                        Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp<br>
-                        Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp
-                    </div>
-                    ${iconUrl ? `<img src="${iconUrl}" style="max-width: 48px; max-height: 48px; object-fit: contain;">` : ""}
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
-                    <span style="font-size: 11px; color: #7a8294;">Updated: ${relativeTime}</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        ${shareButtonHTML(shareUrl)}
-                        ${wikiButtonHTML(name)}
-                    </div>
-                </div>
-            `;
+      priceBox.innerHTML = cardHtml;
       attachTooltips(priceBox);
     });
     updateUrlHash("item", name);
