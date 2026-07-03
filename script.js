@@ -50,11 +50,32 @@ if (infoIcon) {
 }
 
 async function initTracker() {
+  // Helper to fetch with one retry
+  const fetchWithRetry = async (url, options, retries = 1) => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res;
+      } catch (e) {
+        if (i === retries) throw e;
+        console.warn(`Retry ${i + 1} for ${url}`);
+        await new Promise((r) => setTimeout(r, 1000)); // small delay before retry
+      }
+    }
+  };
+
   try {
-    const [priceRes, mapRes] = await Promise.all([
-      fetch("https://prices.runescape.wiki/api/v1/osrs/latest", { headers }),
-      fetch("https://prices.runescape.wiki/api/v1/osrs/mapping", { headers }),
-    ]);
+    // Critical: prices and mapping – retry once if needed
+    const priceRes = await fetchWithRetry(
+      "https://prices.runescape.wiki/api/v1/osrs/latest",
+      { headers },
+    );
+    const mapRes = await fetchWithRetry(
+      "https://prices.runescape.wiki/api/v1/osrs/mapping",
+      { headers },
+    );
+
     const prices = await priceRes.json();
     const mappings = await mapRes.json();
 
@@ -64,28 +85,44 @@ async function initTracker() {
       }
     });
     console.log(`Loaded ${Object.keys(itemMap).length} tradeable items`);
-
-    await loadCollectionLogData();
-    loadHistory();
-
-    const hash = window.location.hash;
-    if (hash) {
-      const hashParams = parseHash(hash);
-      if (hashParams.item) {
-        getPrice(hashParams.item, true);
-        return;
-      }
-      if (hashParams.boss) {
-        getPrice(hashParams.boss, true);
-        return;
-      }
-    }
-
-    const savedItem = sessionStorage.getItem("lastSearchedItem");
-    if (savedItem) getPrice(savedItem, true);
   } catch (e) {
-    console.error("Initialization failed", e);
+    console.error(
+      "Failed to load essential price data – the app may not work correctly.",
+      e,
+    );
+    // itemMap stays empty – the UI will show "No results"
   }
+
+  // Non‑critical: collection log can fail without breaking the app
+  try {
+    await loadCollectionLogData();
+  } catch (e) {
+    console.error(
+      "Collection log loading failed – boss searches won't work.",
+      e,
+    );
+    bossCollectionCache = {}; // ensure it's defined
+  }
+
+  // Always load history, regardless of above errors
+  loadHistory();
+
+  // Handle hash or saved item as before
+  const hash = window.location.hash;
+  if (hash) {
+    const hashParams = parseHash(hash);
+    if (hashParams.item) {
+      getPrice(hashParams.item, true);
+      return;
+    }
+    if (hashParams.boss) {
+      getPrice(hashParams.boss, true);
+      return;
+    }
+  }
+
+  const savedItem = sessionStorage.getItem("lastSearchedItem");
+  if (savedItem) getPrice(savedItem, true);
 }
 
 // ------------------------------------------------------------
@@ -169,39 +206,43 @@ async function loadCollectionLogData() {
   let bossesWithItems = 0;
 
   headings.forEach((heading) => {
-    const headingText = cleanText(heading.textContent);
-    if (!headingText) return;
+    try {
+      const headingText = cleanText(heading.textContent);
+      if (!headingText) return;
 
-    let targetTable = null;
-    for (let table of tables) {
-      const pos = heading.compareDocumentPosition(table);
-      if (pos & Node.DOCUMENT_POSITION_FOLLOWING) {
-        targetTable = table;
-        break;
+      let targetTable = null;
+      for (let table of tables) {
+        const pos = heading.compareDocumentPosition(table);
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) {
+          targetTable = table;
+          break;
+        }
       }
-    }
-    if (!targetTable) return;
+      if (!targetTable) return;
 
-    const items = [];
-    const rows = targetTable.querySelectorAll("tr");
-    rows.forEach((row) => {
-      const cells = row.querySelectorAll("td");
-      if (cells.length === 0) return;
-      cells.forEach((cell) => {
-        const links = cell.querySelectorAll("a");
-        links.forEach((link) => {
-          const itemName = link.textContent.trim();
-          if (itemMap[itemName.toLowerCase()]) {
-            items.push(itemName);
-          }
+      const items = [];
+      const rows = targetTable.querySelectorAll("tr");
+      rows.forEach((row) => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length === 0) return;
+        cells.forEach((cell) => {
+          const links = cell.querySelectorAll("a");
+          links.forEach((link) => {
+            const itemName = link.textContent.trim();
+            if (itemMap[itemName.toLowerCase()]) {
+              items.push(itemName);
+            }
+          });
         });
       });
-    });
 
-    if (items.length > 0) {
-      bossMap[headingText] = [...new Set(items)];
-      bossesWithItems++;
-      console.log(`✅ ${headingText}: [${bossMap[headingText].join(", ")}]`);
+      if (items.length > 0) {
+        bossMap[headingText] = [...new Set(items)];
+        bossesWithItems++;
+        console.log(`✅ ${headingText}: [${bossMap[headingText].join(", ")}]`);
+      }
+    } catch (e) {
+      console.warn("Skipping malformed boss section", e);
     }
   });
 
