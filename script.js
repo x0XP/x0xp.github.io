@@ -1,4 +1,10 @@
 const headers = { "User-Agent": "x0XP-Item-Price-Checker - .x0xp on Discord" };
+
+// Easter eggs
+const easterEggs = {
+  dance: true,
+};
+
 let itemMap = {};
 let bossCollectionCache = {};
 let selectedIndex = -1;
@@ -181,6 +187,17 @@ async function initTracker() {
   attachPinListeners();
   loadPinned();
   loadHistory();
+
+  // Remove the fade‑in class after its animation ends (no more accidental re‑trigger)
+  if (card) {
+    card.addEventListener(
+      "animationend",
+      () => {
+        card.classList.remove("fade-in");
+      },
+      { once: true },
+    );
+  }
 
   const hash = window.location.hash;
   if (hash) {
@@ -861,6 +878,56 @@ function buildSearchResults(valLower) {
 // Keyboard navigation + Enter to search
 // ------------------------------------------------------------
 searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    clearTimeout(debounceTimer);
+    resultsDiv.style.display = "none";
+    suppressDropdown = true;
+
+    const val = searchInput.value.trim().toLowerCase();
+
+    // Easter egg check – runs before any other resolution
+    if (easterEggs[val]) {
+      card.classList.add("dance-animation");
+      setTimeout(() => {
+        card.classList.remove("dance-animation");
+      }, 500);
+      return;
+    }
+
+    // Normal dropdown navigation / resolution
+    const items = resultsDiv.getElementsByClassName("suggested-item");
+    if (items.length && items[0].innerText !== "No results located") {
+      if (selectedIndex > -1 && items[selectedIndex]) {
+        items[selectedIndex].click();
+        return;
+      }
+    }
+
+    const bossKey = findBossKey(val);
+    if (bossKey) {
+      getPrice(bossKey);
+      return;
+    }
+    if (itemMap[val]) {
+      getPrice(itemMap[val].name);
+      return;
+    }
+    const closest = getClosestMatch(val);
+    if (closest) {
+      getPrice(closest.name);
+      return;
+    }
+    const prefixMatch = findClosestItem(val);
+    if (prefixMatch) {
+      getPrice(prefixMatch.name);
+      return;
+    }
+    getPrice(val);
+    return;
+  }
+
+  // Arrow key navigation (only if dropdown is visible)
   const items = resultsDiv.getElementsByClassName("suggested-item");
   if (!items.length || items[0].innerText === "No results located") return;
 
@@ -872,37 +939,6 @@ searchInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : items.length - 1;
     updateVisualSelection(items);
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    clearTimeout(debounceTimer);
-    resultsDiv.style.display = "none";
-    suppressDropdown = true;
-
-    if (selectedIndex > -1 && items[selectedIndex]) {
-      items[selectedIndex].click();
-    } else {
-      const val = searchInput.value.trim().toLowerCase();
-      const bossKey = findBossKey(val);
-      if (bossKey) {
-        getPrice(bossKey);
-        return;
-      }
-      if (itemMap[val]) {
-        getPrice(itemMap[val].name);
-        return;
-      }
-      const closest = getClosestMatch(val);
-      if (closest) {
-        getPrice(closest.name);
-        return;
-      }
-      const prefixMatch = findClosestItem(val);
-      if (prefixMatch) {
-        getPrice(prefixMatch.name);
-        return;
-      }
-      getPrice(val);
-    }
   }
 });
 
@@ -1019,7 +1055,7 @@ async function getPrice(name, skipHistory = false) {
   if (!skipHistory) saveHistory(name);
   sessionStorage.setItem("lastSearchedItem", name);
 
-  priceBox.classList.remove("visible"); // reset entrance animation
+  priceBox.classList.remove("visible");
   priceBox.style.display = "block";
   priceBox.innerHTML = skeletonLoader();
 

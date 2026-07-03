@@ -643,3 +643,25 @@ body::after {
     border-radius: 6px;
     padding-right: 10px;
 }
+
+@keyframes dance {
+    0% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(2deg);
+    }
+    50% {
+        transform: rotate(-2deg);
+    }
+    75% {
+        transform: rotate(1deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.dance-animation {
+    animation: dance 0.5s ease;
+}
