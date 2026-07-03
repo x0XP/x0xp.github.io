@@ -804,7 +804,7 @@ async function getPrice(name, skipHistory = false) {
     );
 
     // *** UPDATED: Use Cloudflare Worker for share links ***
-    const shareUrl = `https://x0xp-embed.embed.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}&ts=${Date.now()}`;
+    const shareUrl = `https://embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}&ts=${Date.now()}`;
 
     animateCardHeight(() => {
       priceBox.innerHTML = `
