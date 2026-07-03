@@ -17,24 +17,18 @@ const searchInput = document.getElementById("itemSearch"),
 
 let helpVisible = false;
 
-// ------------------------------------------------------------
-// Right‑click pin / unpin
-// ------------------------------------------------------------
 // ---------- Right‑click (desktop) + long‑press (mobile) pin / unpin ----------
 let longPressTimer = null;
 
 function attachPinListeners() {
-  // Helper: start a long‑press timer
   function startLongPress(e, name, action) {
-    // Prevent the default long‑press behaviour (e.g., text selection, magnifier)
     e.preventDefault();
     longPressTimer = setTimeout(() => {
       togglePin(name, action);
       longPressTimer = null;
-    }, 500); // 500 ms hold
+    }, 500);
   }
 
-  // Helper: cancel any active long‑press
   function cancelLongPress() {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -55,7 +49,6 @@ function attachPinListeners() {
     const btn = e.target.closest(".hist-btn");
     if (!btn) return;
     const name = btn.textContent.trim();
-    // Only trigger long‑press for touch / pen input (pointerType === "touch" or "pen")
     if (e.pointerType === "touch" || e.pointerType === "pen") {
       startLongPress(e, name, "pin");
     }
@@ -306,7 +299,6 @@ async function loadCollectionLogData() {
   bossCollectionCache = bossMap;
 }
 
-/** Find the next table after a heading element */
 function findNextTable(heading, tables) {
   for (const table of tables) {
     if (
@@ -318,7 +310,6 @@ function findNextTable(heading, tables) {
   return null;
 }
 
-/** Extract tradeable item names from a table (collection log format) */
 function extractTradeableItems(table) {
   const items = [];
   table.querySelectorAll("tr").forEach((row) => {
@@ -374,6 +365,12 @@ function saveHistory(name) {
     finalName = itemMap[name.toLowerCase()].name;
   }
 
+  // *** NEW: Don't save pinned items to history ***
+  const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
+  if (pinned.includes(finalName)) {
+    return; // item is already pinned, skip history
+  }
+
   const oldButtons = Array.from(historyDiv.children);
   const oldPositions = oldButtons.map((btn) => {
     const rect = btn.getBoundingClientRect();
@@ -425,7 +422,8 @@ function loadPinned() {
     .map(
       (n) => `
         <span class="hist-btn pinned-item" style="color:#ffae00; cursor:pointer; transition: all 0.3s ease;"
-              onclick="getPrice('${n.replace(/'/g, "\\'")}')">
+              onclick="getPrice('${n.replace(/'/g, "\\'")}')"
+              onselectstart="return false;">
           ${n}
         </span>`,
     )
@@ -434,22 +432,21 @@ function loadPinned() {
 
 function loadHistory() {
   const hist = JSON.parse(localStorage.getItem("osrsHistory") || "[]");
-  historyDiv.innerHTML = hist
+  const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
+  // *** NEW: filter out any pinned items that might still be in history ***
+  const filtered = hist.filter((n) => !pinned.includes(n));
+  historyDiv.innerHTML = filtered
     .map(
       (n) => `
         <span class="hist-btn" style="cursor:pointer; transition: all 0.3s ease;"
-              onclick="getPrice('${n.replace(/'/g, "\\'")}')">
+              onclick="getPrice('${n.replace(/'/g, "\\'")}')"
+              onselectstart="return false;">
           ${n}
         </span>`,
     )
     .join("");
 }
 
-/**
- * Toggle pinned state and animate movement between rows.
- * @param {string} name - Item / boss name
- * @param {"pin"|"unpin"} action
- */
 window.togglePin = function (name, action) {
   let pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
   let history = JSON.parse(localStorage.getItem("osrsHistory") || "[]");
@@ -464,7 +461,6 @@ window.togglePin = function (name, action) {
   localStorage.setItem("osrsPinned", JSON.stringify(pinned));
   localStorage.setItem("osrsHistory", JSON.stringify(history));
 
-  // 1. Capture old positions of all visible buttons
   const oldButtons = [
     ...pinnedDiv.querySelectorAll(".hist-btn"),
     ...historyDiv.querySelectorAll(".hist-btn"),
@@ -474,11 +470,9 @@ window.togglePin = function (name, action) {
     return { name: btn.textContent.trim(), left: rect.left, top: rect.top };
   });
 
-  // 2. Rebuild the lists
   loadPinned();
   loadHistory();
 
-  // 3. FLIP animation – move new elements from old positions to new positions
   requestAnimationFrame(() => {
     const newButtons = [
       ...pinnedDiv.querySelectorAll(".hist-btn"),
@@ -488,7 +482,6 @@ window.togglePin = function (name, action) {
       const btnName = newBtn.textContent.trim();
       const oldPos = oldPositions.find((p) => p.name === btnName);
       if (!oldPos) {
-        // New button – fade in
         newBtn.style.opacity = "0";
         newBtn.style.transform = "scale(0.9)";
         requestAnimationFrame(() => {
@@ -822,9 +815,6 @@ searchInput.addEventListener("input", () => {
   }, 250);
 });
 
-/**
- * Build the array of suggestion entries for a given search term.
- */
 function buildSearchResults(valLower) {
   let results = [];
   const allBossNames = Object.keys(bossCollectionCache);
@@ -848,7 +838,6 @@ function buildSearchResults(valLower) {
     results = matchedBosses.map((boss) => ({ name: boss, isBoss: true }));
   }
 
-  // Standard item matches
   Object.keys(itemMap).forEach((name) => {
     if (name.includes(valLower)) {
       results.push({ name: itemMap[name].name, isBoss: false });
@@ -1026,7 +1015,6 @@ async function getPrice(name, skipHistory = false) {
 
   let itemData = itemMap[name.toLowerCase()];
 
-  // Resolution chain for partial matches
   if (!itemData) {
     const val = name.toLowerCase();
     const closest = getClosestMatch(val);
@@ -1044,7 +1032,6 @@ async function getPrice(name, skipHistory = false) {
     }
   }
 
-  // --- Boss view ---
   if (!itemData) {
     const bossKey = findBossKey(name);
     if (
@@ -1089,7 +1076,7 @@ async function getPrice(name, skipHistory = false) {
     return;
   }
 
-  // --- Single item view ---
+  // Single item view
   try {
     const [priceRes] = await Promise.all([
       fetch(
