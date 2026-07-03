@@ -2,7 +2,10 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <!-- Open Graph / Discord embed -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>x0XP</title>
+
+        <!-- Open Graph / Discord embed (dynamic tags are managed by the Cloudflare Worker) -->
         <meta property="og:title" content="x0XP OSRS Price Checker" />
         <meta
             property="og:description"
@@ -16,10 +19,16 @@
         <meta property="og:type" content="website" />
         <meta name="theme-color" content="#ffae00" />
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>x0XP's Price Checker</title>
-        <link rel="icon" type="image/x-icon" href="favicon.png" />
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="favicon.png" />
         <link rel="apple-touch-icon" href="favicon.png" />
+
+        <!-- OSRS Pixel Font -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+            rel="stylesheet"
+        />
+
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -27,12 +36,12 @@
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
-        <div class="card">
+        <div class="card fade-in">
             <img src="image0.jpg" alt="Avatar" class="avatar" />
             <h1 id="username">
                 <span>x</span><span>0</span><span>X</span><span>P</span>
             </h1>
-            <p>OSRS Utils</p>
+            <p>OSRS Price Checker</p>
 
             <div class="button-container">
                 <div class="button-row">
@@ -116,7 +125,7 @@
                     • Search any item or boss name.<br />
                     • <b>Enter</b> to see price or boss uniques.<br />
                     • <b>Right‑click</b> (or long‑press on mobile) a recent
-                    search to <b>pin</b> it.<br />
+                    search to <b>pin</b> it above.<br />
                     • Use the <b>share</b> icon to copy a link with a live
                     Discord embed.<br />
                     • The <b>wiki</b> icon opens the official OSRS Wiki page.

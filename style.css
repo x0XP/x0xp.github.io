@@ -7,10 +7,10 @@ body {
     margin: 0;
     padding: 0;
     width: 100%;
-    min-height: 100%; /* allow body to grow */
+    min-height: 100%;
     font-family: sans-serif;
-    overflow-x: hidden; /* keep horizontal hidden */
-    overflow-y: auto; /* allow vertical scroll when needed */
+    overflow-x: hidden;
+    overflow-y: auto;
     background-color: #060814;
 }
 
@@ -20,9 +20,9 @@ body {
         url("image0.jpg") center/cover no-repeat fixed;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* align card to top when scrolling */
+    align-items: flex-start;
     min-height: 100vh;
-    padding: 20px 0; /* some breathing room at top/bottom */
+    padding: 20px 0;
     position: relative;
 }
 
@@ -94,15 +94,15 @@ body::after {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: translateY(10px) scale(0.98);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 .fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: fadeIn 0.5s ease-out forwards;
 }
 
 /* --- Card --- */
@@ -118,6 +118,11 @@ body::after {
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: box-shadow 0.3s ease;
+}
+.card:hover,
+.card.glow {
+    box-shadow: 0 0 18px rgba(255, 174, 0, 0.25);
 }
 
 .avatar {
@@ -129,15 +134,95 @@ body::after {
     border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-#username,
-.username {
+/* ---- OSRS Pixel Title with Tiny Floating Squares ---- */
+#username {
+    font-family: "Press Start 2P", monospace;
+    font-size: 24px;
     margin: 0 0 4px 0;
-    font-size: 28px;
-    color: #ffffff !important;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    color: #ffcc00 !important;
+    text-shadow: 0 0 8px rgba(255, 200, 0, 0.6);
+    letter-spacing: 2px;
+    position: relative;
+    display: inline-block;
+    overflow: visible;
 }
 
+/* Tiny 1×1 anchor for the floating squares */
+#username::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Show and animate the squares on hover */
+#username:hover::after {
+    opacity: 1;
+    animation: pixelGlitch 1s steps(3) infinite;
+}
+
+@keyframes pixelGlitch {
+    0% {
+        box-shadow:
+            15px -8px 0 0 rgba(255, 200, 0, 0.9),
+            -20px 10px 0 0 rgba(255, 0, 0, 0.8),
+            30px 5px 0 0 rgba(0, 255, 255, 0.8),
+            -25px -12px 0 0 rgba(255, 200, 0, 0.7),
+            5px 20px 0 0 rgba(255, 0, 0, 0.6),
+            40px -2px 0 0 rgba(0, 255, 255, 0.7),
+            -10px -20px 0 0 rgba(255, 200, 0, 0.6),
+            -35px 0px 0 0 rgba(255, 0, 0, 0.9),
+            10px 25px 0 0 rgba(0, 255, 255, 0.8),
+            -30px 15px 0 0 rgba(255, 200, 0, 0.8);
+    }
+    33% {
+        box-shadow:
+            20px -5px 0 0 rgba(255, 200, 0, 0.8),
+            -15px 12px 0 0 rgba(255, 0, 0, 0.7),
+            35px 8px 0 0 rgba(0, 255, 255, 0.9),
+            -22px -10px 0 0 rgba(255, 200, 0, 0.7),
+            8px 18px 0 0 rgba(255, 0, 0, 0.9),
+            45px -4px 0 0 rgba(0, 255, 255, 0.6),
+            -12px -18px 0 0 rgba(255, 200, 0, 0.8),
+            -38px 2px 0 0 rgba(255, 0, 0, 0.6),
+            12px 22px 0 0 rgba(0, 255, 255, 0.9),
+            -28px 14px 0 0 rgba(255, 200, 0, 0.7);
+    }
+    66% {
+        box-shadow:
+            18px -7px 0 0 rgba(255, 200, 0, 0.7),
+            -18px 11px 0 0 rgba(255, 0, 0, 0.9),
+            28px 4px 0 0 rgba(0, 255, 255, 0.7),
+            -28px -8px 0 0 rgba(255, 200, 0, 0.8),
+            7px 23px 0 0 rgba(255, 0, 0, 0.7),
+            38px -6px 0 0 rgba(0, 255, 255, 0.8),
+            -8px -22px 0 0 rgba(255, 200, 0, 0.9),
+            -32px 1px 0 0 rgba(255, 0, 0, 0.8),
+            14px 20px 0 0 rgba(0, 255, 255, 0.6),
+            -24px 16px 0 0 rgba(255, 200, 0, 0.7);
+    }
+    100% {
+        box-shadow:
+            15px -8px 0 0 rgba(255, 200, 0, 0.9),
+            -20px 10px 0 0 rgba(255, 0, 0, 0.8),
+            30px 5px 0 0 rgba(0, 255, 255, 0.8),
+            -25px -12px 0 0 rgba(255, 200, 0, 0.7),
+            5px 20px 0 0 rgba(255, 0, 0, 0.6),
+            40px -2px 0 0 rgba(0, 255, 255, 0.7),
+            -10px -20px 0 0 rgba(255, 200, 0, 0.6),
+            -35px 0px 0 0 rgba(255, 0, 0, 0.9),
+            10px 25px 0 0 rgba(0, 255, 255, 0.8),
+            -30px 15px 0 0 rgba(255, 200, 0, 0.8);
+    }
+}
+
+/* Subtitle colour fix */
 .card #username + *,
 .card #username + div,
 .card #username + p,
@@ -210,6 +295,14 @@ body::after {
     color: white;
     border-radius: 5px;
     z-index: 5;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+#itemSearch:focus {
+    border-color: #ffae00;
+    box-shadow: 0 0 8px rgba(255, 174, 0, 0.3);
+    outline: none;
 }
 
 .results-list {
@@ -233,7 +326,7 @@ body::after {
     cursor: pointer;
     color: #ddd;
     font-size: 12px;
-    border-left: 3px solid transparent; /* hidden until hover */
+    border-left: 3px solid transparent;
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease,
@@ -242,8 +335,8 @@ body::after {
 
 .suggested-item:hover {
     background-color: #2a2e3a;
-    border-left-color: #ffae00; /* gold glow stripe */
-    transform: translateX(2px) scale(1.02); /* slight nudge + subtle scale */
+    border-left-color: #ffae00;
+    transform: translateX(2px) scale(1.02);
 }
 
 .suggest-icon {
@@ -267,9 +360,18 @@ body::after {
     color: white;
     width: 100%;
     position: relative;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+}
+.price-box.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
-/* ----- Dark Theme Scrollbar ----- */
+/* ----- Dark Theme Scrollbar (WebKit) ----- */
 .results-list::-webkit-scrollbar,
 .price-box .scrollable-list::-webkit-scrollbar {
     width: 6px;
@@ -277,26 +379,35 @@ body::after {
 
 .results-list::-webkit-scrollbar-track,
 .price-box .scrollable-list::-webkit-scrollbar-track {
-    background: #14171f; /* darkest background */
+    background: #14171f;
     border-radius: 3px;
 }
 
 .results-list::-webkit-scrollbar-thumb,
 .price-box .scrollable-list::-webkit-scrollbar-thumb {
-    background: #2a2e3a; /* matches your card borders */
+    background: #2a2e3a;
     border-radius: 3px;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .results-list::-webkit-scrollbar-thumb:hover,
 .price-box .scrollable-list::-webkit-scrollbar-thumb:hover {
-    background: #3a3f4e;
+    background: #4a4f5e;
+    box-shadow: 0 0 8px rgba(255, 174, 0, 0.4);
 }
 
-/* Firefox */
+/* ----- Dark Theme Scrollbar (Firefox) ----- */
 .results-list,
 .price-box .scrollable-list {
     scrollbar-width: thin;
     scrollbar-color: #2a2e3a #14171f;
+}
+
+.results-list:hover,
+.price-box .scrollable-list:hover {
+    scrollbar-color: #4a4f5e #14171f;
 }
 
 .price-container {
@@ -336,7 +447,7 @@ body::after {
     text-align: left;
 }
 
-/* Wiki button (icon only) - kept minimal, mostly overridden by inline styles */
+/* Wiki button (icon only) */
 .wiki-btn {
     display: inline-flex;
     align-items: center;
@@ -357,7 +468,6 @@ body::after {
     height: 22px;
     box-sizing: border-box;
 }
-/* (Hover is handled inline, but we keep a fallback for any non-inline situation) */
 .wiki-btn:hover {
     background: #383f52;
     color: #ffae00;
@@ -388,20 +498,20 @@ body::after {
 .history-list {
     display: flex;
     gap: 6px;
-    margin-top: 6px; /* reduced from 14px to match gap */
+    margin-top: 6px;
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
 }
 
-/* Pinned items row – identical spacing to history */
+/* Pinned items row */
 .pinned-list {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
-    margin: 8px 0 0 0; /* only top margin */
+    margin: 8px 0 0 0;
 }
 
 .hist-btn {
@@ -417,6 +527,10 @@ body::after {
         color 0.3s ease,
         background-color 0.3s ease,
         transform 0.3s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 .hist-btn:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -437,7 +551,7 @@ body::after {
 ------------------------------------------------------------ */
 .help-box {
     position: absolute;
-    left: calc(100% + 15px); /* 15px gap to the right of the card */
+    left: calc(100% + 15px);
     top: 0;
     width: 220px;
     background: rgba(10, 14, 23, 0.95);
@@ -498,28 +612,34 @@ body::after {
 /* --- Mobile fallback: show help box above instead of to the right --- */
 @media (max-width: 767px) {
     .help-box {
-        /* Reset the right‑side positioning */
         left: 50% !important;
         top: auto !important;
         right: auto !important;
-
-        /* Place it above the search bar (relative to .ge-tracker) */
         bottom: calc(100% + 10px) !important;
-
-        /* Center it horizontally */
         transform: translateX(-50%) !important;
     }
 
     .help-box.visible {
-        /* Keep it centered when visible (overrides the original translateX(0)) */
         transform: translateX(-50%) !important;
     }
 }
 
-/* Prevent text selection and magnifier on history/pinned buttons (mobile) */
-.hist-btn {
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-    -webkit-touch-callout: none;
+/* Button press effect (active state) */
+.icon-btn:active,
+.wiki-btn:active,
+#infoIcon:active,
+.hist-btn:active {
+    transform: scale(0.92);
+    transition: transform 0.1s;
+}
+
+/* Smooth background for scrollable list */
+.scrollable-list {
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.04),
+        rgba(255, 255, 255, 0.01)
+    );
+    border-radius: 6px;
+    padding-right: 10px;
 }

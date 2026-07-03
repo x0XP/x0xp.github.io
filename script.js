@@ -365,10 +365,9 @@ function saveHistory(name) {
     finalName = itemMap[name.toLowerCase()].name;
   }
 
-  // *** NEW: Don't save pinned items to history ***
   const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
   if (pinned.includes(finalName)) {
-    return; // item is already pinned, skip history
+    return;
   }
 
   const oldButtons = Array.from(historyDiv.children);
@@ -420,31 +419,42 @@ function loadPinned() {
   pinnedDiv.style.display = pinned.length ? "flex" : "none";
   pinnedDiv.innerHTML = pinned
     .map(
-      (n) => `
-        <span class="hist-btn pinned-item" style="color:#ffae00; cursor:pointer; transition: all 0.3s ease;"
+      (n, i) => `
+        <span class="hist-btn pinned-item" style="opacity:0; transform:translateY(6px); transition: all 0.3s ease ${i * 0.04}s; color:#ffae00;"
               onclick="getPrice('${n.replace(/'/g, "\\'")}')"
               onselectstart="return false;">
           ${n}
         </span>`,
     )
     .join("");
+  requestAnimationFrame(() => {
+    pinnedDiv.querySelectorAll(".hist-btn").forEach((btn) => {
+      btn.style.opacity = "1";
+      btn.style.transform = "none";
+    });
+  });
 }
 
 function loadHistory() {
   const hist = JSON.parse(localStorage.getItem("osrsHistory") || "[]");
   const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
-  // *** NEW: filter out any pinned items that might still be in history ***
   const filtered = hist.filter((n) => !pinned.includes(n));
   historyDiv.innerHTML = filtered
     .map(
-      (n) => `
-        <span class="hist-btn" style="cursor:pointer; transition: all 0.3s ease;"
+      (n, i) => `
+        <span class="hist-btn" style="opacity:0; transform:translateY(6px); transition: all 0.3s ease ${i * 0.04}s;"
               onclick="getPrice('${n.replace(/'/g, "\\'")}')"
               onselectstart="return false;">
           ${n}
         </span>`,
     )
     .join("");
+  requestAnimationFrame(() => {
+    historyDiv.querySelectorAll(".hist-btn").forEach((btn) => {
+      btn.style.opacity = "1";
+      btn.style.transform = "none";
+    });
+  });
 }
 
 window.togglePin = function (name, action) {
@@ -1009,7 +1019,7 @@ async function getPrice(name, skipHistory = false) {
   if (!skipHistory) saveHistory(name);
   sessionStorage.setItem("lastSearchedItem", name);
 
-  priceBox.classList.remove("fade-in");
+  priceBox.classList.remove("visible"); // reset entrance animation
   priceBox.style.display = "block";
   priceBox.innerHTML = skeletonLoader();
 
@@ -1040,6 +1050,7 @@ async function getPrice(name, skipHistory = false) {
       bossCollectionCache[bossKey].length === 0
     ) {
       priceBox.innerHTML = `<div style="padding:10px; text-align:center; color: #7a8294;">No tradeable uniques found for ${name}.</div>`;
+      priceBox.classList.add("visible");
       return;
     }
 
@@ -1069,6 +1080,7 @@ async function getPrice(name, skipHistory = false) {
 
     animateCardHeight(() => {
       priceBox.innerHTML = buildBossCard(bossKey, uniquesHtml, shareUrl);
+      priceBox.classList.add("visible");
       attachTooltips(priceBox);
     });
     if (!skipHistory) saveHistory(bossKey);
@@ -1105,11 +1117,13 @@ async function getPrice(name, skipHistory = false) {
 
     animateCardHeight(() => {
       priceBox.innerHTML = cardHtml;
+      priceBox.classList.add("visible");
       attachTooltips(priceBox);
     });
     updateUrlHash("item", name);
   } catch (err) {
     priceBox.innerHTML = `<div style="padding:10px; text-align:center; color:#ff5555;">Failed fetching live values.</div>`;
+    priceBox.classList.add("visible");
   }
 }
 
