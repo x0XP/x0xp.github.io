@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>x0XP</title>
 
-        <!-- Open Graph / Discord embed -->
         <meta property="og:title" content="x0XP OSRS Price Checker" />
         <meta
             property="og:description"
@@ -19,16 +18,13 @@
         <meta property="og:type" content="website" />
         <meta name="theme-color" content="#ffae00" />
 
-        <!-- Favicon -->
         <link rel="icon" type="image/png" href="favicon.png" />
         <link rel="apple-touch-icon" href="favicon.png" />
 
-        <!-- OSRS Pixel Font -->
         <link
             href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
             rel="stylesheet"
         />
-
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -36,13 +32,15 @@
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
+        <div id="floatingContainer"></div>
+        <div id="tooltip" class="tooltip"></div>
+
         <div class="card fade-in">
             <img src="image0.jpg" alt="Avatar" class="avatar" />
             <h1 id="username">
                 <span>x</span><span>0</span><span>X</span><span>P</span>
             </h1>
 
-            <!-- Subtitle with changelog icon -->
             <p
                 style="
                     display: flex;
@@ -107,7 +105,6 @@
             </div>
 
             <div class="ge-tracker">
-                <!-- Search bar with only the info icon -->
                 <div style="position: relative">
                     <input
                         type="text"
@@ -158,40 +155,47 @@
                 <div id="priceDisplay" class="price-box"></div>
                 <div id="pinned" class="pinned-list"></div>
                 <div id="history" class="history-list"></div>
-
-                <!-- Help box – appears to the right of the card -->
-                <div id="helpBox" class="help-box">
-                    <strong>Quick Guide</strong><br />
-                    • Search any item or boss name.<br />
-                    • <b>Enter</b> to see price or boss uniques.<br />
-                    • <b>Right‑click</b> (or long‑press on mobile) a recent
-                    search to <b>pin</b> it above.<br />
-                    • Use the <b>share</b> icon to copy a link with a live
-                    Discord embed.<br />
-                    • The <b>wiki</b> icon opens the official OSRS Wiki page.
-                </div>
-
-                <!-- Tooltip for share/wiki buttons -->
-                <div id="tooltip" class="tooltip"></div>
-            </div>
-
-            <!-- Changelog panel – placed directly inside the card, outside the tracker -->
-            <div id="changelogBox" class="help-box" style="width: 260px">
-                <strong>Changelog</strong><br />
-                <div
-                    style="
-                        max-height: 150px;
-                        overflow-y: auto;
-                        margin-top: 6px;
-                        font-size: 10px;
-                        line-height: 1.4;
-                    "
-                    id="changelogContent"
-                >
-                    Loading…
-                </div>
             </div>
         </div>
+
+        <!-- Panels outside the card, above floating cards -->
+        <div id="helpBox" class="help-box">
+            <strong>Quick Guide</strong><br />
+            • Search any item or boss name.<br />
+            • <b>Enter</b> to see price or boss uniques.<br />
+            • <b>Right‑click</b> (or long‑press on mobile) a recent search to
+            <b>pin</b> it above.<br />
+            • Use the <b>share</b> icon to copy a link with a live Discord
+            embed.<br />
+            • The <b>wiki</b> icon opens the official OSRS Wiki page.<br />
+            • Drag the top edge of a price card to create a floating copy.<br />
+            • Click the clipboard icon next to the subtitle for recent updates.
+        </div>
+
+        <div id="changelogBox" class="help-box" style="width: 260px">
+            <strong>Updates</strong><br />
+            <div
+                style="
+                    max-height: 150px;
+                    overflow-y: auto;
+                    margin-top: 6px;
+                    font-size: 10px;
+                    line-height: 1.4;
+                "
+                id="changelogContent"
+            >
+                Loading…
+            </div>
+        </div>
+
+        <button
+            id="clearAllFloating"
+            class="clear-all-float-btn"
+            style="display: none"
+            title="Close all floating windows"
+        >
+            Clear all windows
+        </button>
 
         <script src="script.js"></script>
     </body>

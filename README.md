@@ -5,6 +5,8 @@ Search any tradeable item or boss to instantly see live buy/sell prices and uniq
 
 **Live site:** [x0xp.github.io](https://x0xp.github.io)
 
+![x0XP OSRS Price Checker Dashboard](preview.png)
+
 ---
 
 ## Features
@@ -49,5 +51,5 @@ Need more details? Click the info icon inside the search bar for a quick guide.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/x0XP/x0xp.github.io.git
+   git clone [https://github.com/x0XP/x0xp.github.io.git](https://github.com/x0XP/x0xp.github.io.git)
    cd x0xp.github.io
