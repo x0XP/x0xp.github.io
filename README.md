@@ -6,7 +6,7 @@ Search any tradeable item or boss to instantly see live buy/sell prices and uniq
 **Live site:** [x0xp.github.io](https://x0xp.github.io)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/x0XP/x0xp.github.io/main/preview.jpg" alt="x0XP OSRS Price Checker Dashboard" width="100%">
+  <img src="https://raw.githubusercontent.com/x0XP/x0xp.github.io/main/preview.png" alt="x0XP OSRS Price Checker Dashboard" width="100%">
 </p>
 
 ---
