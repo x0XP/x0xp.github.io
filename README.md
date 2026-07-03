@@ -1,4 +1,4 @@
-# x0XP OSRS Price Tracker
+# x0XP OSRS Price Checker
 
 A lightweight, real-time Old School RuneScape Grand Exchange price checker and boss collection log explorer.  
 Search any tradeable item or boss to instantly see live buy/sell prices and unique drops – all powered by the official OSRS Wiki APIs.
@@ -9,7 +9,7 @@ Search any tradeable item or boss to instantly see live buy/sell prices and uniq
 
 ## Features
 
-- **Instant GE Prices** – Search any tradeable item, see buy/sell prices and last update time.
+- **Instant GE Prices** – Search any tradeable item, see current buy/sell prices and last update time.
 - **Boss Collection Logs** – Type a boss name to view all its tradeable uniques, each with a live average price.
 - **Smart Search** – Substring and fuzzy matching, with a "Did you mean?" fallback.
 - **Pin Favourites** – Right-click (or long-press on mobile) any recent search to pin it above the history.
