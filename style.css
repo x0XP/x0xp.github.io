@@ -2,8 +2,6 @@
 * {
     box-sizing: border-box;
 }
-
-/* Replace the current html, body block */
 html,
 body {
     margin: 0;
@@ -16,7 +14,6 @@ body {
     background-color: #060814;
 }
 
-/* Replace the current body rule – add min-height and remove overflow: hidden */
 body {
     background:
         linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
@@ -517,4 +514,11 @@ body::after {
         /* Keep it centered when visible (overrides the original translateX(0)) */
         transform: translateX(-50%) !important;
     }
+}
+
+/* Prevent text selection and magnifier on history/pinned buttons (mobile) */
+.hist-btn {
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
 }
