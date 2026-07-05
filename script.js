@@ -1,3 +1,14 @@
+// ----- Auto‑reload on version change -----
+const APP_VERSION = "1.0.2";
+const storedVersion = localStorage.getItem("appVersion");
+
+if (storedVersion && storedVersion !== APP_VERSION) {
+  localStorage.setItem("appVersion", APP_VERSION);
+  location.reload(true);
+} else if (!storedVersion) {
+  localStorage.setItem("appVersion", APP_VERSION);
+}
+
 const headers = { "User-Agent": "x0XP-Item-Price-Checker - .x0xp on Discord" };
 
 // Easter eggs
@@ -595,6 +606,7 @@ function positionPanel(box, icon) {
   // Otherwise place above the icon, centered
   let left = iconRect.left + iconRect.width / 2;
   let top = iconRect.top - 10;
+  // Ensure the box doesn't go off the top of the viewport
   if (top < 10) top = 10;
   const halfBox = boxWidth / 2;
   if (left - halfBox < 10) left = halfBox + 10;
@@ -609,7 +621,7 @@ function positionPanel(box, icon) {
   box.style.zIndex = "101";
 }
 
-// Info icon toggle
+// Info icon toggle – always use positionPanel
 if (infoIcon) {
   infoIcon.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -618,21 +630,9 @@ if (infoIcon) {
     infoIcon.style.color = helpVisible ? "#ffae00" : "#7a8294";
 
     if (helpVisible) {
-      // Only position manually on large screens; on mobile, let CSS handle it
-      if (window.innerWidth > 767) {
-        requestAnimationFrame(() => {
-          positionPanel(helpBox, infoIcon);
-        });
-      } else {
-        // Remove inline styles so CSS media query applies
-        helpBox.style.position = "";
-        helpBox.style.left = "";
-        helpBox.style.top = "";
-        helpBox.style.right = "";
-        helpBox.style.bottom = "";
-        helpBox.style.transform = "";
-        helpBox.style.zIndex = "";
-      }
+      requestAnimationFrame(() => {
+        positionPanel(helpBox, infoIcon);
+      });
     }
 
     if (changelogVisible) {
@@ -643,7 +643,7 @@ if (infoIcon) {
   });
 }
 
-// Updates icon toggle – only use positionPanel on wide screens
+// Updates icon toggle – always use positionPanel
 if (updatesIcon) {
   updatesIcon.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -652,19 +652,9 @@ if (updatesIcon) {
     updatesIcon.style.color = changelogVisible ? "#ffae00" : "#7a8294";
 
     if (changelogVisible) {
-      if (window.innerWidth > 767) {
-        requestAnimationFrame(() => {
-          positionPanel(changelogBox, updatesIcon);
-        });
-      } else {
-        changelogBox.style.position = "";
-        changelogBox.style.left = "";
-        changelogBox.style.top = "";
-        changelogBox.style.right = "";
-        changelogBox.style.bottom = "";
-        changelogBox.style.transform = "";
-        changelogBox.style.zIndex = "";
-      }
+      requestAnimationFrame(() => {
+        positionPanel(changelogBox, updatesIcon);
+      });
     }
 
     if (helpVisible) {
@@ -1537,88 +1527,6 @@ function startAutoRefresh() {
   console.log("⏰ Auto-refresh started (interval: 5 seconds for testing)");
   if (refreshInterval) clearInterval(refreshInterval);
   refreshInterval = setInterval(refreshAllCards, 5000);
-}
-
-// ---------- Add to Home Screen ----------
-const addToHomeBtn = document.getElementById("addToHomeBtn");
-const homeModal = document.getElementById("homeScreenModal");
-const modalClose = homeModal?.querySelector(".modal-close");
-const instructionsEl = document.getElementById("homeScreenInstructions");
-
-function isStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true
-  );
-}
-
-function showHomeScreenInstructions() {
-  if (!instructionsEl) return;
-  const isIOS =
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const isAndroid = /Android/.test(navigator.userAgent);
-
-  let html = "";
-  if (isIOS) {
-    html = `
-            <p>To add this site to your home screen on <strong>iOS</strong>:</p>
-            <ol>
-                <li>Tap the <strong>Share</strong> button (square with arrow).</li>
-                <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-                <li>Tap <strong>Add</strong> in the top right.</li>
-            </ol>
-        `;
-  } else if (isAndroid) {
-    html = `
-            <p>To add this site to your home screen on <strong>Android</strong>:</p>
-            <ol>
-                <li>Tap the <strong>Menu</strong> (three dots) in the browser.</li>
-                <li>Tap <strong>Add to Home screen</strong>.</li>
-                <li>Confirm the name and tap <strong>Add</strong>.</li>
-            </ol>
-        `;
-  } else {
-    html = `
-            <p>To add this site to your home screen:</p>
-            <ul>
-                <li>Open the browser menu and look for <strong>Add to Home screen</strong>.</li>
-                <li>On Safari (iOS), use the Share button and select <strong>Add to Home Screen</strong>.</li>
-            </ul>
-        `;
-  }
-  instructionsEl.innerHTML = html;
-  if (homeModal) {
-    homeModal.classList.add("active");
-    homeModal.style.display = "flex"; // ensure it's shown
-  }
-}
-
-// Show button on touch devices, hide if standalone
-if (addToHomeBtn) {
-  if (isStandalone()) {
-    addToHomeBtn.style.display = "none";
-  } else {
-    addToHomeBtn.addEventListener("click", showHomeScreenInstructions);
-  }
-}
-
-// Close modal
-if (modalClose) {
-  modalClose.addEventListener("click", () => {
-    if (homeModal) {
-      homeModal.classList.remove("active");
-      homeModal.style.display = "none";
-    }
-  });
-}
-if (homeModal) {
-  homeModal.addEventListener("click", (e) => {
-    if (e.target === homeModal) {
-      homeModal.classList.remove("active");
-      homeModal.style.display = "none";
-    }
-  });
 }
 
 // ---------- Dropdown ----------

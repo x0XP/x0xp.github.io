@@ -5,6 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>x0XP</title>
 
+        <!-- Cache busting & versioning -->
+        <meta
+            http-equiv="Cache-Control"
+            content="no-cache, no-store, must-revalidate"
+        />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
+
         <meta property="og:title" content="x0XP OSRS Price Checker" />
         <meta
             property="og:description"
@@ -29,7 +37,7 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
-        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="style.css?v=1.0.2" />
     </head>
     <body>
         <div id="floatingContainer"></div>
@@ -102,14 +110,6 @@
                     class="btn btn-wom"
                     ><i class="fas fa-hat-wizard"></i> Wise Old Man</a
                 >
-                <!-- Add to Home Screen button -->
-                <button
-                    id="addToHomeBtn"
-                    class="btn btn-home"
-                    style="display: none"
-                >
-                    <i class="fas fa-plus-circle"></i> Add to Home Screen
-                </button>
             </div>
 
             <div class="ge-tracker">
@@ -196,16 +196,6 @@
             </div>
         </div>
 
-        <!-- Add to Home Screen Instructions Modal -->
-        <div id="homeModal" class="modal-overlay">
-            <div class="modal-content">
-                <button onclick="hideHomeScreenInstructions()">Close</button>
-
-                <h2>Add to Home Screen</h2>
-                <p>Follow the instructions to install this app.</p>
-            </div>
-        </div>
-
         <button
             id="clearAllFloating"
             class="clear-all-float-btn"
@@ -215,6 +205,6 @@
             Clear all windows
         </button>
 
-        <script src="script.js"></script>
+        <script src="script.js?v=1.0.2"></script>
     </body>
 </html>
