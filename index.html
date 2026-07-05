@@ -5,14 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>x0XP</title>
 
-        <!-- Cache busting & versioning -->
-        <meta
-            http-equiv="Cache-Control"
-            content="no-cache, no-store, must-revalidate"
-        />
-        <meta http-equiv="Pragma" content="no-cache" />
-        <meta http-equiv="Expires" content="0" />
-
         <meta property="og:title" content="x0XP OSRS Price Checker" />
         <meta
             property="og:description"
@@ -37,7 +29,7 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
-        <link rel="stylesheet" href="style.css?v=1.0.2" />
+        <link rel="stylesheet" href="style.css" />
     </head>
     <body>
         <div id="floatingContainer"></div>
@@ -97,19 +89,15 @@
                         class="btn btn-github"
                         ><i class="fab fa-github"></i> GitHub</a
                     >
-                    <a
-                        href="https://www.youtube.com/@xZeRoXP"
-                        target="_blank"
-                        class="btn btn-youtube"
-                        ><i class="fab fa-youtube"></i> YouTube</a
-                    >
                 </div>
-                <a
-                    href="https://wiseoldman.net/players/x0XP"
-                    target="_blank"
-                    class="btn btn-wom"
-                    ><i class="fas fa-hat-wizard"></i> Wise Old Man</a
+                <!-- Add to Home Screen button -->
+                <button
+                    id="addToHomeBtn"
+                    class="btn btn-home"
+                    style="display: none"
                 >
+                    <i class="fas fa-plus-circle"></i> Add to Home Screen
+                </button>
             </div>
 
             <div class="ge-tracker">
@@ -205,6 +193,6 @@
             Clear all windows
         </button>
 
-        <script src="script.js?v=1.0.2"></script>
+        <script src="script.js"></script>
     </body>
 </html>
