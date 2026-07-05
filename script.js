@@ -187,7 +187,7 @@ function buildFloatingCardElement(
     origX,
     origY;
 
-  // ---------- Use pointer events for drag (tablet + desktop) ----------
+  // Use pointer events for drag (tablet + desktop)
   header.addEventListener("pointerdown", (e) => {
     if (e.target.classList.contains("floating-close")) return;
     bringToFront(div);
@@ -467,7 +467,7 @@ function endDrag(e) {
   dragState = null;
 }
 
-// ---------- Use pointer events for drag-to-duplicate (tablet + desktop) ----------
+// Use pointer events for drag-to-duplicate (tablet + desktop)
 priceBox.addEventListener("pointerdown", startDrag);
 document.addEventListener("pointermove", moveDrag);
 document.addEventListener("pointerup", endDrag);
@@ -572,6 +572,43 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// ---------- Position panel helper ----------
+function positionPanel(box, icon) {
+  if (!box || !icon) return;
+  const iconRect = icon.getBoundingClientRect();
+  const boxWidth = 220; // approximate width
+  const viewportWidth = window.innerWidth;
+  const gap = 15;
+
+  // Try to place to the right if there's space
+  if (iconRect.right + gap + boxWidth < viewportWidth) {
+    box.style.position = "fixed";
+    box.style.left = iconRect.right + gap + "px";
+    box.style.top = Math.max(10, iconRect.top) + "px";
+    box.style.right = "auto";
+    box.style.bottom = "auto";
+    box.style.transform = "none";
+    box.style.zIndex = "101";
+    return;
+  }
+
+  // Otherwise place above the icon, centered
+  let left = iconRect.left + iconRect.width / 2;
+  let top = iconRect.top - 10;
+  if (top < 10) top = 10;
+  const halfBox = boxWidth / 2;
+  if (left - halfBox < 10) left = halfBox + 10;
+  if (left + halfBox > viewportWidth - 10) left = viewportWidth - halfBox - 10;
+
+  box.style.position = "fixed";
+  box.style.left = left + "px";
+  box.style.top = top + "px";
+  box.style.right = "auto";
+  box.style.bottom = "auto";
+  box.style.transform = "translateX(-50%)";
+  box.style.zIndex = "101";
+}
+
 // Info icon toggle
 if (infoIcon) {
   infoIcon.addEventListener("click", (e) => {
@@ -583,19 +620,18 @@ if (infoIcon) {
     if (helpVisible) {
       // Only position manually on large screens; on mobile, let CSS handle it
       if (window.innerWidth > 767) {
-        const iconRect = infoIcon.getBoundingClientRect();
-        helpBox.style.position = "fixed";
-        helpBox.style.left = iconRect.right + 15 + "px";
-        helpBox.style.top = iconRect.top + "px";
-        helpBox.style.right = "auto";
-        helpBox.style.bottom = "auto";
+        requestAnimationFrame(() => {
+          positionPanel(helpBox, infoIcon);
+        });
       } else {
-        // Reset inline styles so CSS media query takes over
+        // Remove inline styles so CSS media query applies
         helpBox.style.position = "";
         helpBox.style.left = "";
         helpBox.style.top = "";
         helpBox.style.right = "";
         helpBox.style.bottom = "";
+        helpBox.style.transform = "";
+        helpBox.style.zIndex = "";
       }
     }
 
@@ -607,7 +643,7 @@ if (infoIcon) {
   });
 }
 
-// Updates icon toggle
+// Updates icon toggle – only use positionPanel on wide screens
 if (updatesIcon) {
   updatesIcon.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -616,21 +652,18 @@ if (updatesIcon) {
     updatesIcon.style.color = changelogVisible ? "#ffae00" : "#7a8294";
 
     if (changelogVisible) {
-      // Only position manually on large screens; on mobile, let CSS handle it
       if (window.innerWidth > 767) {
-        const iconRect = updatesIcon.getBoundingClientRect();
-        changelogBox.style.position = "fixed";
-        changelogBox.style.left = iconRect.right + 15 + "px";
-        changelogBox.style.top = iconRect.top + "px";
-        changelogBox.style.right = "auto";
-        changelogBox.style.bottom = "auto";
+        requestAnimationFrame(() => {
+          positionPanel(changelogBox, updatesIcon);
+        });
       } else {
-        // Reset inline styles so CSS media query takes over
         changelogBox.style.position = "";
         changelogBox.style.left = "";
         changelogBox.style.top = "";
         changelogBox.style.right = "";
         changelogBox.style.bottom = "";
+        changelogBox.style.transform = "";
+        changelogBox.style.zIndex = "";
       }
     }
 
@@ -1215,20 +1248,15 @@ function attachTooltips(container) {
 
 // ---------- Fade price animation ----------
 function fadePrice(element, newValue) {
-  // If there's a pending timeout, clear it
   if (element.dataset.fadeTimeout) {
     clearTimeout(element.dataset.fadeTimeout);
     element.dataset.fadeTimeout = null;
   }
 
-  // Store the new value in dataset for next time
   element.dataset.value = newValue;
-
-  // Start fade out
   element.style.transition = "opacity 0.15s ease";
   element.style.opacity = "0";
 
-  // After fade out, update text and fade in
   const timeout = setTimeout(() => {
     element.textContent = newValue;
     element.style.opacity = "1";
@@ -1352,7 +1380,6 @@ async function refreshCard(container, type, name, isFloating = false) {
       );
       const shareUrl = `https://embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}&ts=${Date.now()}`;
 
-      // If container doesn't have the expected structure, rebuild it.
       if (
         !container.querySelector(".price-buy") ||
         !container.querySelector(".price-sell")
@@ -1373,13 +1400,11 @@ async function refreshCard(container, type, name, isFloating = false) {
         return;
       }
 
-      // Update prices with fade.
       const buyElement = container.querySelector(".price-buy");
       const sellElement = container.querySelector(".price-sell");
       if (buyElement) fadePrice(buyElement, formatGP(p.high));
       if (sellElement) fadePrice(sellElement, formatGP(p.low));
 
-      // Update timestamp with fade.
       const timeElement = container.querySelector(".price-time");
       if (timeElement) {
         timeElement.style.transition = "opacity 0.15s ease";
@@ -1417,10 +1442,8 @@ async function refreshCard(container, type, name, isFloating = false) {
       });
       const shareUrl = `https://embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
       if (isFloating) {
-        // For floating cards, just render the list without the internal header or max-height wrapper
         container.innerHTML = `<div style="width: 100%;">${uniquesHtml}</div>`;
       } else {
-        // For the main price box, include the full card wrapper and header
         const html = buildBossCard(bossKey, uniquesHtml, shareUrl, true);
         container.innerHTML = html;
       }
@@ -1497,6 +1520,88 @@ function startAutoRefresh() {
   console.log("⏰ Auto-refresh started (interval: 5 seconds for testing)");
   if (refreshInterval) clearInterval(refreshInterval);
   refreshInterval = setInterval(refreshAllCards, 5000);
+}
+
+// ---------- Add to Home Screen ----------
+const addToHomeBtn = document.getElementById("addToHomeBtn");
+const homeModal = document.getElementById("homeScreenModal");
+const modalClose = homeModal?.querySelector(".modal-close");
+const instructionsEl = document.getElementById("homeScreenInstructions");
+
+function isStandalone() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function showHomeScreenInstructions() {
+  if (!instructionsEl) return;
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(navigator.userAgent);
+
+  let html = "";
+  if (isIOS) {
+    html = `
+            <p>To add this site to your home screen on <strong>iOS</strong>:</p>
+            <ol>
+                <li>Tap the <strong>Share</strong> button (square with arrow).</li>
+                <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+                <li>Tap <strong>Add</strong> in the top right.</li>
+            </ol>
+        `;
+  } else if (isAndroid) {
+    html = `
+            <p>To add this site to your home screen on <strong>Android</strong>:</p>
+            <ol>
+                <li>Tap the <strong>Menu</strong> (three dots) in the browser.</li>
+                <li>Tap <strong>Add to Home screen</strong>.</li>
+                <li>Confirm the name and tap <strong>Add</strong>.</li>
+            </ol>
+        `;
+  } else {
+    html = `
+            <p>To add this site to your home screen:</p>
+            <ul>
+                <li>Open the browser menu and look for <strong>Add to Home screen</strong>.</li>
+                <li>On Safari (iOS), use the Share button and select <strong>Add to Home Screen</strong>.</li>
+            </ul>
+        `;
+  }
+  instructionsEl.innerHTML = html;
+  if (homeModal) {
+    homeModal.classList.add("active");
+    homeModal.style.display = "flex"; // ensure it's shown
+  }
+}
+
+// Show button on touch devices, hide if standalone
+if (addToHomeBtn) {
+  if (isStandalone()) {
+    addToHomeBtn.style.display = "none";
+  } else {
+    addToHomeBtn.addEventListener("click", showHomeScreenInstructions);
+  }
+}
+
+// Close modal
+if (modalClose) {
+  modalClose.addEventListener("click", () => {
+    if (homeModal) {
+      homeModal.classList.remove("active");
+      homeModal.style.display = "none";
+    }
+  });
+}
+if (homeModal) {
+  homeModal.addEventListener("click", (e) => {
+    if (e.target === homeModal) {
+      homeModal.classList.remove("active");
+      homeModal.style.display = "none";
+    }
+  });
 }
 
 // ---------- Dropdown ----------
@@ -1795,80 +1900,6 @@ function bringToFront(element) {
   highestZIndex++;
   element.style.zIndex = highestZIndex;
 }
-
-// ---------- Add to Home Screen ----------
-const addToHomeBtn = document.getElementById("addToHomeBtn");
-const homeModal = document.getElementById("homeScreenModal");
-const modalClose = homeModal?.querySelector(".modal-close");
-const instructionsEl = document.getElementById("homeScreenInstructions");
-
-function isTouchDevice() {
-  return "ontouchstart" in window || navigator.maxTouchPoints > 0;
-}
-
-function isStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true
-  );
-}
-
-function showHomeScreenInstructions() {
-  if (!instructionsEl) return;
-  const isIOS =
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const isAndroid = /Android/.test(navigator.userAgent);
-
-  let html = "";
-  if (isIOS) {
-    html = `
-            <p>To add this site to your home screen on <strong>iOS</strong>:</p>
-            <ol>
-                <li>Tap the <strong>Share</strong> button (square with arrow).</li>
-                <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-                <li>Tap <strong>Add</strong> in the top right.</li>
-            </ol>
-        `;
-  } else if (isAndroid) {
-    html = `
-            <p>To add this site to your home screen on <strong>Android</strong>:</p>
-            <ol>
-                <li>Tap the <strong>Menu</strong> (three dots) in the browser.</li>
-                <li>Tap <strong>Add to Home screen</strong>.</li>
-                <li>Confirm the name and tap <strong>Add</strong>.</li>
-            </ol>
-        `;
-  } else {
-    html = `
-            <p>To add this site to your home screen:</p>
-            <ul>
-                <li>Open the browser menu and look for <strong>Add to Home screen</strong>.</li>
-                <li>On Safari (iOS), use the Share button and select <strong>Add to Home Screen</strong>.</li>
-            </ul>
-        `;
-  }
-  instructionsEl.innerHTML = html;
-  homeModal.classList.add("active");
-}
-
-// Show button only on touch devices, not if already standalone
-if (isTouchDevice() && !isStandalone()) {
-  addToHomeBtn.style.display = "block";
-  addToHomeBtn.addEventListener("click", showHomeScreenInstructions);
-}
-
-// Close modal
-if (modalClose) {
-  modalClose.addEventListener("click", () => {
-    homeModal.classList.remove("active");
-  });
-}
-homeModal?.addEventListener("click", (e) => {
-  if (e.target === homeModal) {
-    homeModal.classList.remove("active");
-  }
-});
 
 // Kick off
 initTracker();

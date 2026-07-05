@@ -280,7 +280,6 @@ body::after {
 .btn-wom:hover {
     background: rgba(255, 255, 255, 0.18);
 }
-/* Add to Home Screen button */
 .btn-home {
     background: rgba(0, 200, 100, 0.25);
     border: 1px solid #00cc88;
@@ -329,7 +328,7 @@ body::after {
     border-radius: 0 0 5px 5px;
 }
 
-/* --- Interactive Suggestion Items (dropdown, boss uniques, history) --- */
+/* --- Interactive Suggestion Items --- */
 .suggested-item {
     display: flex;
     align-items: center;
@@ -347,13 +346,11 @@ body::after {
         border-color 0.2s ease,
         transform 0.2s ease;
 }
-
 .suggested-item:hover {
     background-color: #2a2e3a;
     border-left-color: #ffae00;
     transform: translateX(2px) scale(1.02);
 }
-
 .suggest-icon {
     width: 24px;
     height: 24px;
@@ -363,7 +360,7 @@ body::after {
     border: none !important;
 }
 
-/* --- Price Display (now matches floating cards) --- */
+/* --- Price Display --- */
 .price-box {
     margin-top: 12px;
     padding: 12px;
@@ -387,18 +384,16 @@ body::after {
     transform: translateY(0) scale(1);
 }
 
-/* ----- Dark Theme Scrollbar (WebKit) ----- */
+/* Scrollbar styling */
 .results-list::-webkit-scrollbar,
 .price-box .scrollable-list::-webkit-scrollbar {
     width: 6px;
 }
-
 .results-list::-webkit-scrollbar-track,
 .price-box .scrollable-list::-webkit-scrollbar-track {
     background: #14171f;
     border-radius: 3px;
 }
-
 .results-list::-webkit-scrollbar-thumb,
 .price-box .scrollable-list::-webkit-scrollbar-thumb {
     background: #2a2e3a;
@@ -407,20 +402,16 @@ body::after {
         background 0.2s ease,
         box-shadow 0.2s ease;
 }
-
 .results-list::-webkit-scrollbar-thumb:hover,
 .price-box .scrollable-list::-webkit-scrollbar-thumb:hover {
     background: #4a4f5e;
     box-shadow: 0 0 8px rgba(255, 174, 0, 0.4);
 }
-
-/* ----- Dark Theme Scrollbar (Firefox) ----- */
 .results-list,
 .price-box .scrollable-list {
     scrollbar-width: thin;
     scrollbar-color: #2a2e3a #14171f;
 }
-
 .results-list:hover,
 .price-box .scrollable-list:hover {
     scrollbar-color: #4a4f5e #14171f;
@@ -432,19 +423,16 @@ body::after {
     align-items: center;
     width: 100%;
 }
-
 .price-text {
     text-align: left;
     flex-grow: 1;
     min-width: 0;
 }
-
 .item-name {
     display: block;
     margin-bottom: 5px;
     color: #fff;
 }
-
 .item-icon {
     width: 48px;
     height: 48px;
@@ -454,7 +442,6 @@ body::after {
     object-fit: contain;
     flex-shrink: 0;
 }
-
 .timestamp {
     font-size: 10px;
     color: #7a8294;
@@ -463,7 +450,7 @@ body::after {
     text-align: left;
 }
 
-/* Wiki button (icon only) */
+/* Wiki & share buttons */
 .wiki-btn {
     display: inline-flex;
     align-items: center;
@@ -500,8 +487,6 @@ body::after {
     stroke: #ffae00;
     transform: translate(0.5px, -0.5px);
 }
-
-/* Share button (icon-only) */
 .share-btn {
     color: #a8c7fa;
     transition: color 0.2s;
@@ -519,8 +504,6 @@ body::after {
     justify-content: center;
     width: 100%;
 }
-
-/* Pinned items row */
 .pinned-list {
     display: flex;
     gap: 6px;
@@ -529,7 +512,6 @@ body::after {
     width: 100%;
     margin: 8px 0 0 0;
 }
-
 .hist-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -553,8 +535,6 @@ body::after {
     color: #fff;
     transform: translateY(-1px);
 }
-
-/* Transitional colour states for pinning */
 .hist-btn.pinning {
     color: #ffae00 !important;
 }
@@ -562,9 +542,7 @@ body::after {
     color: #aaa !important;
 }
 
-/* ------------------------------------------------------------
-   Help Box (slides out to the right of the card)
------------------------------------------------------------- */
+/* --- Help / Changelog boxes --- */
 .help-box {
     position: absolute;
     left: calc(100% + 15px);
@@ -586,22 +564,17 @@ body::after {
         transform 0.3s ease;
     z-index: 101;
 }
-
 .help-box.visible {
     opacity: 1;
     transform: translateX(0);
     pointer-events: auto;
 }
-
-/* Info icon hover */
 #infoIcon:hover,
 #updatesIcon:hover {
     color: #ffae00;
 }
 
-/* ------------------------------------------------------------
-   Floating Tooltip (above share/wiki buttons)
------------------------------------------------------------- */
+/* --- Tooltip --- */
 .tooltip {
     position: fixed;
     pointer-events: none;
@@ -620,13 +593,12 @@ body::after {
         transform 0.2s ease;
     z-index: 110;
 }
-
 .tooltip.visible {
     opacity: 1;
     transform: translate(-50%, -2px);
 }
 
-/* --- Mobile fallback: show help box above instead of to the right --- */
+/* Mobile: help boxes appear above the card */
 @media (max-width: 767px) {
     .help-box {
         left: 50% !important;
@@ -634,14 +606,17 @@ body::after {
         right: auto !important;
         bottom: calc(100% + 10px) !important;
         transform: translateX(-50%) !important;
+        width: 220px;
+        z-index: 101;
     }
-
     .help-box.visible {
         transform: translateX(-50%) !important;
+        opacity: 1;
+        pointer-events: auto;
     }
 }
 
-/* Button press effect (active state) */
+/* --- Button press effect --- */
 .icon-btn:active,
 .wiki-btn:active,
 #infoIcon:active,
@@ -651,7 +626,6 @@ body::after {
     transition: transform 0.1s;
 }
 
-/* Smooth background for scrollable list */
 .scrollable-list {
     background: linear-gradient(
         to bottom,
@@ -662,11 +636,10 @@ body::after {
     padding-right: 10px;
 }
 
-/* Dance animation for Easter egg */
+/* --- Dance animation --- */
 .dance-animation {
     animation: dance 0.5s ease;
 }
-
 @keyframes dance {
     0% {
         transform: rotate(0deg);
@@ -685,7 +658,7 @@ body::after {
     }
 }
 
-/* ---------- Floating cards (dragged out) ---------- */
+/* ---------- Floating cards ---------- */
 .floating-card {
     position: fixed;
     z-index: 100;
@@ -706,11 +679,9 @@ body::after {
     display: flex;
     flex-direction: column;
 }
-
 .floating-card:hover {
     box-shadow: 0 0 18px rgba(255, 174, 0, 0.25);
 }
-
 .floating-header {
     display: flex;
     align-items: center;
@@ -722,14 +693,12 @@ body::after {
     user-select: none;
     -webkit-user-select: none;
 }
-
 .floating-drag-handle {
     color: #7a8294;
     font-size: 14px;
     letter-spacing: 2px;
     cursor: grab;
 }
-
 .floating-title {
     flex: 1;
     font-weight: bold;
@@ -738,7 +707,6 @@ body::after {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .floating-close {
     cursor: pointer;
     color: #7a8294;
@@ -750,14 +718,37 @@ body::after {
 .floating-close:hover {
     color: #ff5555;
 }
-
 .floating-content {
     flex: 1 1 auto;
     overflow-y: auto;
     min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #2a2e3a #14171f;
+    overflow-x: hidden !important;
+    width: 100%;
+}
+.floating-content::-webkit-scrollbar {
+    width: 4px;
+}
+.floating-content::-webkit-scrollbar-track {
+    background: #14171f;
+    border-radius: 3px;
+}
+.floating-content::-webkit-scrollbar-thumb {
+    background: #2a2e3a;
+    border-radius: 3px;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+.floating-content::-webkit-scrollbar-thumb:hover {
+    background: #4a4f5e;
+    box-shadow: 0 0 8px rgba(255, 174, 0, 0.4);
+}
+.floating-content:hover {
+    scrollbar-color: #4a4f5e #14171f;
 }
 
-/* Resize handle for floating boss cards */
 .resize-handle {
     height: 6px;
     background: rgba(255, 255, 255, 0.05);
@@ -768,7 +759,6 @@ body::after {
     flex-shrink: 0;
 }
 
-/* Drag preview ghost while duplicating */
 .drag-preview {
     position: fixed;
     z-index: 9999;
@@ -782,42 +772,6 @@ body::after {
     backdrop-filter: blur(4px);
 }
 
-/* ----- Dark Theme Scrollbar for floating content (WebKit) ----- */
-.floating-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.floating-content::-webkit-scrollbar-track {
-    background: #14171f;
-    border-radius: 3px;
-}
-
-.floating-content::-webkit-scrollbar-thumb {
-    background: #2a2e3a;
-    border-radius: 3px;
-    transition:
-        background 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.floating-content::-webkit-scrollbar-thumb:hover {
-    background: #4a4f5e;
-    box-shadow: 0 0 8px rgba(255, 174, 0, 0.4);
-}
-
-/* ----- Dark Theme Scrollbar for floating content (Firefox) ----- */
-.floating-content {
-    scrollbar-width: thin;
-    scrollbar-color: #2a2e3a #14171f;
-    overflow-x: hidden !important;
-    width: 100%;
-}
-
-.floating-content:hover {
-    scrollbar-color: #4a4f5e #14171f;
-}
-
-/* Clear all windows – floating at bottom‑right */
 .clear-all-float-btn {
     position: fixed;
     bottom: 20px;
@@ -836,7 +790,6 @@ body::after {
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
-
 .clear-all-float-btn:hover {
     background: rgba(255, 80, 80, 0.2);
     color: #ff5555;
@@ -844,7 +797,6 @@ body::after {
     box-shadow: 0 4px 16px rgba(255, 80, 80, 0.3);
 }
 
-/* Hide drag preview and clear-all on touch devices (mobile) */
 @media (pointer: coarse) and (max-width: 767px) {
     .drag-grip,
     .drag-preview,
@@ -853,12 +805,10 @@ body::after {
     }
 }
 
-/* Changelog text left-aligned */
 #changelogBox {
     text-align: left;
 }
 
-/* Invisible drag grip at the top of the price box */
 .drag-grip {
     position: absolute;
     top: 0;
@@ -873,15 +823,13 @@ body::after {
 .drag-grip:active {
     cursor: grabbing;
 }
-
-/* Hide the grip on touch devices (mobile) */
 @media (pointer: coarse) and (max-width: 767px) {
     .drag-grip {
         display: none !important;
     }
 }
 
-/* Add to Home Screen Modal */
+/* --- Add to Home Modal --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -930,4 +878,16 @@ body::after {
 }
 .modal-box li {
     margin-bottom: 8px;
+}
+
+/* --- Show Add-to-Home button only on touch devices --- */
+@media (pointer: coarse) {
+    #addToHomeBtn {
+        display: block !important;
+    }
+}
+@media (pointer: fine) {
+    #addToHomeBtn {
+        display: none !important;
+    }
 }
