@@ -880,14 +880,14 @@ body::after {
     margin-bottom: 8px;
 }
 
-/* --- Show Add-to-Home button only on touch devices --- */
+/* Show on touch devices (phones + tablets), hide on desktops */
 @media (pointer: coarse) {
     #addToHomeBtn {
-        display: block !important;
+        display: block;
     }
 }
 @media (pointer: fine) {
     #addToHomeBtn {
-        display: none !important;
+        display: none;
     }
 }

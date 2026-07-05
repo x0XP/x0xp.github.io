@@ -679,21 +679,38 @@ if (updatesIcon) {
 async function loadChangelog() {
   try {
     const res = await fetch(
-      "https://api.github.com/repos/x0XP/x0xp.github.io/commits?per_page=10",
+      "https://api.github.com/repos/x0XP/x0xp.github.io/commits?per_page=30",
     );
     const commits = await res.json();
     const content = document.getElementById("changelogContent");
     if (!content) return;
+
     if (!Array.isArray(commits) || commits.length === 0) {
       content.innerHTML = "No updates yet.";
       return;
     }
+
+    // Filter out commits with "ignore commit" in the message (case insensitive)
+    const filtered = commits.filter((commit) => {
+      const msg = commit.commit.message.split("\n")[0];
+      return !msg.toLowerCase().includes("ignore commit");
+    });
+
+    // Take the first 10 from the filtered list
+    const display = filtered.slice(0, 10);
+
+    if (display.length === 0) {
+      content.innerHTML = "No visible updates.";
+      return;
+    }
+
     let html = "";
-    commits.forEach((commit) => {
+    display.forEach((commit) => {
       const msg = commit.commit.message.split("\n")[0];
       const date = new Date(commit.commit.author.date).toLocaleDateString();
       html += `<div>${date} – ${msg}</div>`;
     });
+
     content.innerHTML = html;
   } catch (e) {
     console.error("Failed to load changelog", e);
