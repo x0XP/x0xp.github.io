@@ -280,6 +280,17 @@ body::after {
 .btn-wom:hover {
     background: rgba(255, 255, 255, 0.18);
 }
+/* Add to Home Screen button */
+.btn-home {
+    background: rgba(0, 200, 100, 0.25);
+    border: 1px solid #00cc88;
+    color: #00cc88;
+    width: 100%;
+}
+.btn-home:hover {
+    background: rgba(0, 200, 100, 0.4);
+    color: #00ff99;
+}
 
 /* --- GE Tracker Layout Context --- */
 .ge-tracker {
@@ -328,6 +339,9 @@ body::after {
     color: #ddd;
     font-size: 12px;
     border-left: 3px solid transparent;
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease,
@@ -795,6 +809,8 @@ body::after {
 .floating-content {
     scrollbar-width: thin;
     scrollbar-color: #2a2e3a #14171f;
+    overflow-x: hidden !important;
+    width: 100%;
 }
 
 .floating-content:hover {
@@ -829,7 +845,8 @@ body::after {
 }
 
 /* Hide drag preview and clear-all on touch devices (mobile) */
-@media (pointer: coarse) {
+@media (pointer: coarse) and (max-width: 767px) {
+    .drag-grip,
     .drag-preview,
     .clear-all-float-btn {
         display: none !important;
@@ -851,45 +868,66 @@ body::after {
     cursor: grab;
     z-index: 10;
     background: transparent;
+    touch-action: none;
 }
 .drag-grip:active {
     cursor: grabbing;
 }
 
 /* Hide the grip on touch devices (mobile) */
-@media (pointer: coarse) {
+@media (pointer: coarse) and (max-width: 767px) {
     .drag-grip {
         display: none !important;
     }
 }
 
-/* --- Digit Scroll Animation (perfect alignment) --- */
-.digit-scroll {
-    display: inline-block;
-    overflow: hidden;
-    vertical-align: baseline;
-    height: 1.5em;
-    line-height: 1.5em;
-    font-size: inherit;
-    margin: 0;
-    padding: 0;
+/* Add to Home Screen Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: none;
+    justify-content: center;
+    align-items: center;
 }
-
-.digit-scroll-inner {
-    display: block;
-    transform: translateY(0);
-    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: transform;
+.modal-overlay.active {
+    display: flex;
 }
-
-.digit-scroll-inner.scrolled {
-    transform: translateY(-50%);
+.modal-box {
+    background: rgba(10, 14, 23, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    color: #ccc;
+    position: relative;
 }
-
-.digit-scroll-digit {
-    display: block;
-    text-align: center;
-    height: 1.5em;
-    line-height: 1.5em;
-    font-size: inherit;
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #7a8294;
+}
+.modal-close:hover {
+    color: #fff;
+}
+.modal-box h3 {
+    color: #ffae00;
+    margin-top: 0;
+}
+.modal-box ol,
+.modal-box ul {
+    padding-left: 20px;
+    line-height: 1.6;
+}
+.modal-box li {
+    margin-bottom: 8px;
 }

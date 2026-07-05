@@ -102,6 +102,14 @@
                     class="btn btn-wom"
                     ><i class="fas fa-hat-wizard"></i> Wise Old Man</a
                 >
+                <!-- Add to Home Screen button -->
+                <button
+                    id="addToHomeBtn"
+                    class="btn btn-home"
+                    style="display: none"
+                >
+                    <i class="fas fa-plus-circle"></i> Add to Home Screen
+                </button>
             </div>
 
             <div class="ge-tracker">
@@ -185,6 +193,15 @@
                 id="changelogContent"
             >
                 Loading…
+            </div>
+        </div>
+
+        <!-- Add to Home Screen Instructions Modal -->
+        <div id="homeScreenModal" class="modal-overlay" style="display: none">
+            <div class="modal-box">
+                <span class="modal-close">&times;</span>
+                <h3>Add to Home Screen</h3>
+                <div id="homeScreenInstructions"></div>
             </div>
         </div>
 

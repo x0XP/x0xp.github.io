@@ -29,8 +29,13 @@ let helpVisible = false;
 let changelogVisible = false;
 
 // ---------- Floating card storage ----------
-let floatingCards = []; // { id, type, name, x, y, height (optional) }
+let floatingCards = [];
 let floatingCardCounter = 0;
+let highestZIndex = 100;
+
+// Auto‑refresh state
+let refreshInterval = null;
+let isRefreshing = false;
 
 // Save to localStorage
 function saveFloatingCards() {
@@ -54,14 +59,12 @@ function clampToViewport(div) {
   let height = parseInt(div.style.height) || rect.height;
   const width = rect.width;
 
-  // horizontal
   if (rect.left < 0) {
     left = 0;
   } else if (rect.right > window.innerWidth) {
     left = window.innerWidth - width;
   }
 
-  // vertical
   if (rect.top < 0) {
     top = 0;
   }
@@ -98,10 +101,8 @@ function buildFloatingCardElement(
   div.style.top = y + "px";
   div.dataset.id = cardId;
 
-  // Boss cards start at a compact height (or restored height)
   if (isBoss) {
     div.style.height = (initialHeight || 200) + "px";
-    // Card overflow is never set – content handles scrolling
   }
 
   const header = document.createElement("div");
@@ -120,7 +121,6 @@ function buildFloatingCardElement(
   div.appendChild(header);
   div.appendChild(content);
 
-  // Resize handle – only for boss cards
   if (isBoss) {
     const resizeHandle = document.createElement("div");
     resizeHandle.className = "resize-handle";
@@ -132,11 +132,10 @@ function buildFloatingCardElement(
       startY = e.clientY;
       startHeight = div.offsetHeight;
 
-      // Calculate the height that shows all content without scrolling
       const headerHeight = header.offsetHeight;
       const handleHeight = resizeHandle.offsetHeight;
       const contentNatural = content.scrollHeight;
-      maxHeight = contentNatural + headerHeight + handleHeight + 20; // padding/borders
+      maxHeight = contentNatural + headerHeight + handleHeight + 20;
 
       document.body.style.userSelect = "none";
       div.style.transition = "none";
@@ -144,11 +143,8 @@ function buildFloatingCardElement(
       const onMouseMove = (e) => {
         const delta = e.clientY - startY;
         let newHeight = startHeight + delta;
-
-        // viewport limit
         const cardTop = div.getBoundingClientRect().top;
         const viewMax = window.innerHeight - cardTop - 10;
-
         newHeight = Math.max(120, Math.min(newHeight, maxHeight, viewMax));
         div.style.height = newHeight + "px";
       };
@@ -160,11 +156,10 @@ function buildFloatingCardElement(
         document.removeEventListener("mouseup", onMouseUp);
 
         const currentHeight = parseInt(div.style.height);
-        // Toggle scrollbar on CONTENT, not on the card
         content.style.overflowY =
           currentHeight >= maxHeight ? "hidden" : "auto";
 
-        clampToViewport(div); // keep card inside screen
+        clampToViewport(div);
         const fc = floatingCards.find((f) => f.id == cardId);
         if (fc) {
           fc.height = parseInt(div.style.height);
@@ -181,20 +176,21 @@ function buildFloatingCardElement(
 
   floatingContainer.appendChild(div);
 
-  // Close button
   header.querySelector(".floating-close").addEventListener("click", (e) => {
     e.stopPropagation();
     removeFloatingCard(cardId);
   });
 
-  // Dragging (header)
   let isDragging = false,
     dragStartX,
     dragStartY,
     origX,
     origY;
-  header.addEventListener("mousedown", (e) => {
+
+  // ---------- Use pointer events for drag (tablet + desktop) ----------
+  header.addEventListener("pointerdown", (e) => {
     if (e.target.classList.contains("floating-close")) return;
+    bringToFront(div);
     isDragging = true;
     dragStartX = e.clientX;
     dragStartY = e.clientY;
@@ -204,7 +200,7 @@ function buildFloatingCardElement(
     e.preventDefault();
   });
 
-  window.addEventListener("mousemove", (e) => {
+  window.addEventListener("pointermove", (e) => {
     if (!isDragging) return;
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
@@ -212,11 +208,11 @@ function buildFloatingCardElement(
     div.style.top = origY + dy + "px";
   });
 
-  window.addEventListener("mouseup", () => {
+  window.addEventListener("pointerup", () => {
     if (!isDragging) return;
     isDragging = false;
     div.style.transition = "";
-    clampToViewport(div); // keep card inside screen
+    clampToViewport(div);
     const fc = floatingCards.find((f) => f.id == cardId);
     if (fc) {
       fc.x = parseInt(div.style.left);
@@ -271,16 +267,18 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
             name + " (item)",
             32,
           );
+          const buyStr = formatGP(p.high);
+          const sellStr = formatGP(p.low);
           content.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
               <div style="font-size:11px; line-height:1.4; color:#ccc;">
-                Buy: <span style="color:#00ff00">${formatGP(p.high)}</span> gp<br>
-                Sell: <span style="color:#ff0000">${formatGP(p.low)}</span> gp
+                Buy: <span class="price-buy" style="color:#00ff00" data-value="${buyStr}">${buyStr}</span> gp<br>
+                Sell: <span class="price-sell" style="color:#ff0000" data-value="${sellStr}">${sellStr}</span> gp
               </div>
               ${iconHtml}
             </div>
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:8px;">
-              <span style="font-size:9px; color:#7a8294;">Updated: ${formatTimeAgo(p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN)}</span>
+              <span class="price-time" style="font-size:9px; color:#7a8294;">Updated: ${formatTimeAgo(p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN)}</span>
               <div style="display:flex; gap:6px;">
                 ${shareButtonHTML(itemShareUrl)}
                 ${wikiButtonHTML(name)}
@@ -299,22 +297,29 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
     if (items.length > 0) {
       fetchPricesForItemNames(items)
         .then((priceData) => {
-          let html = `<div>`;
+          let html = `<div style="width: 100%;">`;
           items.forEach((itemTitle) => {
+            const wikiName = resolveWikiName(itemTitle);
+            const fallbackName = itemTitle + " (item)";
             const id = itemMap[itemTitle.toLowerCase()]?.id;
             const p = id && priceData[id] ? priceData[id] : {};
             const avg =
               p.high != null && p.low != null ? (p.high + p.low) / 2 : null;
-            html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-            <span>${fallbackItemIcon(resolveWikiName(itemTitle), itemTitle + " (item)", 16)} ${itemTitle}</span>
-            <span style="color:#00ff00;">${avg != null ? formatShortGP(avg) : "N/A"}</span>
-          </div>`;
+            const priceStr = avg != null ? formatShortGP(avg) : "N/A";
+
+            html += `
+                        <div class="suggested-item" style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
+                            <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
+                                ${fallbackItemIcon(wikiName, fallbackName, 16)}
+                                <span style="font-size:12px; color:#fff;">${itemTitle}</span>
+                            </div>
+                            <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+                        </div>`;
           });
           html += "</div>";
           content.innerHTML = html;
           attachTooltips(div);
 
-          // After content loads, adjust overflow if the saved height already shows everything
           if (initialHeight) {
             requestAnimationFrame(() => {
               const currentHeight = parseInt(div.style.height);
@@ -330,7 +335,6 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
             });
           }
 
-          // Clamp after content renders (prevents off‑screen restored cards)
           requestAnimationFrame(() => {
             clampToViewport(div);
             const fc = floatingCards.find((f) => f.id == id);
@@ -386,7 +390,7 @@ function restoreFloatingCards() {
   }
 }
 
-// ---------- Drag-to-duplicate from main price box ----------
+// ---------- Drag-to-duplicate ----------
 let dragState = null;
 let dragPreview = null;
 
@@ -463,16 +467,16 @@ function endDrag(e) {
   dragState = null;
 }
 
-priceBox.addEventListener("mousedown", startDrag);
-document.addEventListener("mousemove", moveDrag);
-document.addEventListener("mouseup", endDrag);
+// ---------- Use pointer events for drag-to-duplicate (tablet + desktop) ----------
+priceBox.addEventListener("pointerdown", startDrag);
+document.addEventListener("pointermove", moveDrag);
+document.addEventListener("pointerup", endDrag);
 
-// ---------- Attach clear all button ----------
 if (clearAllBtn) {
   clearAllBtn.addEventListener("click", clearAllFloating);
 }
 
-// ---------- Right‑click (desktop) + long‑press (mobile) pin / unpin ----------
+// ---------- Pin listeners ----------
 let longPressTimer = null;
 
 function attachPinListeners() {
@@ -491,7 +495,6 @@ function attachPinListeners() {
     }
   }
 
-  // --- Attach to history items ---
   historyDiv.addEventListener("contextmenu", (e) => {
     const btn = e.target.closest(".hist-btn");
     if (!btn) return;
@@ -537,16 +540,13 @@ function attachPinListeners() {
   }
 }
 
-// ------------------------------------------------------------
-// Search input click – clear and close dropdown
-// ------------------------------------------------------------
+// ---------- Search input ----------
 searchInput.addEventListener("click", () => {
   searchInput.value = "";
   resultsDiv.style.display = "none";
   selectedIndex = -1;
 });
 
-// Close dropdown / close help / close changelog
 document.addEventListener("click", (e) => {
   if (
     e.target !== searchInput &&
@@ -572,9 +572,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ------------------------------------------------------------
-// Info icon toggle (with mutual exclusion)
-// ------------------------------------------------------------
+// Info icon toggle
 if (infoIcon) {
   infoIcon.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -583,12 +581,22 @@ if (infoIcon) {
     infoIcon.style.color = helpVisible ? "#ffae00" : "#7a8294";
 
     if (helpVisible) {
-      const iconRect = infoIcon.getBoundingClientRect();
-      helpBox.style.position = "fixed";
-      helpBox.style.left = iconRect.right + 15 + "px";
-      helpBox.style.top = iconRect.top + "px";
-      helpBox.style.right = "auto";
-      helpBox.style.bottom = "auto";
+      // Only position manually on large screens; on mobile, let CSS handle it
+      if (window.innerWidth > 767) {
+        const iconRect = infoIcon.getBoundingClientRect();
+        helpBox.style.position = "fixed";
+        helpBox.style.left = iconRect.right + 15 + "px";
+        helpBox.style.top = iconRect.top + "px";
+        helpBox.style.right = "auto";
+        helpBox.style.bottom = "auto";
+      } else {
+        // Reset inline styles so CSS media query takes over
+        helpBox.style.position = "";
+        helpBox.style.left = "";
+        helpBox.style.top = "";
+        helpBox.style.right = "";
+        helpBox.style.bottom = "";
+      }
     }
 
     if (changelogVisible) {
@@ -599,9 +607,7 @@ if (infoIcon) {
   });
 }
 
-// ------------------------------------------------------------
-// Updates icon toggle (changelog) with mutual exclusion
-// ------------------------------------------------------------
+// Updates icon toggle
 if (updatesIcon) {
   updatesIcon.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -610,12 +616,22 @@ if (updatesIcon) {
     updatesIcon.style.color = changelogVisible ? "#ffae00" : "#7a8294";
 
     if (changelogVisible) {
-      const iconRect = updatesIcon.getBoundingClientRect();
-      changelogBox.style.position = "fixed";
-      changelogBox.style.left = iconRect.right + 15 + "px";
-      changelogBox.style.top = iconRect.top + "px";
-      changelogBox.style.right = "auto";
-      changelogBox.style.bottom = "auto";
+      // Only position manually on large screens; on mobile, let CSS handle it
+      if (window.innerWidth > 767) {
+        const iconRect = updatesIcon.getBoundingClientRect();
+        changelogBox.style.position = "fixed";
+        changelogBox.style.left = iconRect.right + 15 + "px";
+        changelogBox.style.top = iconRect.top + "px";
+        changelogBox.style.right = "auto";
+        changelogBox.style.bottom = "auto";
+      } else {
+        // Reset inline styles so CSS media query takes over
+        changelogBox.style.position = "";
+        changelogBox.style.left = "";
+        changelogBox.style.top = "";
+        changelogBox.style.right = "";
+        changelogBox.style.bottom = "";
+      }
     }
 
     if (helpVisible) {
@@ -626,31 +642,25 @@ if (updatesIcon) {
   });
 }
 
-// ------------------------------------------------------------
-// Fetch changelog from GitHub commits
-// ------------------------------------------------------------
+// ---------- Changelog ----------
 async function loadChangelog() {
   try {
     const res = await fetch(
       "https://api.github.com/repos/x0XP/x0xp.github.io/commits?per_page=10",
     );
     const commits = await res.json();
-
     const content = document.getElementById("changelogContent");
     if (!content) return;
-
     if (!Array.isArray(commits) || commits.length === 0) {
       content.innerHTML = "No updates yet.";
       return;
     }
-
     let html = "";
     commits.forEach((commit) => {
       const msg = commit.commit.message.split("\n")[0];
       const date = new Date(commit.commit.author.date).toLocaleDateString();
       html += `<div>${date} – ${msg}</div>`;
     });
-
     content.innerHTML = html;
   } catch (e) {
     console.error("Failed to load changelog", e);
@@ -659,9 +669,7 @@ async function loadChangelog() {
   }
 }
 
-// ------------------------------------------------------------
-// Fetch with retry helper
-// ------------------------------------------------------------
+// ---------- Fetch with retry ----------
 async function fetchWithRetry(url, options, retries = 1) {
   for (let i = 0; i <= retries; i++) {
     try {
@@ -676,9 +684,7 @@ async function fetchWithRetry(url, options, retries = 1) {
   }
 }
 
-// ------------------------------------------------------------
-// Initialisation
-// ------------------------------------------------------------
+// ---------- Init ----------
 async function initTracker() {
   try {
     const priceRes = await fetchWithRetry(
@@ -689,10 +695,8 @@ async function initTracker() {
       "https://prices.runescape.wiki/api/v1/osrs/mapping",
       { headers },
     );
-
     const prices = await priceRes.json();
     const mappings = await mapRes.json();
-
     mappings.forEach((item) => {
       if (prices.data[item.id]) {
         itemMap[item.name.toLowerCase()] = { id: item.id, name: item.name };
@@ -700,19 +704,13 @@ async function initTracker() {
     });
     console.log(`Loaded ${Object.keys(itemMap).length} tradeable items`);
   } catch (e) {
-    console.error(
-      "Failed to load essential price data – the app may not work correctly.",
-      e,
-    );
+    console.error("Failed to load essential price data", e);
   }
 
   try {
     await loadCollectionLogData();
   } catch (e) {
-    console.error(
-      "Collection log loading failed – boss searches won't work.",
-      e,
-    );
+    console.error("Collection log loading failed", e);
     bossCollectionCache = {};
   }
 
@@ -725,9 +723,7 @@ async function initTracker() {
   if (card) {
     card.addEventListener(
       "animationend",
-      () => {
-        card.classList.remove("fade-in");
-      },
+      () => card.classList.remove("fade-in"),
       { once: true },
     );
   }
@@ -735,23 +731,18 @@ async function initTracker() {
   const hash = window.location.hash;
   if (hash) {
     const hashParams = parseHash(hash);
-    if (hashParams.item) {
-      getPrice(hashParams.item, true);
-      return;
-    }
-    if (hashParams.boss) {
-      getPrice(hashParams.boss, true);
-      return;
-    }
+    if (hashParams.item) getPrice(hashParams.item, true);
+    else if (hashParams.boss) getPrice(hashParams.boss, true);
   }
 
   const savedItem = sessionStorage.getItem("lastSearchedItem");
   if (savedItem) getPrice(savedItem, true);
+
+  // ---------- Start auto-refresh ----------
+  startAutoRefresh();
 }
 
-// ------------------------------------------------------------
-// URL hash helpers
-// ------------------------------------------------------------
+// ---------- Hash helpers ----------
 function parseHash(hash) {
   const params = {};
   const parts = hash.substring(1).split("&");
@@ -772,9 +763,7 @@ function updateUrlHash(type, name) {
   }
 }
 
-// ------------------------------------------------------------
-// Smooth card height animation
-// ------------------------------------------------------------
+// ---------- Animate card height ----------
 function animateCardHeight(updateCallback) {
   if (!card) {
     updateCallback();
@@ -791,7 +780,7 @@ function animateCardHeight(updateCallback) {
     card.style.height = "auto";
     const endHeight = card.offsetHeight;
     card.style.height = startHeight + "px";
-    card.offsetHeight; // force reflow
+    card.offsetHeight;
     card.style.height = endHeight + "px";
 
     setTimeout(() => {
@@ -802,9 +791,7 @@ function animateCardHeight(updateCallback) {
   });
 }
 
-// ------------------------------------------------------------
-// Fetch the Collection Log page and extract every boss section
-// ------------------------------------------------------------
+// ---------- Collection log ----------
 async function loadCollectionLogData() {
   console.log("Fetching Collection Log page HTML...");
   const html = await fetchHTML("Collection_log");
@@ -824,28 +811,22 @@ async function loadCollectionLogData() {
   const tables = Array.from(doc.querySelectorAll("table.wikitable"));
 
   const bossMap = {};
-  let bossesWithItems = 0;
-
   headings.forEach((heading) => {
     try {
       const headingText = cleanText(heading.textContent);
       if (!headingText) return;
-
       const table = findNextTable(heading, tables);
       if (!table) return;
-
       const items = extractTradeableItems(table);
       if (items.length > 0) {
         bossMap[headingText] = [...new Set(items)];
-        bossesWithItems++;
-        console.log(`✅ ${headingText}: [${bossMap[headingText].join(", ")}]`);
       }
     } catch (e) {
       console.warn("Skipping malformed boss section", e);
     }
   });
 
-  console.log(`Bosses with tradeable uniques: ${bossesWithItems}`);
+  console.log(`Bosses with tradeable uniques: ${Object.keys(bossMap).length}`);
   bossCollectionCache = bossMap;
 }
 
@@ -899,70 +880,26 @@ function findBossKey(name) {
   );
 }
 
-// ------------------------------------------------------------
-// History & UI helpers
-// ------------------------------------------------------------
+// ---------- History & pinning ----------
 function saveHistory(name) {
   let finalName = name;
   if (!itemMap[name.toLowerCase()]) {
     const bossKey = findBossKey(name);
-    if (bossKey) {
-      finalName = bossKey;
-    } else {
-      return;
-    }
+    if (bossKey) finalName = bossKey;
+    else return;
   } else {
     finalName = itemMap[name.toLowerCase()].name;
   }
 
   const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
-  if (pinned.includes(finalName)) {
-    return;
-  }
-
-  const oldButtons = Array.from(historyDiv.children);
-  const oldPositions = oldButtons.map((btn) => {
-    const rect = btn.getBoundingClientRect();
-    return { name: btn.textContent.trim(), left: rect.left, top: rect.top };
-  });
+  if (pinned.includes(finalName)) return;
 
   let hist = JSON.parse(localStorage.getItem("osrsHistory") || "[]");
   hist = [finalName, ...hist.filter((i) => i !== finalName)].slice(0, 5);
   localStorage.setItem("osrsHistory", JSON.stringify(hist));
-
   loadHistory();
-
-  const newButtons = Array.from(historyDiv.children);
-  newButtons.forEach((btn) => {
-    const btnName = btn.textContent.trim();
-    const oldPos = oldPositions.find((p) => p.name === btnName);
-
-    if (oldPos) {
-      const newRect = btn.getBoundingClientRect();
-      const deltaX = oldPos.left - newRect.left;
-      const deltaY = oldPos.top - newRect.top;
-
-      if (deltaX !== 0 || deltaY !== 0) {
-        btn.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-        btn.style.transition = "none";
-        requestAnimationFrame(() => {
-          btn.style.transition = "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
-          btn.style.transform = "none";
-        });
-      }
-    } else {
-      btn.style.opacity = "0";
-      btn.style.transform = "scale(0.85)";
-      requestAnimationFrame(() => {
-        btn.style.transition = "all 0.4s ease";
-        btn.style.opacity = "1";
-        btn.style.transform = "none";
-      });
-    }
-  });
 }
 
-// ------------- Animated pinning (FLIP movement) -------------
 function loadPinned() {
   const pinned = JSON.parse(localStorage.getItem("osrsPinned") || "[]");
   if (!pinnedDiv) return;
@@ -1067,9 +1004,7 @@ window.togglePin = function (name, action) {
   });
 };
 
-// ------------------------------------------------------------
-// Formatting helpers
-// ------------------------------------------------------------
+// ---------- Formatting ----------
 function formatGP(num) {
   if (!num && num !== 0) return "N/A";
   return num.toLocaleString();
@@ -1141,9 +1076,6 @@ function findClosestItem(text) {
   return null;
 }
 
-// ------------------------------------------------------------
-// Resolve exact wiki page name (handles disambiguations)
-// ------------------------------------------------------------
 function resolveWikiName(itemName) {
   const lower = itemName.toLowerCase();
   if (itemMap[lower]) return itemMap[lower].name;
@@ -1157,34 +1089,23 @@ function resolveWikiName(itemName) {
   return itemName;
 }
 
-// ------------------------------------------------------------
-// Build an <img> tag with automatic fallback to NAME_(item).png
-// ------------------------------------------------------------
 function fallbackItemIcon(primaryName, fallbackName, size = 20) {
   const coinIcon = "https://oldschool.runescape.wiki/images/Coins_10000.png";
-
   function safeFilename(str) {
     return str.replace(/ /g, "_").replace(/'/g, "%27");
   }
-
   const primarySrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeFilename(primaryName)}.png`;
   const fallbackSrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeFilename(fallbackName)}.png`;
-
   return `<img src="${primarySrc}"
        style="width:${size}px; height:${size}px; object-fit:contain; flex-shrink:0;"
        onerror="this.onerror=null; this.src='${fallbackSrc}'; this.onerror=()=>this.src='${coinIcon}';">`;
 }
 
-// ------------------------------------------------------------
-// Fetch prices individually for each item (fully parallel)
-// ------------------------------------------------------------
 async function fetchPricesForItemNames(itemNames) {
   const ids = itemNames
     .map((n) => itemMap[n.toLowerCase()]?.id)
     .filter((id) => id != null);
   if (ids.length === 0) return {};
-
-  console.log(`Fetching prices individually for ${ids.length} items...`);
 
   const promises = ids.map((id) =>
     fetch(`https://prices.runescape.wiki/api/v1/osrs/latest?id=${id}`, {
@@ -1203,14 +1124,10 @@ async function fetchPricesForItemNames(itemNames) {
   results.forEach(({ id, data }) => {
     if (data) priceMap[id] = data;
   });
-
-  console.log(`Received prices for ${Object.keys(priceMap).length} items`);
   return priceMap;
 }
 
-// ------------------------------------------------------------
-// Common icon button style
-// ------------------------------------------------------------
+// ---------- Icon buttons ----------
 const iconButtonStyle = `
     background: none;
     border: none;
@@ -1256,9 +1173,7 @@ window.copyShareLink = function (url) {
   navigator.clipboard.writeText(url).catch(console.error);
 };
 
-// ------------------------------------------------------------
-// Tooltip logic
-// ------------------------------------------------------------
+// ---------- Tooltips ----------
 let tooltipEl = null;
 function getTooltip() {
   if (!tooltipEl) tooltipEl = document.getElementById("tooltip");
@@ -1273,19 +1188,13 @@ function showTooltip(event, text) {
 
   const target = event.currentTarget;
   const targetRect = target.getBoundingClientRect();
-
   let left = targetRect.left + targetRect.width / 2;
   let top = targetRect.top - 24;
-
   const tooltipWidth = tooltip.offsetWidth;
   if (left - tooltipWidth / 2 < 8) left = tooltipWidth / 2 + 8;
   if (left + tooltipWidth / 2 > window.innerWidth - 8)
     left = window.innerWidth - tooltipWidth / 2 - 8;
-
-  if (top < 8) {
-    top = targetRect.bottom + 8;
-  }
-
+  if (top < 8) top = targetRect.bottom + 8;
   tooltip.style.left = left + "px";
   tooltip.style.top = top + "px";
 }
@@ -1304,9 +1213,293 @@ function attachTooltips(container) {
   });
 }
 
-// ------------------------------------------------------------
-// Dropdown HTML
-// ------------------------------------------------------------
+// ---------- Fade price animation ----------
+function fadePrice(element, newValue) {
+  // If there's a pending timeout, clear it
+  if (element.dataset.fadeTimeout) {
+    clearTimeout(element.dataset.fadeTimeout);
+    element.dataset.fadeTimeout = null;
+  }
+
+  // Store the new value in dataset for next time
+  element.dataset.value = newValue;
+
+  // Start fade out
+  element.style.transition = "opacity 0.15s ease";
+  element.style.opacity = "0";
+
+  // After fade out, update text and fade in
+  const timeout = setTimeout(() => {
+    element.textContent = newValue;
+    element.style.opacity = "1";
+    element.dataset.fadeTimeout = null;
+  }, 150);
+
+  element.dataset.fadeTimeout = timeout;
+}
+
+// ---------- Builders ----------
+function buildItemCard(
+  name,
+  buy,
+  sell,
+  iconHtml,
+  relativeTime,
+  shareUrl,
+  wikiName,
+  includeWrapper = true,
+) {
+  const buyStr = formatGP(buy);
+  const sellStr = formatGP(sell);
+  const content = `
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+      ${iconHtml}
+      <strong style="color:#ffae00; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</strong>
+    </div>
+    <div style="font-size: 12px; line-height: 1.5; color: #ccc;">
+      Buy: <span class="price-buy" style="color:#00ff00" data-value="${buyStr}">${buyStr}</span> gp<br>
+      Sell: <span class="price-sell" style="color:#ff0000" data-value="${sellStr}">${sellStr}</span> gp
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px;">
+      <span class="price-time" style="font-size: 10px; color: #7a8294;">Updated: ${relativeTime}</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        ${shareButtonHTML(shareUrl)}
+        ${wikiButtonHTML(wikiName)}
+      </div>
+    </div>`;
+  if (includeWrapper) {
+    return `<div class="drag-grip"></div>${content}`;
+  }
+  return content;
+}
+
+function buildBossCard(bossKey, uniquesHtml, shareUrl, includeWrapper = true) {
+  const content = `
+    <div style="text-align:left; width:100%;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
+        <strong style="font-size:14px; color:#ffae00; padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
+        <span style="position:relative; top:-2px; right:-4px;">${shareButtonHTML(shareUrl)}</span>
+      </div>
+      <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:6px; font-size:11px; line-height:1.4;">
+        ${uniquesHtml}
+      </div>
+    </div>`;
+  if (includeWrapper) {
+    return `<div class="drag-grip"></div>${content}`;
+  }
+  return content;
+}
+
+function skeletonLoader() {
+  return `
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
+            <div class="skeleton" style="height: 16px; width: 95%; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 13px; width: 65%; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 13px; width: 55%; border-radius: 4px;"></div>
+        </div>
+        <div class="skeleton" style="width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; margin-left: 15px;"></div>
+    </div>`;
+}
+
+// ---------- Resolve item icon ----------
+async function resolveItemIcon(itemData) {
+  const fetchThumbnail = async (pageName) => {
+    try {
+      const res = await fetch(
+        `https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(pageName)}&pithumbsize=200&redirects=1&origin=*`,
+      );
+      const data = await res.json();
+      const page = Object.values(data.query?.pages || {})[0];
+      return page?.thumbnail?.source || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  try {
+    let thumb = await fetchThumbnail(itemData.name);
+    if (!thumb) thumb = await fetchThumbnail(itemData.name + " (item)");
+    if (thumb) {
+      return `<img src="${thumb}" style="width:48px; height:48px; object-fit:contain; flex-shrink:0;">`;
+    }
+  } catch (e) {
+    /* fall through */
+  }
+
+  const wikiName = resolveWikiName(itemData.name);
+  const fallbackName = itemData.name + " (item)";
+  return fallbackItemIcon(wikiName, fallbackName, 48);
+}
+
+// ---------- Refresh a single card ----------
+async function refreshCard(container, type, name, isFloating = false) {
+  try {
+    if (type === "item") {
+      const itemData = itemMap[name.toLowerCase()];
+      if (!itemData) {
+        container.innerHTML = `<div style="padding:10px; text-align:center; color:#7a8294;">Item not found.</div>`;
+        return;
+      }
+      const res = await fetch(
+        `https://prices.runescape.wiki/api/v1/osrs/latest?id=${itemData.id}`,
+        { headers },
+      );
+      const data = await res.json();
+      const p = data.data[itemData.id] || {};
+      const relativeTime = formatTimeAgo(
+        p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN,
+      );
+      const shareUrl = `https://embed.x0xp.workers.dev?item=${encodeURIComponent(name).replace(/%20/g, "+")}&ts=${Date.now()}`;
+
+      // If container doesn't have the expected structure, rebuild it.
+      if (
+        !container.querySelector(".price-buy") ||
+        !container.querySelector(".price-sell")
+      ) {
+        const iconHtml = await resolveItemIcon(itemData);
+        const html = buildItemCard(
+          name,
+          p.high,
+          p.low,
+          iconHtml,
+          relativeTime,
+          shareUrl,
+          name,
+          !isFloating,
+        );
+        container.innerHTML = html;
+        attachTooltips(container);
+        return;
+      }
+
+      // Update prices with fade.
+      const buyElement = container.querySelector(".price-buy");
+      const sellElement = container.querySelector(".price-sell");
+      if (buyElement) fadePrice(buyElement, formatGP(p.high));
+      if (sellElement) fadePrice(sellElement, formatGP(p.low));
+
+      // Update timestamp with fade.
+      const timeElement = container.querySelector(".price-time");
+      if (timeElement) {
+        timeElement.style.transition = "opacity 0.15s ease";
+        timeElement.style.opacity = "0";
+        setTimeout(() => {
+          timeElement.textContent = `Updated: ${relativeTime}`;
+          timeElement.style.opacity = "1";
+        }, 150);
+      }
+    } else if (type === "boss") {
+      const bossKey = findBossKey(name) || name;
+      const items = bossCollectionCache[bossKey] || [];
+      if (items.length === 0) {
+        container.innerHTML = `<div style="padding:10px; text-align:center; color:#7a8294;">No tradeable uniques found.</div>`;
+        return;
+      }
+      const priceData = await fetchPricesForItemNames(items);
+      let uniquesHtml = "";
+      items.forEach((itemTitle) => {
+        const wikiName = resolveWikiName(itemTitle);
+        const fallbackName = itemTitle + " (item)";
+        const id = itemMap[itemTitle.toLowerCase()]?.id;
+        const p = id && priceData[id] ? priceData[id] : {};
+        const avg =
+          p.high != null && p.low != null ? (p.high + p.low) / 2 : null;
+        const priceStr = avg != null ? formatShortGP(avg) : "N/A";
+        uniquesHtml += `
+                <div class="suggested-item" style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
+                    <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
+                        ${fallbackItemIcon(wikiName, fallbackName, 16)}
+                        <span style="font-size:12px; color:#fff;">${itemTitle}</span>
+                    </div>
+                    <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+                </div>`;
+      });
+      const shareUrl = `https://embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
+      if (isFloating) {
+        // For floating cards, just render the list without the internal header or max-height wrapper
+        container.innerHTML = `<div style="width: 100%;">${uniquesHtml}</div>`;
+      } else {
+        // For the main price box, include the full card wrapper and header
+        const html = buildBossCard(bossKey, uniquesHtml, shareUrl, true);
+        container.innerHTML = html;
+      }
+
+      if (isFloating) {
+        const cardDiv = container.closest(".floating-card");
+        if (cardDiv) {
+          const header = cardDiv.querySelector(".floating-header");
+          const resizeHandle = cardDiv.querySelector(".resize-handle");
+          if (header && resizeHandle) {
+            const headerHeight = header.offsetHeight;
+            const handleHeight = resizeHandle.offsetHeight;
+            const contentNatural = container.scrollHeight;
+            const totalNatural =
+              contentNatural + headerHeight + handleHeight + 20;
+            const currentHeight = parseInt(cardDiv.style.height) || 200;
+            container.style.overflowY =
+              currentHeight >= totalNatural ? "hidden" : "auto";
+            clampToViewport(cardDiv);
+            const fc = floatingCards.find(
+              (f) => f.id == parseInt(cardDiv.dataset.id),
+            );
+            if (fc) {
+              fc.height = parseInt(cardDiv.style.height);
+              fc.x = parseInt(cardDiv.style.left);
+              fc.y = parseInt(cardDiv.style.top);
+              saveFloatingCards();
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Refresh error:", err);
+    container.innerHTML =
+      '<div style="padding:10px; text-align:center; color:#ff5555;">Failed to refresh.</div>';
+  }
+}
+
+// ---------- Refresh all cards ----------
+function refreshAllCards() {
+  if (isRefreshing) return;
+  isRefreshing = true;
+
+  console.log("🔄 Refreshing all cards...");
+
+  const refreshPromises = [];
+
+  if (priceBox.classList.contains("visible")) {
+    const type = priceBox.dataset.type;
+    const name = priceBox.dataset.name;
+    if (type && name) {
+      refreshPromises.push(refreshCard(priceBox, type, name, false));
+    }
+  }
+
+  floatingCards.forEach((fc) => {
+    const cardEl = floatingContainer.querySelector(`[data-id="${fc.id}"]`);
+    if (cardEl) {
+      const contentEl = cardEl.querySelector(".floating-content");
+      if (contentEl) {
+        refreshPromises.push(refreshCard(contentEl, fc.type, fc.name, true));
+      }
+    }
+  });
+
+  Promise.allSettled(refreshPromises).finally(() => {
+    isRefreshing = false;
+  });
+}
+
+// ---------- Start auto-refresh ----------
+function startAutoRefresh() {
+  console.log("⏰ Auto-refresh started (interval: 5 seconds for testing)");
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(refreshAllCards, 5000);
+}
+
+// ---------- Dropdown ----------
 function generateDropdownHTML(entries, query) {
   return entries
     .map((entry, index) => {
@@ -1346,9 +1539,6 @@ function generateDropdownHTML(entries, query) {
     .join("");
 }
 
-// ------------------------------------------------------------
-// Search input handler (debounced suggestions)
-// ------------------------------------------------------------
 searchInput.addEventListener("input", () => {
   if (suppressDropdown) {
     suppressDropdown = false;
@@ -1414,9 +1604,6 @@ function buildSearchResults(valLower) {
   return results;
 }
 
-// ------------------------------------------------------------
-// Keyboard navigation + Enter to search
-// ------------------------------------------------------------
 searchInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -1426,16 +1613,12 @@ searchInput.addEventListener("keydown", (e) => {
 
     const val = searchInput.value.trim().toLowerCase();
 
-    // Easter egg check – runs before any other resolution
     if (easterEggs[val]) {
       card.classList.add("dance-animation");
-      setTimeout(() => {
-        card.classList.remove("dance-animation");
-      }, 500);
+      setTimeout(() => card.classList.remove("dance-animation"), 500);
       return;
     }
 
-    // Normal dropdown navigation / resolution
     const items = resultsDiv.getElementsByClassName("suggested-item");
     if (items.length && items[0].innerText !== "No results located") {
       if (selectedIndex > -1 && items[selectedIndex]) {
@@ -1467,7 +1650,6 @@ searchInput.addEventListener("keydown", (e) => {
     return;
   }
 
-  // Arrow key navigation (only if dropdown is visible)
   const items = resultsDiv.getElementsByClassName("suggested-item");
   if (!items.length || items[0].innerText === "No results located") return;
 
@@ -1489,105 +1671,7 @@ function updateVisualSelection(elements) {
   }
 }
 
-// ------------------------------------------------------------
-// Skeleton loader
-// ------------------------------------------------------------
-function skeletonLoader() {
-  return `
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; max-width: 70%;">
-            <div class="skeleton" style="height: 16px; width: 95%; border-radius: 4px;"></div>
-            <div class="skeleton" style="height: 13px; width: 65%; border-radius: 4px;"></div>
-            <div class="skeleton" style="height: 13px; width: 55%; border-radius: 4px;"></div>
-        </div>
-        <div class="skeleton" style="width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; margin-left: 15px;"></div>
-    </div>`;
-}
-
-// ------------------------------------------------------------
-// Icon resolver for the single item card (with thumbnail fallback)
-// ------------------------------------------------------------
-async function resolveItemIcon(itemData) {
-  const fetchThumbnail = async (pageName) => {
-    try {
-      const res = await fetch(
-        `https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(pageName)}&pithumbsize=200&redirects=1&origin=*`,
-      );
-      const data = await res.json();
-      const page = Object.values(data.query?.pages || {})[0];
-      return page?.thumbnail?.source || null;
-    } catch (e) {
-      return null;
-    }
-  };
-
-  try {
-    let thumb = await fetchThumbnail(itemData.name);
-    if (!thumb) thumb = await fetchThumbnail(itemData.name + " (item)");
-
-    if (thumb) {
-      return `<img src="${thumb}" style="width:48px; height:48px; object-fit:contain; flex-shrink:0;">`;
-    }
-  } catch (e) {
-    /* fall through to fallback */
-  }
-
-  const wikiName = resolveWikiName(itemData.name);
-  const fallbackName = itemData.name + " (item)";
-  return fallbackItemIcon(wikiName, fallbackName, 48);
-}
-
-// ------------------------------------------------------------
-// Build a single item price card (matches floating card style)
-// ------------------------------------------------------------
-function buildItemCard(
-  name,
-  buy,
-  sell,
-  iconHtml,
-  relativeTime,
-  shareUrl,
-  wikiName,
-) {
-  return `
-    <div class="drag-grip"></div>
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-      ${fallbackItemIcon(resolveWikiName(name), name + " (item)", 32)}
-      <strong style="color:#ffae00; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</strong>
-    </div>
-    <div style="font-size: 12px; line-height: 1.5; color: #ccc;">
-      Buy: <span style="color:#00ff00">${formatGP(buy)}</span> gp<br>
-      Sell: <span style="color:#ff0000">${formatGP(sell)}</span> gp
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px;">
-      <span style="font-size: 10px; color: #7a8294;">Updated: ${relativeTime}</span>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        ${shareButtonHTML(shareUrl)}
-        ${wikiButtonHTML(wikiName)}
-      </div>
-    </div>`;
-}
-
-// ------------------------------------------------------------
-// Build the boss unique list card (matches floating card style)
-// ------------------------------------------------------------
-function buildBossCard(bossKey, uniquesHtml, shareUrl) {
-  return `
-    <div class="drag-grip"></div>
-    <div style="text-align:left; width:100%;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
-        <strong style="font-size:14px; color:#ffae00; padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
-        <span style="position:relative; top:-2px; right:-4px;">${shareButtonHTML(shareUrl)}</span>
-      </div>
-      <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:6px; font-size:11px; line-height:1.4;">
-        ${uniquesHtml}
-      </div>
-    </div>`;
-}
-
-// ------------------------------------------------------------
-// Price display (single item or boss list with live prices)
-// ------------------------------------------------------------
+// ---------- Main getPrice ----------
 async function getPrice(name, skipHistory = false) {
   resultsDiv.style.display = "none";
   searchInput.value = name;
@@ -1619,7 +1703,6 @@ async function getPrice(name, skipHistory = false) {
   }
 
   if (!itemData) {
-    // --- Boss view ---
     const bossKey = findBossKey(name);
     if (
       !bossKey ||
@@ -1644,13 +1727,13 @@ async function getPrice(name, skipHistory = false) {
       const priceStr = avg != null ? formatShortGP(avg) : "N/A";
 
       uniquesHtml += `
-        <div class="suggested-item" style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
-            <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
-                ${fallbackItemIcon(wikiName, fallbackName)}
-                <span style="font-size:12px; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
-            </div>
-            <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
-        </div>`;
+              <div class="suggested-item" style="display:flex; align-items:center; justify-content:space-between; padding: 7px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="getPrice('${itemTitle.replace(/'/g, "\\'")}')">
+                  <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex-grow:1;">
+                      ${fallbackItemIcon(wikiName, fallbackName, 16)}
+                      <span style="font-size:12px; color:#fff;">${itemTitle}</span>
+                  </div>
+                  <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+              </div>`;
     });
 
     const shareUrl = `https://embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
@@ -1667,7 +1750,7 @@ async function getPrice(name, skipHistory = false) {
     return;
   }
 
-  // --- Single item view ---
+  // Single item
   try {
     const [priceRes] = await Promise.all([
       fetch(
@@ -1708,4 +1791,84 @@ async function getPrice(name, skipHistory = false) {
   }
 }
 
+function bringToFront(element) {
+  highestZIndex++;
+  element.style.zIndex = highestZIndex;
+}
+
+// ---------- Add to Home Screen ----------
+const addToHomeBtn = document.getElementById("addToHomeBtn");
+const homeModal = document.getElementById("homeScreenModal");
+const modalClose = homeModal?.querySelector(".modal-close");
+const instructionsEl = document.getElementById("homeScreenInstructions");
+
+function isTouchDevice() {
+  return "ontouchstart" in window || navigator.maxTouchPoints > 0;
+}
+
+function isStandalone() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function showHomeScreenInstructions() {
+  if (!instructionsEl) return;
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(navigator.userAgent);
+
+  let html = "";
+  if (isIOS) {
+    html = `
+            <p>To add this site to your home screen on <strong>iOS</strong>:</p>
+            <ol>
+                <li>Tap the <strong>Share</strong> button (square with arrow).</li>
+                <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+                <li>Tap <strong>Add</strong> in the top right.</li>
+            </ol>
+        `;
+  } else if (isAndroid) {
+    html = `
+            <p>To add this site to your home screen on <strong>Android</strong>:</p>
+            <ol>
+                <li>Tap the <strong>Menu</strong> (three dots) in the browser.</li>
+                <li>Tap <strong>Add to Home screen</strong>.</li>
+                <li>Confirm the name and tap <strong>Add</strong>.</li>
+            </ol>
+        `;
+  } else {
+    html = `
+            <p>To add this site to your home screen:</p>
+            <ul>
+                <li>Open the browser menu and look for <strong>Add to Home screen</strong>.</li>
+                <li>On Safari (iOS), use the Share button and select <strong>Add to Home Screen</strong>.</li>
+            </ul>
+        `;
+  }
+  instructionsEl.innerHTML = html;
+  homeModal.classList.add("active");
+}
+
+// Show button only on touch devices, not if already standalone
+if (isTouchDevice() && !isStandalone()) {
+  addToHomeBtn.style.display = "block";
+  addToHomeBtn.addEventListener("click", showHomeScreenInstructions);
+}
+
+// Close modal
+if (modalClose) {
+  modalClose.addEventListener("click", () => {
+    homeModal.classList.remove("active");
+  });
+}
+homeModal?.addEventListener("click", (e) => {
+  if (e.target === homeModal) {
+    homeModal.classList.remove("active");
+  }
+});
+
+// Kick off
 initTracker();
