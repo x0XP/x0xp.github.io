@@ -49,3 +49,15 @@ Need more details? Click the info icon inside the search bar for a quick guide.
   - [OSRS Wiki MediaWiki API](https://oldschool.runescape.wiki/api.php) – page icons, collection log parsing
 - **Backend (Embeds):** [Cloudflare Workers](https://workers.cloudflare.com/) – generates dynamic Open Graph meta tags for Discord, Twitter, etc.
 - **Hosting:** GitHub Pages (static site) + Cloudflare Workers (embed worker)
+
+---
+
+## Versioning & Cache
+
+The site includes a built‑in version check. Every time an update is deployed, the app compares the stored version with the current one and automatically reloads to fetch the latest assets – no manual cache clearing needed.
+
+---
+
+## License & Credits
+
+Built for the OSRS community. All game data and images are property of Jagex Ltd.
