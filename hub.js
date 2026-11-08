@@ -81,6 +81,15 @@
     document.getElementById('githubBio').textContent = profile.bio || '';
   }
 
+  // Human-readable update ages, with the exact date available on hover.
+  function formatUpdateAge(date) {
+    const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
+    if (days === 0) return 'Updated today';
+    const unit = days >= 365 ? 'year' : days >= 30 ? 'month' : 'day';
+    const amount = unit === 'year' ? Math.floor(days / 365) : unit === 'month' ? Math.floor(days / 30) : days;
+    return 'Updated ' + new Intl.RelativeTimeFormat('en-GB', {numeric: 'always'}).format(-amount, unit);
+  }
+
   function renderRepositories(repositories) {
     githubRepos.replaceChildren();
     const count = document.getElementById('githubRepoCount');
@@ -91,7 +100,7 @@
       githubStatus.hidden = false;
       return;
     }
-    const format = new Intl.DateTimeFormat('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
+    const exactFormat = new Intl.DateTimeFormat('en-GB', {day: 'numeric', month: 'long', year: 'numeric'});
     const fragment = document.createDocumentFragment();
     for (const repo of repositories) {
       if (!repo || typeof repo.name !== 'string') continue;
@@ -100,6 +109,7 @@
       link.href = `https://github.com/x0XP/${encodeURIComponent(repo.name)}`;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
+
       const main = document.createElement('span');
       main.className = 'github-repo-main';
       const name = document.createElement('strong');
@@ -112,18 +122,24 @@
         description.textContent = repo.description;
         main.append(description);
       }
-      const details = [repo.language, repo.fork ? 'Fork' : '', repo.archived ? 'Archived' : ''].filter(Boolean);
-      if (details.length) {
-        const metadata = document.createElement('span');
-        metadata.className = 'github-repo-detail';
-        metadata.textContent = details.join(' · ');
-        main.append(metadata);
-      }
-      const updated = document.createElement('span');
+
+      const meta = document.createElement('span');
+      meta.className = 'github-repo-meta';
+      const updated = document.createElement('time');
       updated.className = 'github-repo-updated';
       const date = new Date(repo.updated_at);
-      updated.textContent = Number.isNaN(date.getTime()) ? 'Updated date unavailable' : `Updated ${format.format(date)}`;
-      link.append(main, updated);
+      if (Number.isNaN(date.getTime())) {
+        updated.textContent = 'Update date unavailable';
+      } else {
+        updated.dateTime = date.toISOString();
+        updated.title = `Updated ${exactFormat.format(date)}`;
+        updated.textContent = formatUpdateAge(date);
+      }
+      const external = document.createElement('i');
+      external.className = 'fas fa-arrow-up-right-from-square github-repo-external';
+      external.setAttribute('aria-hidden', 'true');
+      meta.append(updated, external);
+      link.append(main, meta);
       fragment.append(link);
     }
     githubRepos.append(fragment);
