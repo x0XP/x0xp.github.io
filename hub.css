@@ -274,6 +274,8 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
   margin: auto;
   padding: 30px;
   isolation: isolate;
+  /* Override the shared .card centring so each section fills the wider panel. */
+  align-items: stretch;
   text-align: left;
   border: 0;
   border-radius: 0;
