@@ -639,3 +639,22 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
   .price-history-periods { gap: 5px; }
   .price-history-period { min-width: 36px; padding: 6px; }
 }
+
+/* On phones and small tablets, reserve a fixed header lane for the x0XP
+   wordmark and Back button. Only the content below this lane scrolls, so
+   neither header control can overlap the Price Checker or GitHub cards. */
+@media (max-width: 850px) {
+  .checker-view,
+  .github-view {
+    top: calc(var(--edge) + 120px);
+    padding-top: 12px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    scroll-padding-top: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .checker-view,
+  .github-view {
+    top: calc(var(--edge) + 112px);
+  }
+}
