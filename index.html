@@ -44,7 +44,7 @@
             <section id="hubView" class="view hub-view" aria-label="Projects">
                 <nav class="project-list" aria-label="Projects">
                     <button id="openChecker" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><img src="assets/coin-stack.png" alt="" /><span>OSRS Price Checker</span></button>
-                    <a class="project-link" href="https://github.com/x0XP" target="_blank" rel="noopener noreferrer"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></a>
+                    <button id="openGithub" type="button" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></button>
                 </nav>
             </section>
             <section id="checkerView" class="view checker-view" aria-label="OSRS Price Checker" inert aria-hidden="true">
@@ -104,6 +104,31 @@
             </div>
         </div>
 
+            </section>
+            <section id="githubView" class="view github-view" aria-label="GitHub profile and repositories" inert aria-hidden="true">
+                <div class="card github-card">
+                    <div class="checker-heading github-heading">
+                        <i class="fab fa-github" aria-hidden="true"></i>
+                        <h2 id="githubTitle" tabindex="-1">GitHub</h2>
+                    </div>
+                    <div class="github-profile">
+                        <img id="githubAvatar" src="https://github.com/x0XP.png?size=128" alt="x0XP GitHub avatar" width="68" height="68" />
+                        <div class="github-profile-detail">
+                            <strong id="githubName">x0XP</strong>
+                            <span id="githubHandle">@x0XP</span>
+                            <p id="githubBio"></p>
+                        </div>
+                    </div>
+                    <a class="github-profile-button" href="https://github.com/x0XP" target="_blank" rel="noopener noreferrer">
+                        View GitHub profile <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                    <div class="github-repos-heading">
+                        <h3>Repositories</h3>
+                        <span id="githubRepoCount"></span>
+                    </div>
+                    <div id="githubStatus" class="github-status" role="status" aria-live="polite">Loading repositories…</div>
+                    <div id="githubRepos" class="github-repos"></div>
+                </div>
             </section>
         </main>
 
