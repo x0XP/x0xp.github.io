@@ -659,11 +659,14 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
   }
 }
 
-/* Softly dissolve content into the top of each scrolled panel rather than
-   cutting cards off against a hard horizontal edge. The fixed header is
-   outside these panels and is never faded. */
-.checker-view.has-scroll-fade,
-.github-view.has-scroll-fade {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 var(--scroll-fade, 32px));
-  mask-image: linear-gradient(to bottom, transparent 0px, #000 var(--scroll-fade, 32px));
+/* Fade only the clipped card edge, never the scroll container or backdrop.
+   The fade follows the card's clipped position and covers just 12px. */
+.checker-view > .card.has-card-edge-fade,
+.github-view > .github-card.has-card-edge-fade {
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent var(--card-fade-offset, 0px),
+    #000 calc(var(--card-fade-offset, 0px) + 12px));
+  mask-image: linear-gradient(to bottom,
+    transparent var(--card-fade-offset, 0px),
+    #000 calc(var(--card-fade-offset, 0px) + 12px));
 }
