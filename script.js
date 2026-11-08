@@ -47,8 +47,11 @@ function saveFloatingCards() {
     height: f.height,
   }));
   localStorage.setItem("floatingCards", JSON.stringify(data));
-  if (clearAllBtn)
-    clearAllBtn.style.display = floatingCards.length ? "inline-block" : "none";
+  if (clearAllBtn) {
+    const hasWindows = floatingCards.length > 0;
+    clearAllBtn.classList.toggle("has-floating-windows", hasWindows);
+    clearAllBtn.style.display = hasWindows ? "inline-block" : "none";
+  }
 }
 
 // Helper: keep a floating card entirely within the viewport

@@ -140,8 +140,12 @@
     function hover(event){
       const rect=svg.getBoundingClientRect();
       if(!rect.width)return;
-      const fraction=Math.min(1,Math.max(0,(event.clientX-rect.left)/rect.width));
-      const targetTs=xMin+fraction*(xMax-xMin);
+      // Convert the pointer into SVG coordinates, then map only the plot area.
+      // Using the full SVG width also includes the left Y-axis margin and
+      // makes the indicated price drift away from the cursor.
+      const svgX=(event.clientX-rect.left)*width/rect.width;
+      const plotX=Math.max(margin.left,Math.min(margin.left+w,svgX));
+      const targetTs=xMin+((plotX-margin.left)/w)*(xMax-xMin);
       let lo=0,hi=chartPoints.length-1;
       while(lo<hi){const mid=Math.floor((lo+hi)/2);if(chartPoints[mid].row.timestamp<targetTs)lo=mid+1;else hi=mid;}
       const candidates=[chartPoints[lo],chartPoints[Math.max(0,lo-1)]];

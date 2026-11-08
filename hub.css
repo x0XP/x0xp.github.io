@@ -9,10 +9,10 @@ button { font: inherit; }
 #username { font-size: 26px; line-height: 1.4; color: var(--gold) !important; text-shadow: 2px 3px 0 #4c391d,0 0 12px #d9ac5914; margin: 0; letter-spacing: 0; }
 #username::after { display: none; }
 #username img { display: block; width: 148px; height: 51px; object-fit: contain; }
-.back-home { display: flex; align-items: center; gap: 10px; margin-top: 20px; padding: 8px 0; background: none; border: 0; color: #d9cbb3; cursor: pointer; font-size: 13px; }
+.back-home { display: flex; align-items: center; gap: 10px; margin-top: 20px; padding: 8px 0; background: none; border: 0; color: #d9cbb3; cursor: pointer; font-size: 13px; opacity: .72; transition: opacity .28s ease, color .28s ease; }
 .back-home[hidden] { display: none; }
 .back-home span { font-size: 24px; line-height: 16px; transition: transform .2s; }
-.back-home:hover { color: var(--gold); }
+.back-home:hover, .back-home:focus-visible { color: var(--gold); opacity: 1; }
 .back-home:hover span { transform: translateX(-4px); }
 .view { position: fixed; inset: 0; z-index: 3; transition: transform .65s cubic-bezier(.22,.8,.25,1), opacity .45s; }
 .hub-view { transform: translateX(0); }
@@ -179,20 +179,21 @@ body.checker-open .checker-view { transform: translateX(0); opacity: 1; }
 .resize-handle:focus-visible { outline: none; }
 .resize-handle:focus-visible::after { height: 4px; box-shadow: 0 0 8px #d9ac5950; }
 .is-dragging, .is-resizing { user-select: none; }
-.clear-all-float-btn { right: 20px; bottom: 20px; min-height: 44px; padding: 12px 20px; border: 0; border-radius: 0; background: none; isolation: isolate; color: var(--ivory); font-size: 13px; font-weight: 400; letter-spacing: 0; box-shadow: 0 8px 24px #0003; }
+.clear-all-float-btn { right: 20px; bottom: 20px; min-height: 44px; padding: 12px 20px; border: 0; border-radius: 0; background: #10151af5; isolation: isolate; color: var(--ivory); font-size: 13px; font-weight: 400; letter-spacing: 0; box-shadow: 0 8px 24px #0003; transition: box-shadow .28s ease, color .28s ease; }
 .clear-all-float-btn::before, .clear-all-float-btn::after { content: ''; position: absolute; pointer-events: none; border-radius: 7px; }
-.clear-all-float-btn::before { inset: 0; z-index: -2; background: #b7986480; }
-.clear-all-float-btn::after { inset: 1px; z-index: -1; background: #10151af5; }
-.clear-all-float-btn:hover { color: var(--ivory); background: none; box-shadow: 0 8px 24px #0003; }
-.clear-all-float-btn:hover::before { background: var(--gold); }
-.clear-all-float-btn:hover::after { background: #2c2419f5; }
-.clear-all-float-btn.pointer-lit::after { background: radial-gradient(140px circle at var(--glow-x,50%) var(--glow-y,50%),#49351ff5,#10151af5); }
+.clear-all-float-btn::before { inset: 0; z-index: -2; background: #b7986480; transition: background-color .28s ease; }
+.clear-all-float-btn::after { inset: 1px; z-index: -1; background: radial-gradient(140px circle at var(--glow-x,50%) var(--glow-y,50%),#49351ff5,#10151af5); opacity: 0; transition: opacity .28s ease; }
+.clear-all-float-btn:hover, .clear-all-float-btn:focus-visible { box-shadow: 0 8px 24px #0003, 0 0 16px #d9ac5924; }
+.clear-all-float-btn:hover::before, .clear-all-float-btn:focus-visible::before { background: var(--gold); }
+.clear-all-float-btn:hover::after, .clear-all-float-btn:focus-visible::after { opacity: 1; }
 .floating-header .icon-btn:hover, .floating-content .icon-btn:hover { color: var(--gold) !important; }
 .drag-preview { background: #d9ac5910; border: 1px dashed #d9ac5980; border-radius: 8px; }
 #floatingContainer { position: fixed; inset: 0; z-index: 100; pointer-events: none; transform: translateX(100%); opacity: 0; transition: transform .65s cubic-bezier(.22,.8,.25,1), opacity .45s; }
 #floatingContainer .floating-card { pointer-events: auto; }
 #clearAllFloating { transform: translateX(100vw); opacity: 0; transition: transform .65s cubic-bezier(.22,.8,.25,1), opacity .45s; }
 body.checker-open #floatingContainer, body.checker-open #clearAllFloating { transform: translateX(0); opacity: 1; }
+@keyframes close-all-appear { from { opacity: 0; filter: brightness(.85); } to { opacity: 1; filter: brightness(1); } }
+body.checker-open #clearAllFloating.has-floating-windows { animation: close-all-appear .35s ease-out both; }
 body:not(.checker-open) #floatingContainer .floating-card { pointer-events: none; }
 body:not(.checker-open) .help-box, body:not(.checker-open) #tooltip { visibility: hidden !important; pointer-events: none; }
 .floating-card[data-type="boss"] .floating-content { overflow-y: auto !important; scrollbar-gutter: stable; }
@@ -250,7 +251,8 @@ body:not(.checker-open) .help-box, body:not(.checker-open) #tooltip { visibility
   .checker-view { padding-top: 145px; padding-bottom: 145px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .view, #floatingContainer, #clearAllFloating, .project-link::after, .back-home span { transition: none; }
+  .view, #floatingContainer, #clearAllFloating, .project-link::after, .back-home, .back-home span, .clear-all-float-btn, .clear-all-float-btn::before, .clear-all-float-btn::after { transition: none; }
+  body.checker-open #clearAllFloating.has-floating-windows { animation: none; }
 }
 
 /* GitHub panel: retain the Price Checker's card and slide design. */
