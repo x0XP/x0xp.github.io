@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-11-08",
+    "title": "Price history charts",
+    "changes": [
+      "Added a gold-accented historical price chart below the buy and sell prices for tradeable items.",
+      "Switch between 24 hours, 7 days, 30 days, 90 days, 1 year and all available history, with price and volume statistics.",
+      "Kept charts out of floating windows so their compact price cards remain easy to use."
+    ]
+  },
+  {
+    "date": "2026-11-08",
     "title": "Price checker redesign and floating-window fixes",
     "changes": [
       "Refreshed the item and boss price checker cards with a clearer amber-accented layout, search controls and scrolling results.",

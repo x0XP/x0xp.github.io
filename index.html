@@ -179,7 +179,7 @@
                 function start() {
                     window.x0xpInitialBody = document.body.innerHTML;
                     // The Price Checker must execute before hub.js uses trackerReady.
-                    for (const file of ['script.js', 'hub.js', 'site-refresh.js']) {
+                    for (const file of ['price-history.js', 'script.js', 'hub.js', 'site-refresh.js']) {
                         const script = document.createElement('script');
                         script.async = false;
                         script.src = file + '?site_asset=' + window.x0xpAssetToken;

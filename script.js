@@ -437,6 +437,8 @@ function startDrag(e) {
     } else {
       content.innerHTML = priceBox.innerHTML;
       content.querySelector('.drag-grip')?.remove();
+      // Floating copies keep their compact price layout, without a duplicate chart.
+      content.querySelector('.price-history')?.remove();
     }
     dragPreview.append(header, content);
     if (type === 'boss') {
@@ -1326,6 +1328,7 @@ function buildItemCard(
       <div><span class="price-label">BUY</span><span class="price-buy" data-value="${buyStr}">${buyStr}</span><small>gp</small></div>
       <div><span class="price-label">SELL</span><span class="price-sell" data-value="${sellStr}">${sellStr}</span><small>gp</small></div>
     </div>
+    ${includeWrapper && window.PriceHistory ? window.PriceHistory.markup(itemMap[name.toLowerCase()]?.id) : ''}
     <div class="price-footer"><span class="price-time">Updated: ${relativeTime}</span><div class="price-actions">${shareButtonHTML(shareUrl)}${wikiButtonHTML(wikiName)}</div></div>`;
   if (includeWrapper) {
     return `<div class="drag-grip"></div>${content}`;
@@ -1429,6 +1432,7 @@ async function refreshCard(container, type, name, isFloating = false) {
         );
         container.innerHTML = html;
         attachTooltips(container);
+        if (!isFloating) window.PriceHistory?.mount(container, itemData.id);
         return;
       }
 
@@ -1881,6 +1885,7 @@ async function getPrice(name, skipHistory = false) {
       priceBox.dataset.name = name;
       priceBox.classList.add("visible");
       attachTooltips(priceBox);
+      window.PriceHistory?.mount(priceBox, itemData.id);
     });
     updateUrlHash("item", name);
   } catch (err) {

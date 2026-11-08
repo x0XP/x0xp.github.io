@@ -6,7 +6,7 @@ Tools by x0XP.
 
 ## Current tools
 
-- **OSRS Price Checker** – Search items and bosses, check live prices, pin favourites, and open draggable floating windows.
+- **OSRS Price Checker** – Search items and bosses, check live prices and price history, pin favourites, and open draggable floating windows.
 
 ## Screens
 
