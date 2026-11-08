@@ -436,14 +436,6 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
   text-align: right;
   white-space: nowrap;
 }
-.github-repo-updated::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  flex: 0 0 5px;
-  border-radius: 50%;
-  background: #d9ac59;
-}
 .github-repo-external { color: #b69b6c; font-size: 12px; }
 .github-repo:hover .github-repo-external { color: var(--gold); }
 .github-retry {
