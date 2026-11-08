@@ -100,8 +100,8 @@
     status.hidden=true;
     const width=Math.max(280,Math.round(chart.clientWidth||740));
     const small=width<470;
-    const height=small?234:272;
-    const margin={top:16,left:small?54:68,right:14,bottom:34};
+    const height=small?160:178;
+    const margin={top:10,left:small?51:58,right:10,bottom:26};
     const w=width-margin.left-margin.right;
     const h=height-margin.top-margin.bottom;
     const values=rows.map(r=>r.price);
@@ -123,7 +123,7 @@
       svg.append(node('line',{x1:margin.left,y1:y,x2:width-margin.right,y2:y,stroke:'#b79864','stroke-opacity':'.2'}));
       svg.append(node('text',{x:margin.left-10,y:y+4,'text-anchor':'end',fill:'#b7b4ae','font-size':small?'10':'11'},shorthand(yMax-(yMax-yMin)*i/4)));
     }
-    const tickCount=small?3:6;
+    const tickCount=small?3:5;
     for(let i=0;i<tickCount;i++){
       const t=xMin+(xMax-xMin)*i/(tickCount-1);
       const x=xx(t);
@@ -167,8 +167,11 @@
     for(const stat of ['high','low','change','volume']){const el=field(stat);el.textContent='—';el.classList.remove('is-up','is-down');}
     if(!rows.length)return;
     const values=rows.map(r=>r.price);
-    field('high').textContent=gp(Math.max(...values))+' gp';
-    field('low').textContent=gp(Math.min(...values))+' gp';
+    const high=Math.max(...values),low=Math.min(...values);
+    field('high').textContent=shorthand(high)+' gp';
+    field('low').textContent=shorthand(low)+' gp';
+    field('high').title=gp(high)+' gp';
+    field('low').title=gp(low)+' gp';
     if(rows.length>1&&rows[0].price>0){
       const change=(rows[rows.length-1].price/rows[0].price-1)*100;
       const el=field('change');
