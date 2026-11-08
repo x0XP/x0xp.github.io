@@ -37,7 +37,7 @@
       const top = Math.max(0, panelBox.top);
       const left = Math.max(panelBox.left, cardBox.left);
       const right = Math.min(panelBox.right, cardBox.right);
-      const height = Math.min(12, panelBox.bottom - top, cardBox.bottom - top);
+      const height = Math.min(18, panelBox.bottom - top, cardBox.bottom - top);
       const clipped = panel.scrollTop > 0 && cardBox.top < top - .5 &&
         right > left && height > 0;
       edge.hidden = !clipped;

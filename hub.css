@@ -164,7 +164,8 @@ body.checker-open .checker-view { transform: translateX(0); opacity: 1; }
 .is-dragging .floating-header { cursor: grabbing; }
 .floating-title { font-size: 14px; color: var(--ivory); }
 .floating-symbol { display: flex; width: 24px; height: 24px; flex: 0 0 24px; align-items: center; justify-content: center; }
-.floating-symbol img { max-width: 24px; max-height: 24px; width: auto !important; height: auto !important; }
+.floating-symbol img { max-width: 24px; max-height: 24px; width: auto !important; height: auto !important; object-fit: contain; }
+.floating-symbol i { font-size: 19px; color: #d9ac59; }
 .floating-close { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 4px; padding: 0; }
 .floating-close:hover { color: var(--gold); background: #d9ac591a; }
 .floating-content { scrollbar-color: #796341 #10151a; }
@@ -179,13 +180,31 @@ body.checker-open .checker-view { transform: translateX(0); opacity: 1; }
 .resize-handle:focus-visible { outline: none; }
 .resize-handle:focus-visible::after { height: 4px; box-shadow: 0 0 8px #d9ac5950; }
 .is-dragging, .is-resizing { user-select: none; }
-.clear-all-float-btn { right: 20px; bottom: 20px; min-height: 44px; padding: 12px 20px; border: 0; border-radius: 0; background: #10151af5; isolation: isolate; color: var(--ivory); font-size: 13px; font-weight: 400; letter-spacing: 0; box-shadow: 0 8px 24px #0003; transition: box-shadow .28s ease, color .28s ease; }
-.clear-all-float-btn::before, .clear-all-float-btn::after { content: ''; position: absolute; pointer-events: none; border-radius: 7px; }
-.clear-all-float-btn::before { inset: 0; z-index: -2; background: #b7986480; transition: background-color .28s ease; }
-.clear-all-float-btn::after { inset: 1px; z-index: -1; background: radial-gradient(140px circle at var(--glow-x,50%) var(--glow-y,50%),#49351ff5,#10151af5); opacity: 0; transition: opacity .28s ease; }
-.clear-all-float-btn:hover, .clear-all-float-btn:focus-visible { box-shadow: 0 8px 24px #0003, 0 0 16px #d9ac5924; }
-.clear-all-float-btn:hover::before, .clear-all-float-btn:focus-visible::before { background: var(--gold); }
-.clear-all-float-btn:hover::after, .clear-all-float-btn:focus-visible::after { opacity: 1; }
+.clear-all-float-btn {
+  right: 20px;
+  bottom: 20px;
+  min-height: 44px;
+  padding: 12px 20px;
+  border: 1px solid #b7986480;
+  border-radius: 7px;
+  background: #10151af5;
+  color: var(--ivory);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  box-shadow: 0 8px 24px #0003;
+  transition: background-color .28s ease, border-color .28s ease,
+              box-shadow .28s ease, color .28s ease;
+}
+.clear-all-float-btn::before,
+.clear-all-float-btn::after { content: none; }
+.clear-all-float-btn:hover,
+.clear-all-float-btn:focus-visible {
+  color: var(--ivory);
+  background: #292622;
+  border-color: var(--gold);
+  box-shadow: 0 8px 24px #0003, 0 0 16px #d9ac5924;
+}
 .floating-header .icon-btn:hover, .floating-content .icon-btn:hover { color: var(--gold) !important; }
 .drag-preview { background: #d9ac5910; border: 1px dashed #d9ac5980; border-radius: 8px; }
 #floatingContainer { position: fixed; inset: 0; z-index: 100; pointer-events: none; transform: translateX(100%); opacity: 0; transition: transform .65s cubic-bezier(.22,.8,.25,1), opacity .45s; }
@@ -665,8 +684,12 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
 .scroll-card-edge {
   position: fixed;
   z-index: 5;
-  height: 12px;
+  height: 18px;
   pointer-events: none;
-  background: linear-gradient(to bottom, rgba(12, 17, 24, .17), rgba(12, 17, 24, 0));
+  /* Paint the *same wallpaper* as the page across this clipped strip,
+     then blend it away. Never mask the backdrop-filter card or the view. */
+  background: #0d1726 url('assets/hub-background.png') center / cover no-repeat fixed;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #0009 46%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #0009 46%, transparent 100%);
 }
 .scroll-card-edge[hidden] { display: none !important; }

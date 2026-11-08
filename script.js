@@ -129,7 +129,7 @@ function buildFloatingCardElement(
   const header = document.createElement("div");
   header.className = "floating-header";
   header.innerHTML = `
-    <span class="floating-symbol" aria-hidden="true">${isBoss ? '<img src="assets/coin-stack.png" alt="" />' : ""}</span>
+    <span class="floating-symbol" aria-hidden="true">${isBoss ? '<i class="fas fa-dungeon"></i>' : ""}</span>
     <span class="floating-title">${name}</span>
     ${shareUrl ? shareButtonHTML(shareUrl) : ""}
     <button class="floating-close" aria-label="Close floating card" data-id="${cardId}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
@@ -247,6 +247,41 @@ function buildFloatingCardElement(
   return { div, content };
 }
 
+
+const bossTitleIconRequests = new Map();
+
+function loadBossTitleIcon(card, name) {
+  const symbol = card.querySelector(".floating-symbol");
+  if (!symbol) return;
+  // PageImages returns the article's representative image. If there isn't
+  // one, retain the neutral dungeon icon rather than showing coins.
+  if (!bossTitleIconRequests.has(name)) {
+    const url = `https://oldschool.runescape.wiki/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(name)}&pithumbsize=96&redirects=1&origin=*`;
+    const request = fetch(url)
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        const page = Object.values(data?.query?.pages || {})[0];
+        const source = page?.thumbnail?.source;
+        return typeof source === "string" && source.startsWith("https://oldschool.runescape.wiki/")
+          ? source : null;
+      })
+      .catch(() => null);
+    bossTitleIconRequests.set(name, request);
+  }
+  bossTitleIconRequests.get(name).then(src => {
+    if (!src || !card.isConnected || card.dataset.name !== name) return;
+    const img = document.createElement("img");
+    img.alt = "";
+    img.width = 24;
+    img.height = 24;
+    img.addEventListener("load", () => {
+      if (symbol.isConnected) symbol.replaceChildren(img);
+    }, {once:true});
+    // Keep the neutral fallback if a remote image fails to load.
+    img.src = src;
+  });
+}
+
 // Add a new floating card
 function createFloatingCard(type, name, x, y, initialHeight = null, snapshot = null) {
   const id = ++floatingCardCounter;
@@ -275,6 +310,7 @@ function createFloatingCard(type, name, x, y, initialHeight = null, snapshot = n
     if (type === 'boss') div.dataset.contentReady = 'true';
     clampToViewport(div);
   }
+  if (type === "boss") loadBossTitleIcon(div, name);
 
   if (type === "item") {
     const itemData = itemMap[name.toLowerCase()];
@@ -423,7 +459,9 @@ function startDrag(e) {
     header.className = 'floating-header';
     const symbol = document.createElement('span');
     symbol.className = 'floating-symbol';
-    const icon = type === 'boss' ? Object.assign(new Image(), {src:'assets/coin-stack.png'}) : priceBox.querySelector('.item-summary img')?.cloneNode(true);
+    const icon = type === 'boss'
+      ? Object.assign(document.createElement('i'), {className: 'fas fa-dungeon'})
+      : priceBox.querySelector('.item-summary img')?.cloneNode(true);
     if (icon) symbol.append(icon);
     const title = document.createElement('span');
     title.className = 'floating-title';
@@ -773,7 +811,10 @@ async function initTracker() {
     const mappings = await mapRes.json();
     mappings.forEach((item) => {
       if (prices.data[item.id]) {
-        itemMap[item.name.toLowerCase()] = { id: item.id, name: item.name };
+        itemMap[item.name.toLowerCase()] = {
+          id: item.id, name: item.name,
+          icon: typeof item.icon === "string" ? item.icon : null,
+        };
       }
     });
     console.log(`Loaded ${Object.keys(itemMap).length} tradeable items`);
@@ -1169,15 +1210,18 @@ function resolveWikiName(itemName) {
 }
 
 function fallbackItemIcon(primaryName, fallbackName, size = 20) {
-  const coinIcon = "https://oldschool.runescape.wiki/images/Coins_10000.png";
-  function safeFilename(str) {
-    return str.replace(/ /g, "_").replace(/'/g, "%27");
-  }
-  const primarySrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeFilename(primaryName)}.png`;
-  const fallbackSrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeFilename(fallbackName)}.png`;
-  return `<img src="${primarySrc}"
+  // The OSRS prices mapping provides the actual inventory icon filename.
+  // A coin stack is not a valid fallback for unrelated item thumbnails.
+  const mapped = itemMap[primaryName.toLowerCase()] || itemMap[fallbackName.toLowerCase()];
+  const file = mapped?.icon;
+  const safeName = str => encodeURIComponent(str.replace(/ /g, "_"));
+  const primarySrc = typeof file === "string" && /\.(png|gif|webp)$/i.test(file)
+    ? `https://oldschool.runescape.wiki/images/${safeName(file)}`
+    : `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeName(primaryName + ".png")}`;
+  const fallbackSrc = `https://oldschool.runescape.wiki/w/Special:Redirect/file/${safeName(fallbackName + ".png")}`;
+  return `<img src="${primarySrc}" alt="" loading="lazy"
        style="width:${size}px; height:${size}px; object-fit:contain; flex-shrink:0;"
-       onerror="this.onerror=null; this.src='${fallbackSrc}'; this.onerror=()=>this.src='${coinIcon}';">`;
+       onerror="this.onerror=function(){this.onerror=null;this.style.visibility='hidden';};this.src='${fallbackSrc}';">`;
 }
 
 async function fetchPricesForItemNames(itemNames) {
