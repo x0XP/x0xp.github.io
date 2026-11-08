@@ -22,7 +22,6 @@ let itemMap = {};
 let bossCollectionCache = {};
 let selectedIndex = -1;
 let debounceTimer;
-let suppressDropdown = false;
 
 // DOM elements
 const searchInput = document.getElementById("itemSearch"),
@@ -609,7 +608,7 @@ function attachPinListeners() {
 // ---------- Search input ----------
 searchInput.addEventListener("click", () => {
   searchInput.value = "";
-  resultsDiv.style.display = "none";
+  showSearchResults(false);
   selectedIndex = -1;
 });
 
@@ -619,7 +618,7 @@ document.addEventListener("click", (e) => {
     e.target !== resultsDiv &&
     !resultsDiv.contains(e.target)
   ) {
-    resultsDiv.style.display = "none";
+    showSearchResults(false);
     selectedIndex = -1;
   }
   if (helpBox && !helpBox.contains(e.target) && e.target !== infoIcon) {
@@ -699,7 +698,7 @@ if (updatesIcon) {
 async function loadChangelog() {
   const content = document.getElementById("changelogContent");
   if (!content) return;
-  content.textContent = "Loading price checker updates…";
+  content.textContent = "Loading updates…";
 
   try {
     const response = await fetch("price-checker-changelog.json", { cache: "no-store" });
@@ -709,7 +708,7 @@ async function loadChangelog() {
 
     content.replaceChildren();
     if (updates.length === 0) {
-      content.textContent = "No price checker updates yet.";
+      content.textContent = "No updates yet.";
       return;
     }
 
@@ -720,7 +719,7 @@ async function loadChangelog() {
           typeof update.title !== "string" ||
           !Array.isArray(update.changes) ||
           !update.changes.every(change => typeof change === "string")) {
-        throw new Error("Invalid price checker changelog entry");
+        throw new Error("Invalid changelog entry");
       }
 
       const entry = document.createElement("article");
@@ -742,8 +741,8 @@ async function loadChangelog() {
       content.appendChild(entry);
     }
   } catch (error) {
-    console.error("Failed to load price checker changelog", error);
-    content.textContent = "Unable to load price checker updates.";
+    console.error("Failed to load updates changelog", error);
+    content.textContent = "Unable to load updates.";
   }
 }
 
@@ -1549,77 +1548,126 @@ function startAutoRefresh() {
   refreshInterval = setInterval(refreshAllCards, 60000);
 }
 
-// ---------- Dropdown ----------
-function generateDropdownHTML(entries, query) {
-  return entries
-    .map((entry, index) => {
-      const safeName = entry.name.replace(/'/g, "\\'");
-      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(`(${escaped})`, "gi");
-      const highlightedName = entry.name.replace(
-        regex,
-        `<strong style="color: #00ff00;">$1</strong>`,
-      );
-
-      if (entry.isBoss) {
-        return `
-          <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
-              <img src="https://oldschool.runescape.wiki/images/Collection_log_icon.png" class="suggest-icon" style="width:16px; height:16px;">
-              <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(Collection Log)</span></span>
-          </div>`;
-      }
-
-      if (entry.isBossDrop) {
-        const wikiName = resolveWikiName(entry.name);
-        const fallbackName = entry.name + " (item)";
-        return `
-          <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')" style="border-left: 3px solid #ffae00;">
-              ${fallbackItemIcon(wikiName, fallbackName)}
-              <span>${highlightedName} <span style="color: #ffae00; font-size: 11px; margin-left: 5px;">(${entry.boss} drop)</span></span>
-          </div>`;
-      }
-
-      const wikiName = resolveWikiName(entry.name);
-      const fallbackName = entry.name + " (item)";
-      return `
-        <div class="suggested-item" id="suggest-${index}" onclick="getPrice('${safeName}')">
-            ${fallbackItemIcon(wikiName, fallbackName)}
-            <span>${highlightedName}</span>
-        </div>`;
-    })
-    .join("");
-}
-
-searchInput.addEventListener("input", () => {
-  if (suppressDropdown) {
-    suppressDropdown = false;
+// ---------- Search suggestions ----------
+// Suggestions are DOM nodes, not interpolated HTML: item names are always text.
+function appendSearchHighlight(container, name, query) {
+  if (!query) {
+    container.textContent = name;
     return;
   }
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matches = new RegExp(escaped, "gi");
+  let cursor = 0;
+  for (const match of name.matchAll(matches)) {
+    container.append(document.createTextNode(name.slice(cursor, match.index)));
+    const highlight = document.createElement("strong");
+    highlight.className = "search-match";
+    highlight.textContent = match[0];
+    container.append(highlight);
+    cursor = match.index + match[0].length;
+  }
+  container.append(document.createTextNode(name.slice(cursor)));
+}
+
+function createSuggestionIcon(entry) {
+  const img = document.createElement("img");
+  img.className = "suggest-icon";
+  img.alt = "";
+  img.loading = "lazy";
+  if (entry.isBoss) {
+    img.src = "https://oldschool.runescape.wiki/images/Collection_log_icon.png";
+    return img;
+  }
+  const filenames = [resolveWikiName(entry.name), `${entry.name} (item)`];
+  const toWikiUrl = filename =>
+    `https://oldschool.runescape.wiki/w/Special:Redirect/file/${encodeURIComponent(filename.replace(/ /g, "_"))}.png`;
+  let fallbackIndex = 0;
+  img.onerror = () => {
+    if (++fallbackIndex < filenames.length) img.src = toWikiUrl(filenames[fallbackIndex]);
+    else {
+      img.onerror = null;
+      img.src = "https://oldschool.runescape.wiki/images/Coins_10000.png";
+    }
+  };
+  img.src = toWikiUrl(filenames[0]);
+  return img;
+}
+
+function makeSuggestion(entry, index, query) {
+  const row = document.createElement("div");
+  row.className = "suggested-item";
+  row.id = `suggest-${index}`;
+  row.setAttribute("role", "option");
+  row.setAttribute("aria-selected", "false");
+  row.dataset.searchName = entry.name;
+  row.append(createSuggestionIcon(entry));
+
+  const name = document.createElement("span");
+  name.className = "suggestion-name";
+  name.title = entry.name;
+  appendSearchHighlight(name, entry.name, query);
+  row.append(name);
+  if (entry.isBoss || entry.isBossDrop) {
+    const detail = document.createElement("span");
+    detail.className = "suggestion-type";
+    detail.textContent = entry.isBoss ? "Collection Log" : `${entry.boss} drop`;
+    row.append(detail);
+  }
+  row.addEventListener("click", () => getPrice(entry.name));
+  return row;
+}
+
+function showSearchResults(visible) {
+  searchInput.classList.toggle("has-suggestions", visible);
+  resultsDiv.style.display = visible ? "block" : "none";
+  searchInput.setAttribute("aria-expanded", String(visible));
+  if (!visible) searchInput.removeAttribute("aria-activedescendant");
+}
+
+function renderSearchResults(entries, query) {
+  resultsDiv.replaceChildren(...entries.map((entry, index) => makeSuggestion(entry, index, query)));
+  showSearchResults(true);
+}
+
+searchInput.setAttribute("role", "combobox");
+searchInput.setAttribute("aria-autocomplete", "list");
+searchInput.setAttribute("aria-controls", "results");
+searchInput.setAttribute("aria-expanded", "false");
+resultsDiv.setAttribute("role", "listbox");
+resultsDiv.setAttribute("aria-label", "Matching items and bosses");
+
+searchInput.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   const val = searchInput.value.trim();
   const valLower = val.toLowerCase();
   selectedIndex = -1;
+  searchInput.removeAttribute("aria-activedescendant");
   if (val.length < 3) {
-    resultsDiv.style.display = "none";
+    showSearchResults(false);
     return;
   }
 
   debounceTimer = setTimeout(() => {
+    if (searchInput.value.trim() !== val) return;
     const results = buildSearchResults(valLower);
     if (results.length > 0) {
-      resultsDiv.innerHTML = generateDropdownHTML(results.slice(0, 15), val);
-      resultsDiv.style.display = "block";
+      renderSearchResults(results.slice(0, 15), val);
       return;
     }
 
     const closest = getClosestMatch(valLower);
     if (closest) {
-      const safeName = closest.name.replace(/'/g, "\\'");
-      resultsDiv.innerHTML = `<div class="suggested-item" onclick="getPrice('${safeName}')" style="justify-content: center; cursor: pointer;"><span>Did you mean: <strong style="color: #00ff00;">${closest.name}</strong>?</span></div>`;
+      renderSearchResults([{ name: closest.name }], val);
+      const name = resultsDiv.querySelector(".suggestion-name");
+      name.prepend(document.createTextNode("Did you mean: "));
+      name.append(document.createTextNode("?"));
     } else {
-      resultsDiv.innerHTML = `<div class="suggested-item" style="color: #666; cursor: default; justify-content: center;"><span>No results located</span></div>`;
+      const empty = document.createElement("div");
+      empty.className = "suggested-item suggestion-empty";
+      empty.textContent = "No results located";
+      resultsDiv.replaceChildren(empty);
+      showSearchResults(true);
     }
-    resultsDiv.style.display = "block";
   }, 250);
 });
 
@@ -1656,11 +1704,16 @@ function buildSearchResults(valLower) {
 }
 
 searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    clearTimeout(debounceTimer);
+    showSearchResults(false);
+    selectedIndex = -1;
+    return;
+  }
   if (e.key === "Enter") {
     e.preventDefault();
     clearTimeout(debounceTimer);
-    resultsDiv.style.display = "none";
-    suppressDropdown = true;
+    showSearchResults(false);
 
     const val = searchInput.value.trim().toLowerCase();
 
@@ -1702,7 +1755,8 @@ searchInput.addEventListener("keydown", (e) => {
   }
 
   const items = resultsDiv.getElementsByClassName("suggested-item");
-  if (!items.length || items[0].innerText === "No results located") return;
+  if (resultsDiv.style.display === "none" ||
+      !items.length || items[0].innerText === "No results located") return;
 
   if (e.key === "ArrowDown" || (e.key === "Tab" && !e.shiftKey)) {
     e.preventDefault();
@@ -1717,14 +1771,19 @@ searchInput.addEventListener("keydown", (e) => {
 
 function updateVisualSelection(elements) {
   for (let i = 0; i < elements.length; i++) {
-    elements[i].style.background = i === selectedIndex ? "#2a2e3a" : "";
-    if (i === selectedIndex) elements[i].scrollIntoView({ block: "nearest" });
+    const active = i === selectedIndex;
+    elements[i].classList.toggle("is-selected", active);
+    elements[i].setAttribute("aria-selected", String(active));
+    if (active) {
+      searchInput.setAttribute("aria-activedescendant", elements[i].id);
+      elements[i].scrollIntoView({ block: "nearest" });
+    }
   }
 }
 
 // ---------- Main getPrice ----------
 async function getPrice(name, skipHistory = false) {
-  resultsDiv.style.display = "none";
+  showSearchResults(false);
   searchInput.value = name;
   selectedIndex = -1;
   if (!skipHistory) saveHistory(name);

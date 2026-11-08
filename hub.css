@@ -1,4 +1,4 @@
-:root { --edge: clamp(24px, 3.65vw, 56px); --gold: #d9ac59; --ivory: #f2e7d1; }
+:root { --edge: clamp(24px, 3.65vw, 56px); --gold: #d9ac59; --ivory: #f2e7d1; --list-highlight: #292622; --list-gold: #dfc089; }
 html, body { height: 100%; overflow: hidden; }
 body { display: block; padding: 0; color: var(--ivory); font-family: Arial, Helvetica, sans-serif; background: #0d1726 url('assets/hub-background.png') center / cover no-repeat fixed; }
 body::before { display: block; position: fixed; pointer-events: none; background: repeating-linear-gradient(transparent 0 2px,#000 2px 3px); opacity: .055; }
@@ -59,9 +59,61 @@ body.checker-open .checker-view { transform: translateX(0); opacity: 1; }
 #itemSearch { padding: 14px 38px 14px 14px; background: #090d14b3; border-color: #c6a16b45; color: var(--ivory); font-size: 14px; }
 #itemSearch:focus { border-color: var(--gold); box-shadow: 0 0 16px #d9ac5918; }
 #itemSearch { padding-left: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%239c998f' stroke-width='1.5'%3E%3Ccircle cx='7.5' cy='7.5' r='5'/%3E%3Cpath d='m11 11 4 4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 13px center; }
-.results-list { background: #11161d; border-color: #d9ac5940; max-height: 240px; }
-.suggested-item { padding: 11px 8px; }
-.suggested-item:hover { background: #d9ac5912; transform: none; }
+/* Search suggestions share the boss-unique list typography and understated row highlight. */
+#itemSearch { border-radius: 8px; }
+#itemSearch.has-suggestions { border-radius: 8px 8px 0 0; border-bottom-color: #b7986433; }
+.results-list {
+  background: #10151af8;
+  border: 1px solid #b7986480;
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 16px 35px #0007;
+  max-height: min(228px, 44dvh);
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #a38a55 transparent;
+}
+.results-list::-webkit-scrollbar { width: 2px; }
+.results-list::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.results-list::-webkit-scrollbar-track { background: transparent; }
+.results-list::-webkit-scrollbar-thumb,
+.results-list::-webkit-scrollbar-thumb:hover { background: #a38a55; border-radius: 0; box-shadow: none; }
+.results-list:hover { scrollbar-color: #a38a55 transparent; }
+.results-list .suggested-item {
+  min-height: 43px;
+  padding: 8px 12px;
+  gap: 10px;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  border-left: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .05);
+  background: transparent;
+  transform: none;
+  transition: background-color .15s ease;
+}
+.results-list .suggested-item:last-child { border-bottom: 0; }
+.results-list .suggested-item:hover,
+.results-list .suggested-item.is-selected,
+.scrollable-list .suggested-item:hover,
+.floating-content .suggested-item:hover {
+  background: var(--list-highlight);
+  border-left-color: transparent;
+  transform: none;
+}
+/* Use the same typeface and warm gold as the boss drops and their prices. */
+.scrollable-list .suggested-item,
+.floating-content .suggested-item { font-family: Arial, Helvetica, sans-serif; }
+.results-list .suggested-item .suggest-icon { width: 20px; height: 20px; }
+.suggestion-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-match { color: var(--list-gold); font-weight: 400; }
+.suggestion-type { color: #bba67e; flex-shrink: 0; max-width: 43%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.results-list .suggestion-empty { justify-content: center; color: #b5aa99; cursor: default; border-left: 0; }
+.results-list .suggestion-empty:hover { background: transparent; border-left-color: transparent; }
 .price-box { margin-top: 24px; padding: 0; background: transparent; border: 0; border-radius: 0; backdrop-filter: none; }
 .item-name { color: var(--ivory); font-size: 16px; }
 .timestamp { color: #a8a397; }
