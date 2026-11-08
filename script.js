@@ -1,5 +1,5 @@
 // ----- Auto‑reload on version change -----
-const APP_VERSION = "1.0.4";
+const APP_VERSION = "1.0.5";
 const storedVersion = localStorage.getItem("appVersion");
 
 if (storedVersion && storedVersion !== APP_VERSION) {
@@ -45,6 +45,7 @@ let changelogVisible = false;
 let floatingCards = [];
 let floatingCardCounter = 0;
 let highestZIndex = 100;
+const floatingDisposers = new Map();
 
 // Auto‑refresh state
 let refreshInterval = null;
@@ -65,37 +66,51 @@ function saveFloatingCards() {
 }
 
 // Helper: keep a floating card entirely within the viewport
+function floatingContentHeight(div) {
+  const content = div.querySelector('.floating-content');
+  const list = content?.firstElementChild;
+  if (!list || !div.dataset.contentReady) return Infinity;
+  return Math.max(160, Math.ceil(list.getBoundingClientRect().height + div.offsetHeight - content.clientHeight));
+}
+
 function clampToViewport(div) {
+  if (!div.getBoundingClientRect().width) return;
+  const edge = 0;
+  const bottom = innerHeight;
+  if (div.dataset.type === "boss") {
+    const requested = parseFloat(div.style.height) || 240;
+    div.style.height = Math.min(Math.max(160, requested), floatingContentHeight(div), Math.max(160, bottom - edge)) + "px";
+  }
   const rect = div.getBoundingClientRect();
-  let left = parseInt(div.style.left) || rect.left;
-  let top = parseInt(div.style.top) || rect.top;
-  let height = parseInt(div.style.height) || rect.height;
-  const width = rect.width;
-
-  if (rect.left < 0) {
-    left = 0;
-  } else if (rect.right > window.innerWidth) {
-    left = window.innerWidth - width;
-  }
-
-  if (rect.top < 0) {
-    top = 0;
-  }
-  const maxBottom = window.innerHeight - 10;
-  if (rect.bottom > maxBottom) {
-    const minHeight = 120;
-    const newHeight = Math.max(minHeight, maxBottom - rect.top);
-    if (newHeight !== rect.height) {
-      height = newHeight;
-    } else {
-      top = maxBottom - height;
-    }
-  }
-
+  const left = Math.max(edge, Math.min(parseFloat(div.style.left) || edge, innerWidth - rect.width - edge));
+  const top = Math.max(edge, Math.min(parseFloat(div.style.top) || edge, bottom - rect.height));
   div.style.left = left + "px";
   div.style.top = top + "px";
-  div.style.height = height + "px";
 }
+
+function rememberFloatingCard(div) {
+  if (!div.getBoundingClientRect().width) return;
+  const state = floatingCards.find(entry => entry.id === Number(div.dataset.id));
+  if (!state) return;
+  state.x = parseFloat(div.style.left);
+  state.y = parseFloat(div.style.top);
+  state.height = state.type === "boss" ? parseFloat(div.style.height) : null;
+  const handle = div.querySelector('.resize-handle');
+  if (handle) {
+    const bottom = innerHeight;
+    handle.setAttribute('aria-valuemin', '160');
+    handle.setAttribute('aria-valuemax', String(Math.round(Math.min(floatingContentHeight(div), Math.max(160, bottom - div.offsetTop)))));
+    handle.setAttribute('aria-valuenow', String(Math.round(div.offsetHeight)));
+  }
+  saveFloatingCards();
+}
+
+window.addEventListener("resize", () => {
+  floatingContainer.querySelectorAll(".floating-card").forEach(div => {
+    clampToViewport(div);
+    rememberFloatingCard(div);
+  });
+});
 
 // Create a floating card DOM element
 function buildFloatingCardElement(
@@ -113,6 +128,10 @@ function buildFloatingCardElement(
   div.style.left = x + "px";
   div.style.top = y + "px";
   div.dataset.id = cardId;
+  div.dataset.type = type;
+  div.dataset.name = name;
+  div.setAttribute("role", "region");
+  div.setAttribute("aria-label", `${name} floating window`);
 
   if (isBoss) {
     div.style.height = (initialHeight || 200) + "px";
@@ -121,9 +140,10 @@ function buildFloatingCardElement(
   const header = document.createElement("div");
   header.className = "floating-header";
   header.innerHTML = `
+    <span class="floating-symbol" aria-hidden="true">${isBoss ? '<img src="assets/coin-stack.png" alt="" />' : ""}</span>
     <span class="floating-title">${name}</span>
     ${shareUrl ? shareButtonHTML(shareUrl) : ""}
-    <span class="floating-close" data-id="${cardId}">×</span>
+    <button class="floating-close" aria-label="Close floating card" data-id="${cardId}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
   `;
 
   const content = document.createElement("div");
@@ -134,104 +154,101 @@ function buildFloatingCardElement(
   div.appendChild(header);
   div.appendChild(content);
 
+  // Pointer capture keeps a drag alive outside its handle without global listeners.
+  let move = null;
+  header.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || event.target.closest("button, a")) return;
+    bringToFront(div);
+    move = {x: event.clientX, y: event.clientY, left: div.offsetLeft, top: div.offsetTop};
+    header.setPointerCapture(event.pointerId);
+    div.classList.add("is-dragging");
+    event.preventDefault();
+  });
+  header.addEventListener("pointermove", event => {
+    if (!move) return;
+    div.style.left = move.left + event.clientX - move.x + "px";
+    div.style.top = move.top + event.clientY - move.y + "px";
+    clampToViewport(div);
+  });
+  const finishMove = () => {
+    if (!move) return;
+    move = null;
+    div.classList.remove("is-dragging");
+    clampToViewport(div);
+    rememberFloatingCard(div);
+  };
+  header.addEventListener("pointerup", finishMove);
+  header.addEventListener("pointercancel", finishMove);
+  header.addEventListener("lostpointercapture", finishMove);
+  header.addEventListener("keydown", event => {
+    if (event.target !== header || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 30 : 10;
+    div.style.left = div.offsetLeft + (event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0) + "px";
+    div.style.top = div.offsetTop + (event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0) + "px";
+    clampToViewport(div);
+    rememberFloatingCard(div);
+  });
+  header.tabIndex = 0;
+  header.setAttribute("aria-label", `Move ${name} window`);
+  div.addEventListener("pointerdown", () => bringToFront(div));
+
   if (isBoss) {
-    const resizeHandle = document.createElement("div");
-    resizeHandle.className = "resize-handle";
-    div.appendChild(resizeHandle);
-
-    let startY, startHeight, maxHeight;
-    resizeHandle.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      startY = e.clientY;
-      startHeight = div.offsetHeight;
-
-      const headerHeight = header.offsetHeight;
-      const handleHeight = resizeHandle.offsetHeight;
-      const contentNatural = content.scrollHeight;
-      maxHeight = contentNatural + headerHeight + handleHeight + 20;
-
-      document.body.style.userSelect = "none";
-      div.style.transition = "none";
-
-      const onMouseMove = (e) => {
-        const delta = e.clientY - startY;
-        let newHeight = startHeight + delta;
-        const cardTop = div.getBoundingClientRect().top;
-        const viewMax = window.innerHeight - cardTop - 10;
-        newHeight = Math.max(120, Math.min(newHeight, maxHeight, viewMax));
-        div.style.height = newHeight + "px";
-      };
-
-      const onMouseUp = () => {
-        document.body.style.userSelect = "";
-        div.style.transition = "";
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-
-        const currentHeight = parseInt(div.style.height);
-        content.style.overflowY =
-          currentHeight >= maxHeight ? "hidden" : "auto";
-
-        clampToViewport(div);
-        const fc = floatingCards.find((f) => f.id == cardId);
-        if (fc) {
-          fc.height = parseInt(div.style.height);
-          fc.x = parseInt(div.style.left);
-          fc.y = parseInt(div.style.top);
-          saveFloatingCards();
-        }
-      };
-
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
+    const handle = document.createElement("div");
+    handle.className = "resize-handle";
+    handle.tabIndex = 0;
+    handle.setAttribute("role", "slider");
+    handle.setAttribute("aria-label", `Resize ${name} window`);
+    handle.setAttribute("aria-orientation", "vertical");
+    div.appendChild(handle);
+    let resize = null;
+    const resizeTo = height => {
+      const bottom = innerHeight;
+      const max = Math.min(floatingContentHeight(div), Math.max(160, bottom - div.offsetTop));
+      div.style.height = Math.max(160, Math.min(height, max)) + "px";
+      handle.setAttribute("aria-valuemin", "160");
+      handle.setAttribute("aria-valuemax", String(Math.round(max)));
+      handle.setAttribute("aria-valuenow", String(Math.round(div.offsetHeight)));
+    };
+    handle.addEventListener("pointerdown", event => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      resize = {y: event.clientY, height: div.offsetHeight};
+      handle.setPointerCapture(event.pointerId);
+      div.classList.add("is-resizing");
     });
+    handle.addEventListener("pointermove", event => {
+      if (resize) resizeTo(resize.height + event.clientY - resize.y);
+    });
+    const finishResize = () => {
+      if (!resize) return;
+      resize = null;
+      div.classList.remove("is-resizing");
+      rememberFloatingCard(div);
+    };
+    handle.addEventListener("pointerup", finishResize);
+    handle.addEventListener("pointercancel", finishResize);
+    handle.addEventListener("lostpointercapture", finishResize);
+    handle.addEventListener("keydown", event => {
+      if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault();
+      resizeTo(div.offsetHeight + (event.key === "ArrowUp" ? -20 : 20));
+      rememberFloatingCard(div);
+    });
+    resizeTo(initialHeight || 240);
   }
 
   floatingContainer.appendChild(div);
-
-  header.querySelector(".floating-close").addEventListener("click", (e) => {
-    e.stopPropagation();
-    removeFloatingCard(cardId);
-  });
-
-  let isDragging = false,
-    dragStartX,
-    dragStartY,
-    origX,
-    origY;
-
-  // Use pointer events for drag (tablet + desktop)
-  header.addEventListener("pointerdown", (e) => {
-    if (e.target.classList.contains("floating-close")) return;
-    bringToFront(div);
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    origX = div.offsetLeft;
-    origY = div.offsetTop;
-    div.style.transition = "none";
-    e.preventDefault();
-  });
-
-  window.addEventListener("pointermove", (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - dragStartX;
-    const dy = e.clientY - dragStartY;
-    div.style.left = origX + dx + "px";
-    div.style.top = origY + dy + "px";
-  });
-
-  window.addEventListener("pointerup", () => {
-    if (!isDragging) return;
-    isDragging = false;
-    div.style.transition = "";
+  clampToViewport(div);
+  const observer = new ResizeObserver(() => {
     clampToViewport(div);
-    const fc = floatingCards.find((f) => f.id == cardId);
-    if (fc) {
-      fc.x = parseInt(div.style.left);
-      fc.y = parseInt(div.style.top);
-      saveFloatingCards();
-    }
+    rememberFloatingCard(div);
+  });
+  observer.observe(div);
+  floatingDisposers.set(cardId, () => observer.disconnect());
+  header.querySelector(".floating-close").addEventListener("click", event => {
+    event.stopPropagation();
+    removeFloatingCard(cardId);
   });
 
   if (shareUrl) {
@@ -242,7 +259,7 @@ function buildFloatingCardElement(
 }
 
 // Add a new floating card
-function createFloatingCard(type, name, x, y, initialHeight = null) {
+function createFloatingCard(type, name, x, y, initialHeight = null, snapshot = null) {
   const id = ++floatingCardCounter;
   const fc = { id, type, name, x, y, height: initialHeight };
   floatingCards.push(fc);
@@ -263,6 +280,12 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
     shareUrl,
     initialHeight,
   );
+  if (snapshot) {
+    content.innerHTML = snapshot.content;
+    div.querySelector('.floating-symbol').innerHTML = snapshot.icon;
+    if (type === 'boss') div.dataset.contentReady = 'true';
+    clampToViewport(div);
+  }
 
   if (type === "item") {
     const itemData = itemMap[name.toLowerCase()];
@@ -280,24 +303,9 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
             name + " (item)",
             32,
           );
-          const buyStr = formatGP(p.high);
-          const sellStr = formatGP(p.low);
-          content.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-              <div style="font-size:11px; line-height:1.4; color:#ccc;">
-                Buy: <span class="price-buy" style="color:#00ff00" data-value="${buyStr}">${buyStr}</span> gp<br>
-                Sell: <span class="price-sell" style="color:#ff0000" data-value="${sellStr}">${sellStr}</span> gp
-              </div>
-              ${iconHtml}
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:8px;">
-              <span class="price-time" style="font-size:9px; color:#7a8294;">Updated: ${formatTimeAgo(p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN)}</span>
-              <div style="display:flex; gap:6px;">
-                ${shareButtonHTML(itemShareUrl)}
-                ${wikiButtonHTML(name)}
-              </div>
-            </div>
-          `;
+          div.querySelector(".floating-symbol").innerHTML = iconHtml;
+          content.innerHTML = buildItemCard(name, p.high, p.low, iconHtml,
+            formatTimeAgo(p.highTime ? Math.round((Date.now() / 1000 - p.highTime) / 60) : NaN), itemShareUrl, name, false);
           attachTooltips(div);
         })
         .catch(() => {
@@ -326,27 +334,13 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
                                 ${fallbackItemIcon(wikiName, fallbackName, 16)}
                                 <span style="font-size:12px; color:#fff;">${itemTitle}</span>
                             </div>
-                            <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+                            <span style="font-size:11px; color:#dfc089; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
                         </div>`;
           });
           html += "</div>";
           content.innerHTML = html;
+          div.dataset.contentReady = "true";
           attachTooltips(div);
-
-          if (initialHeight) {
-            requestAnimationFrame(() => {
-              const currentHeight = parseInt(div.style.height);
-              const headerHeight =
-                div.querySelector(".floating-header").offsetHeight;
-              const handleHeight =
-                div.querySelector(".resize-handle")?.offsetHeight || 6;
-              const contentNatural = content.scrollHeight;
-              const totalNatural =
-                contentNatural + headerHeight + handleHeight + 20;
-              content.style.overflowY =
-                currentHeight >= totalNatural ? "hidden" : "auto";
-            });
-          }
 
           requestAnimationFrame(() => {
             clampToViewport(div);
@@ -366,10 +360,13 @@ function createFloatingCard(type, name, x, y, initialHeight = null) {
       content.innerHTML = `<div style="text-align:center; color:#7a8294; padding:10px;">No tradeable uniques found.</div>`;
     }
   }
+  return div;
 }
 
 // Remove a floating card
 function removeFloatingCard(id) {
+  floatingDisposers.get(id)?.();
+  floatingDisposers.delete(id);
   const div = floatingContainer.querySelector(`[data-id="${id}"]`);
   if (div) {
     div.style.opacity = "0";
@@ -382,6 +379,8 @@ function removeFloatingCard(id) {
 
 // Clear all floating cards
 function clearAllFloating() {
+  floatingDisposers.forEach(dispose => dispose());
+  floatingDisposers.clear();
   floatingContainer.querySelectorAll(".floating-card").forEach((card) => {
     card.style.opacity = "0";
     card.style.transform = "scale(0.9)";
@@ -408,6 +407,7 @@ let dragState = null;
 let dragPreview = null;
 
 function startDrag(e) {
+  if (e.button !== 0) return;
   if (
     !e.target.classList.contains("drag-grip") &&
     !e.target.closest(".drag-grip")
@@ -421,27 +421,56 @@ function startDrag(e) {
   e.preventDefault();
   document.body.style.userSelect = "none";
 
-  const rect = priceBox.getBoundingClientRect();
-  dragPreview = document.createElement("div");
-  dragPreview.className = "drag-preview";
-  dragPreview.style.display = "block";
-  dragPreview.style.width = rect.width + "px";
-  dragPreview.style.height = rect.height + "px";
-  dragPreview.style.left = e.clientX - rect.width / 2 + "px";
-  dragPreview.style.top = e.clientY - rect.height / 2 + "px";
+  // Measure the floating layout itself, never the larger checker result.
+  const existing = [...floatingContainer.querySelectorAll('.floating-card')].find(el => el.dataset.type === type && el.dataset.name === name);
+  dragPreview = existing ? existing.cloneNode(true) : document.createElement('div');
+  dragPreview.className = 'floating-card drag-preview';
+  dragPreview.dataset.type = type;
+  dragPreview.removeAttribute('id');
+  dragPreview.setAttribute('aria-hidden', 'true');
+  dragPreview.inert = true;
+  if (!existing) {
+    const header = document.createElement('div');
+    header.className = 'floating-header';
+    const symbol = document.createElement('span');
+    symbol.className = 'floating-symbol';
+    const icon = type === 'boss' ? Object.assign(new Image(), {src:'assets/coin-stack.png'}) : priceBox.querySelector('.item-summary img')?.cloneNode(true);
+    if (icon) symbol.append(icon);
+    const title = document.createElement('span');
+    title.className = 'floating-title';
+    title.textContent = name;
+    const close = document.createElement('span');
+    close.className = 'floating-close';
+    header.append(symbol, title, close);
+    const content = document.createElement('div');
+    content.className = 'floating-content';
+    if (type === 'boss') {
+      const list = document.createElement('div');
+      list.innerHTML = priceBox.querySelector('.scrollable-list')?.innerHTML || '';
+      content.append(list);
+    } else {
+      content.innerHTML = priceBox.innerHTML;
+      content.querySelector('.drag-grip')?.remove();
+    }
+    dragPreview.append(header, content);
+    if (type === 'boss') {
+      const handle = document.createElement('div');
+      handle.className = 'resize-handle';
+      dragPreview.append(handle);
+      dragPreview.style.height = '240px';
+    }
+  }
+  dragPreview.style.display = 'flex';
+  dragPreview.style.left = '0px';
+  dragPreview.style.top = '0px';
   document.body.appendChild(dragPreview);
-
-  dragState = {
-    type,
-    name,
-    previewEl: dragPreview,
-    startX: e.clientX,
-    startY: e.clientY,
-    offsetX: rect.width / 2,
-    offsetY: rect.height / 2,
-    width: rect.width,
-    height: rect.height,
-  };
+  if (type === 'boss') dragPreview.dataset.contentReady = 'true';
+  clampToViewport(dragPreview);
+  const rect = dragPreview.getBoundingClientRect();
+  dragPreview.style.left = e.clientX - rect.width / 2 + 'px';
+  dragPreview.style.top = e.clientY - rect.height / 2 + 'px';
+  clampToViewport(dragPreview);
+  dragState = {type, name, offsetX:rect.width / 2, offsetY:rect.height / 2, width:rect.width, height:rect.height};
 
   priceBox.style.cursor = "grabbing";
 }
@@ -450,12 +479,19 @@ function moveDrag(e) {
   if (!dragState) return;
   dragPreview.style.left = e.clientX - dragState.offsetX + "px";
   dragPreview.style.top = e.clientY - dragState.offsetY + "px";
+  clampToViewport(dragPreview);
 }
 
 function endDrag(e) {
   if (!dragState) return;
 
   document.body.style.userSelect = "";
+  const dropLeft = parseFloat(dragPreview?.style.left);
+  const dropTop = parseFloat(dragPreview?.style.top);
+  const snapshot = dragPreview ? {
+    content: dragPreview.querySelector('.floating-content').innerHTML,
+    icon: dragPreview.querySelector('.floating-symbol').innerHTML,
+  } : null;
   if (dragPreview) {
     dragPreview.remove();
     dragPreview = null;
@@ -469,12 +505,16 @@ function endDrag(e) {
     e.clientY < cardRect.top ||
     e.clientY > cardRect.bottom
   ) {
-    createFloatingCard(
+    const placed = createFloatingCard(
       dragState.type,
       dragState.name,
-      e.clientX - dragState.offsetX,
-      e.clientY - dragState.offsetY,
+      dropLeft,
+      dropTop,
+      dragState.type === "boss" ? dragState.height : null,
+      snapshot,
     );
+    placed.dataset.previewWidth = dragState.width;
+    placed.dataset.previewHeight = dragState.height;
   }
 
   dragState = null;
@@ -484,6 +524,19 @@ function endDrag(e) {
 priceBox.addEventListener("pointerdown", startDrag);
 document.addEventListener("pointermove", moveDrag);
 document.addEventListener("pointerup", endDrag);
+function cancelDuplicateDrag() {
+  if (!dragState) return;
+  dragPreview?.remove();
+  dragPreview = null;
+  dragState = null;
+  document.body.style.userSelect = "";
+  priceBox.style.cursor = "";
+}
+document.addEventListener("pointercancel", cancelDuplicateDrag);
+window.addEventListener("blur", cancelDuplicateDrag);
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") cancelDuplicateDrag();
+});
 
 if (clearAllBtn) {
   clearAllBtn.addEventListener("click", clearAllFloating);
@@ -587,40 +640,15 @@ document.addEventListener("click", (e) => {
 
 // ---------- Position panel helper ----------
 function positionPanel(box, icon) {
-  if (!box || !icon) return;
-  const iconRect = icon.getBoundingClientRect();
-  const boxWidth = 220; // approximate width
-  const viewportWidth = window.innerWidth;
-  const gap = 15;
-
-  // Try to place to the right if there's space
-  if (iconRect.right + gap + boxWidth < viewportWidth) {
-    box.style.position = "fixed";
-    box.style.left = iconRect.right + gap + "px";
-    box.style.top = Math.max(10, iconRect.top) + "px";
-    box.style.right = "auto";
-    box.style.bottom = "auto";
-    box.style.transform = "none";
-    box.style.zIndex = "101";
-    return;
-  }
-
-  // Otherwise place above the icon, centered
-  let left = iconRect.left + iconRect.width / 2;
-  let top = iconRect.top - 10;
-  // Ensure the box doesn't go off the top of the viewport
-  if (top < 10) top = 10;
-  const halfBox = boxWidth / 2;
-  if (left - halfBox < 10) left = halfBox + 10;
-  if (left + halfBox > viewportWidth - 10) left = viewportWidth - halfBox - 10;
-
-  box.style.position = "fixed";
-  box.style.left = left + "px";
-  box.style.top = top + "px";
-  box.style.right = "auto";
-  box.style.bottom = "auto";
-  box.style.transform = "translateX(-50%)";
-  box.style.zIndex = "101";
+  const rect = icon.getBoundingClientRect();
+  const width = box.offsetWidth;
+  const height = box.offsetHeight;
+  const gap = 12;
+  let left = rect.right + gap;
+  if (left + width > innerWidth - 16) left = rect.left - width - gap;
+  left = Math.max(16, Math.min(left, innerWidth - width - 16));
+  const top = Math.max(16, Math.min(rect.bottom + gap, innerHeight - height - 16));
+  Object.assign(box.style, {position: 'fixed', left: `${left}px`, top: `${top}px`, right: 'auto', bottom: 'auto', transform: 'none', zIndex: '101'});
 }
 
 // Info icon toggle – always use positionPanel
@@ -667,49 +695,60 @@ if (updatesIcon) {
   });
 }
 
-// ---------- Changelog ----------
+// ---------- Price checker changelog (independent of repository commits) ----------
 async function loadChangelog() {
+  const content = document.getElementById("changelogContent");
+  if (!content) return;
+  content.textContent = "Loading price checker updates…";
+
   try {
-    const res = await fetch(
-      "https://api.github.com/repos/x0XP/x0xp.github.io/commits?per_page=30",
-    );
-    const commits = await res.json();
-    const content = document.getElementById("changelogContent");
-    if (!content) return;
+    const response = await fetch("price-checker-changelog.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`Changelog request failed (${response.status})`);
+    const updates = await response.json();
+    if (!Array.isArray(updates)) throw new Error("Changelog must be an array");
 
-    if (!Array.isArray(commits) || commits.length === 0) {
-      content.innerHTML = "No updates yet.";
+    content.replaceChildren();
+    if (updates.length === 0) {
+      content.textContent = "No price checker updates yet.";
       return;
     }
 
-    // Filter out commits with "ignore commit" in the message (case insensitive)
-    const filtered = commits.filter((commit) => {
-      const msg = commit.commit.message.split("\n")[0];
-      return !msg.toLowerCase().includes("ignore commit");
-    });
+    for (const update of updates) {
+      if (!update || typeof update.date !== "string" ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(update.date) ||
+          Number.isNaN(Date.parse(`${update.date}T12:00:00Z`)) ||
+          typeof update.title !== "string" ||
+          !Array.isArray(update.changes) ||
+          !update.changes.every(change => typeof change === "string")) {
+        throw new Error("Invalid price checker changelog entry");
+      }
 
-    // Take the first 10 from the filtered list
-    const display = filtered.slice(0, 10);
-
-    if (display.length === 0) {
-      content.innerHTML = "No visible updates.";
-      return;
+      const entry = document.createElement("article");
+      entry.className = "update-entry";
+      const date = document.createElement("time");
+      date.dateTime = update.date;
+      date.textContent = new Date(`${update.date}T12:00:00Z`).toLocaleDateString("en-GB", {
+        day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
+      });
+      const title = document.createElement("h3");
+      title.textContent = update.title;
+      const changes = document.createElement("ul");
+      for (const change of update.changes) {
+        const item = document.createElement("li");
+        item.textContent = change;
+        changes.appendChild(item);
+      }
+      entry.append(date, title, changes);
+      content.appendChild(entry);
     }
-
-    let html = "";
-    display.forEach((commit) => {
-      const msg = commit.commit.message.split("\n")[0];
-      const date = new Date(commit.commit.author.date).toLocaleDateString();
-      html += `<div>${date} – ${msg}</div>`;
-    });
-
-    content.innerHTML = html;
-  } catch (e) {
-    console.error("Failed to load changelog", e);
-    const content = document.getElementById("changelogContent");
-    if (content) content.innerHTML = "Failed to load updates.";
+  } catch (error) {
+    console.error("Failed to load price checker changelog", error);
+    content.textContent = "Unable to load price checker updates.";
   }
 }
+
+// The changelog is local and should not wait for the live item/boss APIs.
+void loadChangelog();
 
 // ---------- Fetch with retry ----------
 async function fetchWithRetry(url, options, retries = 1) {
@@ -728,6 +767,8 @@ async function fetchWithRetry(url, options, retries = 1) {
 
 // ---------- Init ----------
 async function initTracker() {
+  searchInput.disabled = true;
+  searchInput.placeholder = "Loading items…";
   try {
     const priceRes = await fetchWithRetry(
       "https://prices.runescape.wiki/api/v1/osrs/latest",
@@ -756,10 +797,11 @@ async function initTracker() {
     bossCollectionCache = {};
   }
 
+  searchInput.disabled = false;
+  searchInput.placeholder = "Search an item or boss…";
   attachPinListeners();
   loadPinned();
   loadHistory();
-  loadChangelog();
   restoreFloatingCards();
 
   if (card) {
@@ -773,12 +815,12 @@ async function initTracker() {
   const hash = window.location.hash;
   if (hash) {
     const hashParams = parseHash(hash);
-    if (hashParams.item) getPrice(hashParams.item, true);
-    else if (hashParams.boss) getPrice(hashParams.boss, true);
+    if (hashParams.item) await getPrice(hashParams.item, true);
+    else if (hashParams.boss) await getPrice(hashParams.boss, true);
   }
 
   const savedItem = sessionStorage.getItem("lastSearchedItem");
-  if (savedItem) getPrice(savedItem, true);
+  if (savedItem && !/^#(?:item|boss)=/.test(hash)) await getPrice(savedItem, true);
 
   // ---------- Start auto-refresh ----------
   startAutoRefresh();
@@ -791,13 +833,15 @@ function parseHash(hash) {
   parts.forEach((part) => {
     const [key, value] = part.split("=");
     if (key && value) {
-      params[key] = decodeURIComponent(value.replace(/\+/g, " "));
+      try { params[key] = decodeURIComponent(value.replace(/\+/g, " ")); } catch { /* Ignore malformed external fragments. */ }
     }
   });
   return params;
 }
 
 function updateUrlHash(type, name) {
+  // Restoring cached cards in the background must not change the hub route.
+  if (!document.body.classList.contains("checker-open")) return;
   const encoded = encodeURIComponent(name).replace(/%20/g, "+");
   const hash = `#${type}=${encoded}`;
   if (window.location.hash !== hash) {
@@ -1062,6 +1106,8 @@ function formatShortGP(num) {
 
 function formatTimeAgo(totalMinutes) {
   if (isNaN(totalMinutes) || totalMinutes < 0) return "Just now";
+  if (totalMinutes === 0) return "Just now";
+  if (totalMinutes === 1) return "1 min ago";
   if (totalMinutes < 60) return `${totalMinutes} mins ago`;
   const totalHours = Math.round(totalMinutes / 60);
   if (totalHours < 24) return `${totalHours} hours ago`;
@@ -1185,7 +1231,7 @@ const iconButtonStyle = `
 
 function shareButtonHTML(url) {
   return `<button onclick="copyShareLink('${url.replace(/'/g, "\\'")}')"
-                class="icon-btn"
+                class="icon-btn" aria-label="Copy share link"
                 data-tooltip="Copy share link"
                 style="${iconButtonStyle}"
                 onmouseover="this.style.color='#ffae00'"
@@ -1198,7 +1244,7 @@ function shareButtonHTML(url) {
 }
 
 function wikiButtonHTML(pageName) {
-  return `<a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(pageName)}" target="_blank"
+  return `<a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(pageName)}" target="_blank" rel="noopener noreferrer" aria-label="Open Wiki page"
                 class="icon-btn"
                 data-tooltip="Open Wiki page"
                 style="${iconButtonStyle} text-decoration: none;"
@@ -1289,21 +1335,12 @@ function buildItemCard(
   const buyStr = formatGP(buy);
   const sellStr = formatGP(sell);
   const content = `
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-      ${iconHtml}
-      <strong style="color:#ffae00; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</strong>
+    <div class="item-summary">${iconHtml}<strong>${name}</strong></div>
+    <div class="price-grid">
+      <div><span class="price-label">BUY</span><span class="price-buy" data-value="${buyStr}">${buyStr}</span><small>gp</small></div>
+      <div><span class="price-label">SELL</span><span class="price-sell" data-value="${sellStr}">${sellStr}</span><small>gp</small></div>
     </div>
-    <div style="font-size: 12px; line-height: 1.5; color: #ccc;">
-      Buy: <span class="price-buy" style="color:#00ff00" data-value="${buyStr}">${buyStr}</span> gp<br>
-      Sell: <span class="price-sell" style="color:#ff0000" data-value="${sellStr}">${sellStr}</span> gp
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px;">
-      <span class="price-time" style="font-size: 10px; color: #7a8294;">Updated: ${relativeTime}</span>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        ${shareButtonHTML(shareUrl)}
-        ${wikiButtonHTML(wikiName)}
-      </div>
-    </div>`;
+    <div class="price-footer"><span class="price-time">Updated: ${relativeTime}</span><div class="price-actions">${shareButtonHTML(shareUrl)}${wikiButtonHTML(wikiName)}</div></div>`;
   if (includeWrapper) {
     return `<div class="drag-grip"></div>${content}`;
   }
@@ -1314,7 +1351,7 @@ function buildBossCard(bossKey, uniquesHtml, shareUrl, includeWrapper = true) {
   const content = `
     <div style="text-align:left; width:100%;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom:8px;">
-        <strong style="font-size:14px; color:#ffae00; padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
+        <strong style="font-size:16px; color:#f2e7d1; padding-bottom:4px; flex:1;">${bossKey.toUpperCase()} UNIQUES</strong>
         <span style="position:relative; top:-2px; right:-4px;">${shareButtonHTML(shareUrl)}</span>
       </div>
       <div class="scrollable-list" style="max-height:250px; overflow-y:auto; padding-right:6px; font-size:11px; line-height:1.4;">
@@ -1446,7 +1483,7 @@ async function refreshCard(container, type, name, isFloating = false) {
                         ${fallbackItemIcon(wikiName, fallbackName, 16)}
                         <span style="font-size:12px; color:#fff;">${itemTitle}</span>
                     </div>
-                    <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+                    <span style="font-size:11px; color:#dfc089; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
                 </div>`;
       });
       const shareUrl = `https://embed.x0xp.workers.dev?boss=${encodeURIComponent(bossKey).replace(/%20/g, "+")}`;
@@ -1460,28 +1497,9 @@ async function refreshCard(container, type, name, isFloating = false) {
       if (isFloating) {
         const cardDiv = container.closest(".floating-card");
         if (cardDiv) {
-          const header = cardDiv.querySelector(".floating-header");
-          const resizeHandle = cardDiv.querySelector(".resize-handle");
-          if (header && resizeHandle) {
-            const headerHeight = header.offsetHeight;
-            const handleHeight = resizeHandle.offsetHeight;
-            const contentNatural = container.scrollHeight;
-            const totalNatural =
-              contentNatural + headerHeight + handleHeight + 20;
-            const currentHeight = parseInt(cardDiv.style.height) || 200;
-            container.style.overflowY =
-              currentHeight >= totalNatural ? "hidden" : "auto";
-            clampToViewport(cardDiv);
-            const fc = floatingCards.find(
-              (f) => f.id == parseInt(cardDiv.dataset.id),
-            );
-            if (fc) {
-              fc.height = parseInt(cardDiv.style.height);
-              fc.x = parseInt(cardDiv.style.left);
-              fc.y = parseInt(cardDiv.style.top);
-              saveFloatingCards();
-            }
-          }
+          cardDiv.dataset.contentReady = "true";
+          clampToViewport(cardDiv);
+          rememberFloatingCard(cardDiv);
         }
       }
     }
@@ -1536,7 +1554,8 @@ function generateDropdownHTML(entries, query) {
   return entries
     .map((entry, index) => {
       const safeName = entry.name.replace(/'/g, "\\'");
-      const regex = new RegExp(`(${query})`, "gi");
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escaped})`, "gi");
       const highlightedName = entry.name.replace(
         regex,
         `<strong style="color: #00ff00;">$1</strong>`,
@@ -1717,7 +1736,8 @@ async function getPrice(name, skipHistory = false) {
 
   let itemData = itemMap[name.toLowerCase()];
 
-  if (!itemData) {
+  // Resolve named bosses before fuzzy item matching (e.g. Zulrah vs Zulrah drops).
+  if (!itemData && !findBossKey(name)) {
     const val = name.toLowerCase();
     const closest = getClosestMatch(val);
     if (closest) {
@@ -1764,7 +1784,7 @@ async function getPrice(name, skipHistory = false) {
                       ${fallbackItemIcon(wikiName, fallbackName, 16)}
                       <span style="font-size:12px; color:#fff;">${itemTitle}</span>
                   </div>
-                  <span style="font-size:11px; color:#00ff00; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
+                  <span style="font-size:11px; color:#dfc089; margin-left:8px; margin-right:4px; flex-shrink:0;">${priceStr}</span>
               </div>`;
     });
 
@@ -1829,4 +1849,4 @@ function bringToFront(element) {
 }
 
 // Kick off
-initTracker();
+const trackerReady = initTracker();

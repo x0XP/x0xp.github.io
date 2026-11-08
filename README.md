@@ -1,4 +1,6 @@
-# x0XP OSRS Price Checker
+# x0XP Developer Hub
+
+The homepage is a developer hub; select **OSRS Price Checker** to open the checker in a sliding view.
 
 A lightweight, real-time Old School RuneScape Grand Exchange price checker and boss collection log explorer.  
 Search any tradeable item or boss to instantly see live buy/sell prices and unique drops – all powered by the official OSRS Wiki APIs.
@@ -28,7 +30,7 @@ Search any tradeable item or boss to instantly see live buy/sell prices and uniq
 
 ## How to Use
 
-1. Open [x0xp.github.io](https://x0xp.github.io).
+1. Open [x0xp.github.io](https://x0xp.github.io) and choose **OSRS Price Checker**.
 2. Type an item name (e.g. `Abyssal whip`) or a boss name (e.g. `Vorkath`).
 3. Press **Enter** to see the current price, or click a suggestion from the dropdown.
 4. Right‑click (or long‑press on mobile) a recent search to pin it permanently.
@@ -55,6 +57,22 @@ Need more details? Click the info icon inside the search bar for a quick guide.
 ## Versioning & Cache
 
 The site includes a built‑in version check. Every time an update is deployed, the app compares the stored version with the current one and automatically reloads to fetch the latest assets – no manual cache clearing needed.
+
+---
+
+## Price checker updates
+
+The **Price checker updates** panel reads `price-checker-changelog.json` from this repository, not GitHub commits. To document a future **price checker** change, add a new entry **at the top** of the JSON array:
+
+```json
+{
+  "date": "YYYY-MM-DD",
+  "title": "Short price checker update title",
+  "changes": ["First change", "Second change"]
+}
+```
+
+Use a real implementation date in ISO format (`YYYY-MM-DD`) and short, factual changes. Do not include developer-hub-only changes or manufacture past releases. Keep the JSON valid; it is fetched by the static site on each page load. When deploying a new JavaScript version, also increment `APP_VERSION` in `script.js` for the existing reload check.
 
 ---
 

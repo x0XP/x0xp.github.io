@@ -5,10 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>x0XP</title>
 
-        <meta property="og:title" content="x0XP OSRS Price Checker" />
+        <meta property="og:title" content="x0XP" />
         <meta
             property="og:description"
-            content="Instant GE prices and boss collection log uniques."
+            content="Projects and tools by x0XP."
         />
         <meta
             property="og:image"
@@ -30,85 +30,35 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
         <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="hub.css" />
     </head>
     <body>
         <div id="floatingContainer"></div>
         <div id="tooltip" class="tooltip"></div>
 
-        <div class="card fade-in">
-            <img src="image0.jpg" alt="Avatar" class="avatar" />
-            <h1 id="username">
-                <span>x</span><span>0</span><span>X</span><span>P</span>
-            </h1>
-
-            <p
-                style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 6px;
-                "
-            >
-                OSRS Price Checker
-                <span
-                    id="updatesIcon"
-                    style="
-                        cursor: pointer;
-                        display: inline-flex;
-                        align-items: center;
-                        color: #7a8294;
-                        transition: color 0.2s;
-                    "
-                >
-                    <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path
-                            d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
-                        />
-                        <rect x="9" y="3" width="6" height="4" rx="1" />
-                        <path d="M9 12h6" />
-                        <path d="M9 16h6" />
-                    </svg>
-                </span>
-            </p>
-
-            <div class="button-container">
-                <div class="button-row">
-                    <a
-                        href="https://github.com/x0XP"
-                        target="_blank"
-                        class="btn btn-github"
-                        ><i class="fab fa-github"></i> GitHub</a
-                    >
-                </div>
-                <!-- Add to Home Screen button -->
-                <button
-                    id="addToHomeBtn"
-                    class="btn btn-home"
-                    style="display: none"
-                >
-                    <i class="fas fa-plus-circle"></i> Add to Home Screen
-                </button>
-            </div>
-
+        <header class="site-header">
+            <h1 id="username" aria-label="x0XP"><img src="assets/wordmark.png" alt="" /></h1>
+            <button id="backHome" class="back-home" aria-label="Back to home" hidden><span aria-hidden="true">←</span> Back</button>
+        </header>
+        <main>
+            <section id="hubView" class="view hub-view" aria-label="Projects">
+                <nav class="project-list" aria-label="Projects">
+                    <button id="openChecker" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><img src="assets/coin-stack.png" alt="" /><span>OSRS Price Checker</span></button>
+                    <a class="project-link" href="https://github.com/x0XP" target="_blank" rel="noopener noreferrer"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></a>
+                </nav>
+            </section>
+            <section id="checkerView" class="view checker-view" aria-label="OSRS Price Checker" inert aria-hidden="true">
+        <div class="card">
+            <div class="checker-heading"><img src="assets/coin-stack.png" alt="" /><h2>OSRS Price Checker</h2><button id="updatesIcon" class="icon-button" title="Price checker updates" aria-label="Price checker updates"><i class="far fa-clipboard" aria-hidden="true"></i></button></div>
             <div class="ge-tracker">
                 <div style="position: relative">
                     <input
                         type="text"
                         id="itemSearch"
-                        placeholder="Search GE Item..."
-                        style="padding-right: 32px"
+                        placeholder="Search an item or boss…"
+                        aria-label="Search an item or boss"
                     />
-                    <span
+                    <button type="button" aria-label="Quick guide"
                         id="infoIcon"
                         style="
                             position: absolute;
@@ -144,7 +94,7 @@
                                 stroke-linecap="round"
                             />
                         </svg>
-                    </span>
+                    </button>
                 </div>
 
                 <div id="results" class="results-list"></div>
@@ -153,6 +103,9 @@
                 <div id="history" class="history-list"></div>
             </div>
         </div>
+
+            </section>
+        </main>
 
         <!-- Panels outside the card, above floating cards -->
         <div id="helpBox" class="help-box">
@@ -165,22 +118,13 @@
             embed.<br />
             • The <b>wiki</b> icon opens the official OSRS Wiki page.<br />
             • Drag the top edge of a price card to create a floating copy.<br />
-            • Click the clipboard icon next to the subtitle for recent updates.
+            • Click the clipboard icon beside the checker title for price checker updates.
         </div>
 
-        <div id="changelogBox" class="help-box" style="width: 260px">
-            <strong>Updates</strong><br />
-            <div
-                style="
-                    max-height: 150px;
-                    overflow-y: auto;
-                    margin-top: 6px;
-                    font-size: 10px;
-                    line-height: 1.4;
-                "
-                id="changelogContent"
-            >
-                Loading…
+        <div id="changelogBox" class="help-box">
+            <strong>Price checker updates</strong><br />
+            <div id="changelogContent" aria-live="polite">
+                Loading price checker updates…
             </div>
         </div>
 
@@ -190,9 +134,10 @@
             style="display: none"
             title="Close all floating windows"
         >
-            Clear all windows
+            Close all windows
         </button>
 
         <script src="script.js"></script>
+        <script src="hub.js"></script>
     </body>
 </html>

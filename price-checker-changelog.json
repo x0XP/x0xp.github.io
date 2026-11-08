@@ -1,0 +1,11 @@
+[
+  {
+    "date": "2026-11-08",
+    "title": "Price checker redesign and floating-window fixes",
+    "changes": [
+      "Refreshed the item and boss price checker cards with a clearer amber-accented layout, search controls and scrolling results.",
+      "Improved floating-window dragging, including a correctly sized drag preview and viewport clamping.",
+      "Improved boss-window resizing, scrollable unique-drop lists, and floating-window close controls and saved positions."
+    ]
+  }
+]
