@@ -659,14 +659,14 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
   }
 }
 
-/* Fade only the clipped card edge, never the scroll container or backdrop.
-   The fade follows the card's clipped position and covers just 12px. */
-.checker-view > .card.has-card-edge-fade,
-.github-view > .github-card.has-card-edge-fade {
-  -webkit-mask-image: linear-gradient(to bottom,
-    transparent var(--card-fade-offset, 0px),
-    #000 calc(var(--card-fade-offset, 0px) + 12px));
-  mask-image: linear-gradient(to bottom,
-    transparent var(--card-fade-offset, 0px),
-    #000 calc(var(--card-fade-offset, 0px) + 12px));
+/* Only soften the visible card edge when scrolled. An ordinary,
+   pointer-transparent overlay avoids Safari's mask/backdrop compositing bug
+   and never affects wallpaper pixels outside the card's rectangle. */
+.scroll-card-edge {
+  position: fixed;
+  z-index: 5;
+  height: 12px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(12, 17, 24, .17), rgba(12, 17, 24, 0));
 }
+.scroll-card-edge[hidden] { display: none !important; }

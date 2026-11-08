@@ -11,27 +11,52 @@
   let githubRequest = null;
   let focusTimer;
 
-  // Only soften the card's actual clipped edge (12px); masking the whole
-  // scrolling view changes how backdrop-filter composites over the wallpaper.
-  for (const [panel, selector] of [[checker, '.card'], [github, '.github-card']]) {
+  // Avoid CSS masks on elements with backdrop-filter: iOS Safari can
+  // change the entire wallpaper's brightness when the mask is toggled.
+  // Draw a 12px translucent edge strictly within the visible card bounds.
+  for (const [panel, selector, viewClass] of [
+    [checker, '.card', 'checker-open'],
+    [github, '.github-card', 'github-open']
+  ]) {
     const card = panel.querySelector(selector);
     if (!card) continue;
-    let fadeScheduled = false;
-    const updateCardEdge = () => {
-      fadeScheduled = false;
-      const offset = Math.max(0, panel.getBoundingClientRect().top - card.getBoundingClientRect().top);
-      const clipped = panel.scrollTop > 0 && offset > 0.5;
-      card.classList.toggle('has-card-edge-fade', clipped);
-      if (clipped) card.style.setProperty('--card-fade-offset', `${offset}px`);
-      else card.style.removeProperty('--card-fade-offset');
+    const edge = document.createElement('div');
+    edge.className = 'scroll-card-edge';
+    edge.setAttribute('aria-hidden', 'true');
+    edge.hidden = true;
+    document.body.appendChild(edge);
+    let scheduled = false;
+    const updateEdge = () => {
+      scheduled = false;
+      if (!document.body.classList.contains(viewClass)) {
+        edge.hidden = true;
+        return;
+      }
+      const panelBox = panel.getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+      const top = Math.max(0, panelBox.top);
+      const left = Math.max(panelBox.left, cardBox.left);
+      const right = Math.min(panelBox.right, cardBox.right);
+      const height = Math.min(12, panelBox.bottom - top, cardBox.bottom - top);
+      const clipped = panel.scrollTop > 0 && cardBox.top < top - .5 &&
+        right > left && height > 0;
+      edge.hidden = !clipped;
+      if (clipped) {
+        edge.style.top = `${top}px`;
+        edge.style.left = `${left}px`;
+        edge.style.width = `${right - left}px`;
+        edge.style.height = `${height}px`;
+      }
     };
-    panel.addEventListener('scroll', () => {
-      if (fadeScheduled) return;
-      fadeScheduled = true;
-      requestAnimationFrame(updateCardEdge);
-    }, {passive: true});
-    window.addEventListener('resize', updateCardEdge, {passive: true});
-    updateCardEdge();
+    const scheduleEdge = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(updateEdge);
+    };
+    panel.addEventListener('scroll', scheduleEdge, {passive: true});
+    panel.addEventListener('transitionend', scheduleEdge);
+    window.addEventListener('resize', scheduleEdge, {passive: true});
+    updateEdge();
   }
 
   // Keep the light in the button's own coordinate system, even during a slide.
