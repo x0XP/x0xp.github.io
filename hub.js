@@ -11,6 +11,24 @@
   let githubRequest = null;
   let focusTimer;
 
+  // As users scroll, gradually fade content at the top edge of the panel.
+  // Keep the fixed x0XP logo and Back button outside the masked scroll area.
+  for (const panel of [checker, github]) {
+    let fadeScheduled = false;
+    const updateScrollFade = () => {
+      fadeScheduled = false;
+      const fade = Math.min(32, Math.max(0, panel.scrollTop));
+      panel.classList.toggle('has-scroll-fade', fade > 0);
+      panel.style.setProperty('--scroll-fade', `${fade}px`);
+    };
+    panel.addEventListener('scroll', () => {
+      if (fadeScheduled) return;
+      fadeScheduled = true;
+      requestAnimationFrame(updateScrollFade);
+    }, {passive: true});
+    updateScrollFade();
+  }
+
   // Keep the light in the button's own coordinate system, even during a slide.
   document.querySelectorAll('.project-link, .clear-all-float-btn').forEach(link => {
     link.addEventListener('pointermove', event => {

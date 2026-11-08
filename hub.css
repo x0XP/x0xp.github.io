@@ -658,3 +658,12 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
     top: calc(var(--edge) + 112px);
   }
 }
+
+/* Softly dissolve content into the top of each scrolled panel rather than
+   cutting cards off against a hard horizontal edge. The fixed header is
+   outside these panels and is never faded. */
+.checker-view.has-scroll-fade,
+.github-view.has-scroll-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 var(--scroll-fade, 32px));
+  mask-image: linear-gradient(to bottom, transparent 0px, #000 var(--scroll-fade, 32px));
+}
