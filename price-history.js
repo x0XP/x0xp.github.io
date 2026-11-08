@@ -93,6 +93,12 @@
     const chart=section.querySelector('.price-history-chart');
     const status=chart.querySelector('.price-history-status');
     const tooltip=chart.querySelector('.price-history-tooltip');
+    // Keep the timestamp and GP value readable on phones without a long line.
+    const dateText=document.createElement('span');
+    dateText.className='price-history-tooltip-date';
+    const priceText=document.createElement('strong');
+    priceText.className='price-history-tooltip-price';
+    tooltip.replaceChildren(dateText,priceText);
     chart.querySelector('svg')?.remove();
     tooltip.hidden=true;
     status.hidden=false;
@@ -153,9 +159,17 @@
       guide.setAttribute('x1',point.x);guide.setAttribute('x2',point.x);guide.setAttribute('visibility','visible');
       dot.setAttribute('cx',point.x);dot.setAttribute('cy',point.y);dot.setAttribute('visibility','visible');
       const date=new Date(point.row.timestamp*1000);
-      tooltip.textContent=`${date.toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'})} · ${gp(point.row.price)} gp`;
+      dateText.textContent=date.toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
+      priceText.textContent=`${gp(point.row.price)} gp`;
       tooltip.hidden=false;
-      const tipX=Math.max(66,Math.min(rect.width-66,point.x/width*rect.width));
+      // Clamp against the rendered tooltip, not a guessed fixed width.
+      // The SVG can be scaled inside the chart, so convert both to client px.
+      const chartRect=chart.getBoundingClientRect();
+      const targetX=rect.left-chartRect.left+(point.x/width)*rect.width;
+      const halfWidth=tooltip.getBoundingClientRect().width/2;
+      const inset=8;
+      const tipX=Math.max(inset+halfWidth,
+        Math.min(chartRect.width-inset-halfWidth,targetX));
       tooltip.style.left=tipX+'px';
     }
     svg.addEventListener('pointermove',hover);
