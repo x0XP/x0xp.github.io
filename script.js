@@ -1,16 +1,3 @@
-// ----- Auto‑reload on version change -----
-const APP_VERSION = "1.0.5";
-const storedVersion = localStorage.getItem("appVersion");
-
-if (storedVersion && storedVersion !== APP_VERSION) {
-  localStorage.setItem("appVersion", APP_VERSION);
-  location.reload(true);
-} else if (!storedVersion) {
-  localStorage.setItem("appVersion", APP_VERSION);
-}
-
-console.log(`App version: ${APP_VERSION}`);
-
 const headers = { "User-Agent": "x0XP-Item-Price-Checker - .x0xp on Discord" };
 
 // Easter eggs

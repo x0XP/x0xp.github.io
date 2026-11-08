@@ -29,8 +29,19 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
-        <link rel="stylesheet" href="style.css" />
-        <link rel="stylesheet" href="hub.css?v=github-panel-20261108-layout3" />
+        <!-- Revalidate local styles on each visit; external libraries retain normal caching. -->
+        <script>
+            (() => {
+                const token = Date.now() + '-' + Math.random().toString(36).slice(2);
+                for (const file of ['style.css', 'hub.css']) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = file + '?site_asset=' + token;
+                    document.head.appendChild(link);
+                }
+                window.x0xpAssetToken = token;
+            })();
+        </script>
     </head>
     <body>
         <div id="floatingContainer"></div>
@@ -162,7 +173,23 @@
             Close all windows
         </button>
 
-        <script src="script.js"></script>
-        <script src="hub.js?v=github-panel-20261108"></script>
+        <script data-site-bootstrap>
+            (() => {
+                // Capture a complete, unmodified DOM to detect newer deployed HTML.
+                function start() {
+                    window.x0xpInitialBody = document.body.innerHTML;
+                    // The Price Checker must execute before hub.js uses trackerReady.
+                    for (const file of ['script.js', 'hub.js', 'site-refresh.js']) {
+                        const script = document.createElement('script');
+                        script.async = false;
+                        script.src = file + '?site_asset=' + window.x0xpAssetToken;
+                        document.body.appendChild(script);
+                    }
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', start, {once: true});
+                } else start();
+            })();
+        </script>
     </body>
 </html>
