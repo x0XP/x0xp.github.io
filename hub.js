@@ -3,6 +3,13 @@
   const checker = document.getElementById('checkerView');
   const github = document.getElementById('githubView');
   const repoDetail = document.getElementById('repoDetailView');
+  const solTrainer = document.getElementById('solTrainerView');
+  const openSolTrainer = document.getElementById('openSolTrainer');
+  const solFrame = document.getElementById('solTrainerFrame');
+  const solPanel = document.getElementById('solTrainerPanel');
+  const solPlaceholder = document.getElementById('solTrainerPlaceholder');
+  const solStatus = document.getElementById('solTrainerStatus');
+  const solFullscreen = document.getElementById('solTrainerFullscreen');
   const openChecker = document.getElementById('openChecker');
   const openGithub = document.getElementById('openGithub');
   const back = document.getElementById('backHome');
@@ -11,6 +18,64 @@
   let lastHomeTrigger = openChecker;
   let githubRequest = null;
   let focusTimer;
+  let trainerGeneration = 0;
+  const independentTrainerURL = 'https://x0xp.github.io/ColosseumTrainer/';
+  const backupTrainerURL = new URL('sol-trainer/', document.baseURI).href;
+
+  async function preferredTrainerURL() {
+    // During the fork's Pages activation use the previously compiled x0XP
+    // build, then switch to the independent fork as soon as its assets exist.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
+    try {
+      const probe = await fetch(independentTrainerURL + 'osrs-assets/manifest.json', {
+        method: 'HEAD', cache: 'no-store', signal: controller.signal
+      });
+      return probe.ok ? independentTrainerURL : backupTrainerURL;
+    } catch (_) {
+      return backupTrainerURL;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function openTrainerFrame() {
+    const generation = ++trainerGeneration;
+    solPanel.dataset.state = 'loading';
+    solPlaceholder.hidden = false;
+    solStatus.textContent = 'Loading the trainer…';
+    preferredTrainerURL().then(url => {
+      if (generation !== trainerGeneration ||
+          !document.body.classList.contains('sol-trainer-open')) return;
+      solFullscreen.href = url;
+      solFrame.src = url;
+    });
+  }
+
+  function stopTrainerFrame() {
+    trainerGeneration++;
+    if (solFrame.getAttribute('src') !== 'about:blank') {
+      solFrame.setAttribute('src', 'about:blank');
+    }
+    solPanel.dataset.state = 'idle';
+    solPlaceholder.hidden = false;
+  }
+
+  solFrame.addEventListener('load', () => {
+    if (document.body.classList.contains('sol-trainer-open') &&
+        solFrame.getAttribute('src') !== 'about:blank') {
+      solPanel.dataset.state = 'ready';
+      solPlaceholder.hidden = true;
+    }
+  });
+
+  solFrame.addEventListener('error', () => {
+    if (document.body.classList.contains('sol-trainer-open')) {
+      solPanel.dataset.state = 'error';
+      solStatus.textContent = 'The trainer could not load. Try Full screen.';
+      solPlaceholder.hidden = false;
+    }
+  });
 
   // Avoid CSS masks on elements with backdrop-filter: iOS Safari can
   // change the entire wallpaper's brightness when the mask is toggled.
@@ -18,7 +83,8 @@
   for (const [panel, selector, viewClass] of [
     [checker, '.card', 'checker-open'],
     [github, '.github-card', 'github-open'],
-    [repoDetail, '.repo-detail-card', 'repo-detail-open']
+    [repoDetail, '.repo-detail-card', 'repo-detail-open'],
+    [solTrainer, '.sol-trainer-card', 'sol-trainer-open']
   ]) {
     const card = panel.querySelector(selector);
     if (!card) continue;
@@ -84,11 +150,14 @@
     const isChecker = view === 'checker';
     const isGithub = view === 'github';
     const isRepoDetail = view === 'repo-detail';
+    const isSolTrainer = view === 'sol-trainer';
+    if (!isSolTrainer && document.body.classList.contains('sol-trainer-open')) stopTrainerFrame();
+    document.body.classList.toggle('sol-trainer-open', isSolTrainer);
     document.body.classList.toggle('checker-open', isChecker);
     document.body.classList.toggle('github-open', isGithub);
     document.body.classList.toggle('repo-detail-open', isRepoDetail);
     for (const [element, active] of [[hub, view === 'home'], [checker, isChecker],
-      [github, isGithub], [repoDetail, isRepoDetail]]) {
+      [github, isGithub], [repoDetail, isRepoDetail], [solTrainer, isSolTrainer]]) {
       element.inert = !active;
       element.setAttribute('aria-hidden', String(!active));
     }
@@ -97,14 +166,17 @@
     document.getElementById('floatingContainer').inert = !isChecker;
     document.getElementById('clearAllFloating').inert = !isChecker;
     document.title = isChecker ? 'OSRS Price Checker · x0XP'
-      : isRepoDetail ? 'Repository · x0XP' : isGithub ? 'GitHub · x0XP' : 'x0XP';
+      : isRepoDetail ? 'Repository · x0XP'
+      : isSolTrainer ? 'Sol Heredit Trainer · x0XP'
+      : isGithub ? 'GitHub · x0XP' : 'x0XP';
     document.querySelectorAll('.help-box').forEach(panel => panel.classList.remove('visible'));
     helpVisible = false;
     changelogVisible = false;
     if (focus) {
       const target = isChecker ? document.getElementById('itemSearch')
         : isRepoDetail ? document.getElementById('repoDetailTitle')
-        : isGithub ? document.getElementById('githubTitle') : lastHomeTrigger;
+        : isGithub ? document.getElementById('githubTitle')
+        : isSolTrainer ? document.getElementById('solTrainerTitle') : lastHomeTrigger;
       focusTimer = setTimeout(() => target.focus({preventScroll: true}), 650);
     }
   }
@@ -249,8 +321,13 @@
     const repoMatch = /^#repo=(.+)$/.exec(route);
     const view = repoMatch ? 'repo-detail' :
       /^#(?:checker|item=|boss=)/.test(route) ? 'checker' :
-      route === '#github' ? 'github' : 'home';
+      route === '#github' ? 'github' :
+      route === '#sol-trainer' ? 'sol-trainer' : 'home';
     showView(view, focus);
+    if (view === 'sol-trainer') {
+      openTrainerFrame();
+      return;
+    }
     if (view === 'repo-detail') {
       let name = '';
       try { name = decodeURIComponent(repoMatch[1]); } catch (_) { /* Show invalid link. */ }
@@ -279,6 +356,12 @@
     history.pushState({github: true}, '', '#github');
     showView('github');
     loadGitHub();
+  });
+  openSolTrainer.addEventListener('click', () => {
+    lastHomeTrigger = openSolTrainer;
+    history.pushState({trainer: true}, '', '#sol-trainer');
+    showView('sol-trainer');
+    openTrainerFrame();
   });
   back.addEventListener('click', () => {
     if (document.body.classList.contains('repo-detail-open')) {

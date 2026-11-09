@@ -8,6 +8,7 @@ Tools by x0XP.
 
 - **OSRS Price Checker** – Search items and bosses, check live prices and price history, pin favourites, and open draggable floating windows.
 - **GitHub** – Browse repositories and open in-site details with README previews and links to source files.
+- **Sol Heredit Trainer** – Practise the Colosseum boss encounter using our maintained [ColosseumTrainer fork](https://github.com/x0XP/ColosseumTrainer).
 
 ## Screens
 

@@ -132,7 +132,7 @@
                 const token = Date.now() + '-' + Math.random().toString(36).slice(2);
                 window.x0xpAssetToken = token;
                 const stylesReady = Promise.all(
-                    ['style.css', 'components.css', 'hub.css', 'repo-detail.css'].map(file =>
+                    ['style.css', 'components.css', 'hub.css', 'repo-detail.css', 'sol-trainer.css'].map(file =>
                         new Promise(resolve => {
                             const sheet = document.createElement('link');
                             sheet.rel = 'stylesheet';
@@ -216,6 +216,7 @@
                 <nav class="project-list" aria-label="Projects">
                     <button id="openChecker" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><img src="assets/coin-stack.png" alt="" /><span>OSRS Price Checker</span></button>
                     <button id="openGithub" type="button" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></button>
+                    <button id="openSolTrainer" type="button" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><i class="fas fa-shield-halved" aria-hidden="true"></i><span>Sol Heredit Trainer</span></button>
                 </nav>
             </section>
             <section id="checkerView" class="view ui-slide-view checker-view" aria-label="OSRS Price Checker" inert aria-hidden="true">
@@ -309,6 +310,26 @@
                     </div>
                     <div id="repoDetailBody" class="repo-detail-content" aria-live="polite">
                         <p class="ui-muted">Loading repository details…</p>
+                    </div>
+                </div>
+            </section>
+            <section id="solTrainerView" class="view ui-slide-view sol-trainer-view" aria-label="Sol Heredit Trainer" inert aria-hidden="true">
+                <div class="card ui-card ui-surface sol-trainer-card">
+                    <div class="ui-card-heading sol-trainer-heading">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                        <h2 id="solTrainerTitle" tabindex="-1">Sol Heredit Trainer</h2>
+                        <a id="solTrainerFullscreen" class="ui-button sol-trainer-fullscreen" href="sol-trainer/" target="_blank" rel="noopener noreferrer">
+                            Full screen <i class="fas fa-up-right-from-square" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <p class="sol-trainer-intro">Practise the Sol Heredit encounter. Full screen is recommended on smaller displays.</p>
+                    <div id="solTrainerPanel" class="sol-trainer-panel" data-state="idle">
+                        <div id="solTrainerPlaceholder" class="sol-trainer-placeholder" role="status">
+                            <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                            <p id="solTrainerStatus">Loading the trainer…</p>
+                        </div>
+                        <iframe id="solTrainerFrame" class="sol-trainer-frame" title="Sol Heredit Trainer"
+                            src="about:blank" loading="lazy" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>
                     </div>
                 </div>
             </section>

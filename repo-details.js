@@ -144,8 +144,12 @@
     const actions = element('div', 'repo-detail-actions');
     const url = repoUrl(repo.name);
     actions.append(link('View repository', url, true));
-    if (typeof repo.homepage === 'string' && /^https:\/\//i.test(repo.homepage)) {
-      actions.append(link('Visit website', repo.homepage, true));
+    // The fork still carries the original project's homepage metadata.
+    // Do not send visitors to a different developer's hosted trainer.
+    const homepage = repo.name === 'ColosseumTrainer' && /colosim\.com/i.test(repo.homepage || '')
+      ? '' : repo.homepage;
+    if (typeof homepage === 'string' && /^https:\/\//i.test(homepage)) {
+      actions.append(link('Visit website', homepage, true));
     }
     body.append(actions);
 

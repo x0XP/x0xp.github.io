@@ -1,0 +1,32 @@
+/* Sol Heredit Trainer: existing x0XP panel and shared card design. */
+.sol-trainer-view { display:flex; overflow-y:auto; padding:var(--edge); transform:translateX(100%); opacity:0; scrollbar-width:thin; scrollbar-color:#796341 #0d131c; }
+body.sol-trainer-open .hub-view,
+body.sol-trainer-open .checker-view,
+body.sol-trainer-open .github-view,
+body.sol-trainer-open .repo-detail-view { transform:translateX(-100%); opacity:0; }
+body.sol-trainer-open .sol-trainer-view { transform:translateX(0); opacity:1; }
+.sol-trainer-card { box-sizing:border-box; width:min(1240px,100%); min-width:0; flex-shrink:0; margin:auto; padding:25px; }
+.sol-trainer-heading { padding-bottom:17px; }
+.sol-trainer-heading > i { width:34px; flex:0 0 34px; color:var(--ui-gold); font-size:28px; text-align:center; }
+.sol-trainer-fullscreen { flex-shrink:0; }
+.sol-trainer-intro { margin:14px 0 16px; color:var(--ui-muted); font:400 12px/1.6 Arial,Helvetica,sans-serif; }
+.sol-trainer-panel { position:relative; box-sizing:border-box; height:clamp(460px,74dvh,880px); width:100%; overflow:hidden; background:#080b12; border:1px solid #b7986455; border-radius:8px; }
+.sol-trainer-frame { display:block; width:100%; height:100%; background:#080b12; border:0; }
+.sol-trainer-panel[data-state="loading"] .sol-trainer-frame { visibility:hidden; }
+.sol-trainer-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:center; padding:20px; color:var(--ui-muted); text-align:center; font-size:12px; background:#080b12; }
+.sol-trainer-placeholder > i { color:var(--ui-gold); font-size:26px; }
+.sol-trainer-placeholder[hidden] { display:none; }
+.sol-trainer-placeholder p { margin:0; max-width:320px; line-height:1.65; }
+@media (max-width:850px) {
+  .sol-trainer-view { top:calc(var(--edge) + 120px); padding-top:12px; padding-bottom:max(24px,env(safe-area-inset-bottom,0px)); }
+  .sol-trainer-panel { height:min(76dvh,750px); min-height:450px; }
+}
+@media (max-width:600px) {
+  .sol-trainer-view { top:calc(var(--edge) + 112px); }
+  .sol-trainer-card { width:100%; padding:20px; }
+  .sol-trainer-heading { flex-wrap:wrap; }
+  .sol-trainer-heading > i { width:28px; flex-basis:28px; font-size:24px; }
+  .sol-trainer-fullscreen { width:100%; }
+  .sol-trainer-panel { height:560px; }
+}
+@media (prefers-reduced-motion:reduce) { .sol-trainer-view { transition:none; } }

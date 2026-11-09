@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-09T11:47:25.907Z",
+  "generated_at": "2026-11-09T14:34:34.336Z",
   "profile": {
     "login": "x0XP",
     "name": "x0XP",
@@ -9,6 +9,20 @@
     "html_url": "https://github.com/x0XP"
   },
   "repositories": [
+    {
+      "name": "ColosseumTrainer",
+      "full_name": "x0XP/ColosseumTrainer",
+      "description": "Source code for the Sol Heredit Trainer, built on top of osrs-sdk",
+      "language": "TypeScript",
+      "updated_at": "2026-11-09T14:28:17Z",
+      "pushed_at": "2026-11-09T14:28:13Z",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "default_branch": "colosseum",
+      "html_url": "https://github.com/x0XP/ColosseumTrainer",
+      "homepage": "",
+      "private": false
+    },
     {
       "name": "x0xp.github.io",
       "full_name": "x0XP/x0xp.github.io",
