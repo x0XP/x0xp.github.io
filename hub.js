@@ -18,42 +18,20 @@
   let lastHomeTrigger = openChecker;
   let githubRequest = null;
   let focusTimer;
-  let trainerGeneration = 0;
+  // The fork is now independently published. Use the exact same build for
+  // embedded and full-screen play rather than occasionally selecting an older
+  // copy when a manifest probe fails or times out.
   const independentTrainerURL = 'https://x0xp.github.io/ColosseumTrainer/';
-  const backupTrainerURL = new URL('sol-trainer/', document.baseURI).href;
-
-  async function preferredTrainerURL() {
-    // During the fork's Pages activation use the previously compiled x0XP
-    // build, then switch to the independent fork as soon as its assets exist.
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
-    try {
-      const probe = await fetch(independentTrainerURL + 'osrs-assets/manifest.json', {
-        method: 'HEAD', cache: 'no-store', signal: controller.signal
-      });
-      return probe.ok ? independentTrainerURL : backupTrainerURL;
-    } catch (_) {
-      return backupTrainerURL;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
 
   function openTrainerFrame() {
-    const generation = ++trainerGeneration;
     solPanel.dataset.state = 'loading';
     solPlaceholder.hidden = false;
     solStatus.textContent = 'Loading the trainer…';
-    preferredTrainerURL().then(url => {
-      if (generation !== trainerGeneration ||
-          !document.body.classList.contains('sol-trainer-open')) return;
-      solFullscreen.href = url;
-      solFrame.src = url;
-    });
+    solFullscreen.href = independentTrainerURL;
+    solFrame.src = independentTrainerURL;
   }
 
   function stopTrainerFrame() {
-    trainerGeneration++;
     if (solFrame.getAttribute('src') !== 'about:blank') {
       solFrame.setAttribute('src', 'about:blank');
     }
