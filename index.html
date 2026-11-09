@@ -132,7 +132,7 @@
                 const token = Date.now() + '-' + Math.random().toString(36).slice(2);
                 window.x0xpAssetToken = token;
                 const stylesReady = Promise.all(
-                    ['style.css', 'components.css', 'hub.css', 'repo-detail.css', 'sol-trainer.css'].map(file =>
+                    ['style.css', 'components.css', 'hub.css', 'repo-detail.css', 'sol-trainer.css', 'button-glow.css'].map(file =>
                         new Promise(resolve => {
                             const sheet = document.createElement('link');
                             sheet.rel = 'stylesheet';

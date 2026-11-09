@@ -1,0 +1,65 @@
+/* Shared pointer-following gold glow.
+   Home project cards keep their own SVG highlight. */
+:is(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+).pointer-lit:hover,
+:is(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+):focus-visible {
+  background-image: radial-gradient(
+    190px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    #e4ac5152 0%,
+    #b77b2726 48%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  border-color: #ebc683;
+  box-shadow: 0 0 24px -9px #d8983640;
+}
+
+/* Close All previously had a red glow. Keep the standard gold hover
+   even when someone hovers without moving the pointer. Do not alter
+   this fixed button's positioning or view transition. */
+#clearAllFloating:hover,
+#clearAllFloating:focus-visible {
+  color: #f2e7d1;
+  background-color: #10151af5;
+  border-color: #ebc683;
+  box-shadow: 0 0 24px -9px #d8983640;
+}
+
+/* Keyboard focus gets a centred highlight rather than the last cursor
+   position; mouse/pencil pointers use the coordinates tracked in hub.js. */
+:is(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+):focus-visible:not(.pointer-lit) {
+  --glow-x: 50%;
+  --glow-y: 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    button:not(.project-link),
+    a.ui-button,
+    a.ui-list-row,
+    a.btn,
+    a.wiki-btn,
+    a.share-btn
+  ) {
+    transition: none;
+  }
+}
