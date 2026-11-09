@@ -86,18 +86,32 @@
     }
     return readmeCache.get(key);
   }
-  function readmeSummary(markdown) {
-    const clean = markdown.replace(/```[\s\S]*?```/g, '')
+  function readmePreview(markdown) {
+    // Preserve headings in a short preview while creating only text nodes.
+    const clean = markdown.replace(/\x60{3}[\s\S]*?\x60{3}/g, '')
       .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
       .replace(/<[^>]*>/g, ' ')
-      .replace(/\*\*|__|`/g, '')
-      .replace(/^\s*#{1,6}\s+/gm, '')
-      .replace(/^\s*[-*+]\s+/gm, '')
       .replace(/\r/g, '');
-    return clean.split(/\n\s*\n/).map(t => t.replace(/\s*\n\s*/g, ' ').trim())
-      .filter(t => t.length > 8 && !/^\|/.test(t))
-      .slice(0, 3).map(t => t.slice(0, 420));
+    const blocks = [];
+    for (const chunk of clean.split(/\n\s*\n/)) {
+      const raw = chunk.trim();
+      if (!raw || /^\|/.test(raw) || /^([-*_]\s*){3,}$/.test(raw)) continue;
+      const heading = /^(#{1,6})\s+(.+)$/.exec(raw);
+      const text = (heading ? heading[2] : raw)
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/\*\*|__|\x60/g, '')
+        .replace(/^\s*[-*+]\s+/gm, '• ')
+        .replace(/\s+/g, ' ').trim();
+      if (!text) continue;
+      blocks.push({
+        tag: heading ? (heading[1].length === 1 ? 'h4' : 'h5') : 'p',
+        text: text.length > 450 ? text.slice(0, 447) + '…' : text
+      });
+      if (blocks.length === 5) break;
+    }
+    // Never leave a section heading dangling at the end of the preview.
+    if (blocks.length > 1 && blocks[blocks.length - 1].tag !== 'p') blocks.pop();
+    return blocks;
   }
   function previewImage(markdown, repo) {
     const imageMatch = /!\[([^\]]*)\]\(([^)]+)\)/.exec(markdown);
@@ -156,9 +170,9 @@
     const readmeSection = element('section', 'repo-detail-section');
     readmeSection.append(element('h3', 'ui-section-heading', 'README'));
     const readmeBox = element('div', 'repo-detail-readme');
-    const paragraphs = readmeSummary(markdown || '');
-    if (paragraphs.length) {
-      for (const p of paragraphs) readmeBox.append(element('p', '', p));
+    const blocks = readmePreview(markdown || '');
+    if (blocks.length) {
+      for (const block of blocks) readmeBox.append(element(block.tag, '', block.text));
     } else {
       readmeBox.append(element('p', '', 'No README preview is available for this repository.'));
     }

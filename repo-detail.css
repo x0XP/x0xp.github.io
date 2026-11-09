@@ -93,6 +93,24 @@ body.repo-detail-open .repo-detail-view {
   border-radius: 8px;
   background: #131920a6;
 }
+.repo-detail-readme h4,
+.repo-detail-readme h5 {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.repo-detail-readme h4 {
+  color: #f2e7d1;
+  font-size: 15px;
+  font-weight: 600;
+}
+.repo-detail-readme h5 {
+  color: #d9ac59;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 3px;
+}
 .repo-detail-readme p {
   margin: 0;
   color: #c6c0b4;
