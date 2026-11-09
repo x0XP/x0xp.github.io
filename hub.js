@@ -2,6 +2,7 @@
   const hub = document.getElementById('hubView');
   const checker = document.getElementById('checkerView');
   const github = document.getElementById('githubView');
+  const repoDetail = document.getElementById('repoDetailView');
   const openChecker = document.getElementById('openChecker');
   const openGithub = document.getElementById('openGithub');
   const back = document.getElementById('backHome');
@@ -16,7 +17,8 @@
   // Draw a 12px translucent edge strictly within the visible card bounds.
   for (const [panel, selector, viewClass] of [
     [checker, '.card', 'checker-open'],
-    [github, '.github-card', 'github-open']
+    [github, '.github-card', 'github-open'],
+    [repoDetail, '.repo-detail-card', 'repo-detail-open']
   ]) {
     const card = panel.querySelector(selector);
     if (!card) continue;
@@ -81,21 +83,28 @@
     clearTimeout(focusTimer);
     const isChecker = view === 'checker';
     const isGithub = view === 'github';
+    const isRepoDetail = view === 'repo-detail';
     document.body.classList.toggle('checker-open', isChecker);
     document.body.classList.toggle('github-open', isGithub);
-    for (const [element, active] of [[hub, view === 'home'], [checker, isChecker], [github, isGithub]]) {
+    document.body.classList.toggle('repo-detail-open', isRepoDetail);
+    for (const [element, active] of [[hub, view === 'home'], [checker, isChecker],
+      [github, isGithub], [repoDetail, isRepoDetail]]) {
       element.inert = !active;
       element.setAttribute('aria-hidden', String(!active));
     }
     back.hidden = view === 'home';
+    back.setAttribute('aria-label', isRepoDetail ? 'Back to GitHub repositories' : 'Back to home');
     document.getElementById('floatingContainer').inert = !isChecker;
     document.getElementById('clearAllFloating').inert = !isChecker;
-    document.title = isChecker ? 'OSRS Price Checker · x0XP' : isGithub ? 'GitHub · x0XP' : 'x0XP';
+    document.title = isChecker ? 'OSRS Price Checker · x0XP'
+      : isRepoDetail ? 'Repository · x0XP' : isGithub ? 'GitHub · x0XP' : 'x0XP';
     document.querySelectorAll('.help-box').forEach(panel => panel.classList.remove('visible'));
     helpVisible = false;
     changelogVisible = false;
     if (focus) {
-      const target = isChecker ? document.getElementById('itemSearch') : isGithub ? document.getElementById('githubTitle') : lastHomeTrigger;
+      const target = isChecker ? document.getElementById('itemSearch')
+        : isRepoDetail ? document.getElementById('repoDetailTitle')
+        : isGithub ? document.getElementById('githubTitle') : lastHomeTrigger;
       focusTimer = setTimeout(() => target.focus({preventScroll: true}), 650);
     }
   }
@@ -138,6 +147,13 @@
     return 'Updated ' + new Intl.RelativeTimeFormat('en-GB', {numeric: 'always'}).format(-amount, unit);
   }
 
+  function openRepository(name, repo) {
+    if (!window.X0XPRepoDetails?.validName(name)) return;
+    history.pushState({repository: name}, '', '#repo=' + encodeURIComponent(name));
+    showView('repo-detail');
+    window.X0XPRepoDetails.show(name, repo);
+  }
+
   function renderRepositories(repositories) {
     githubRepos.replaceChildren();
     const count = document.getElementById('githubRepoCount');
@@ -153,10 +169,14 @@
     for (const repo of repositories) {
       if (!repo || typeof repo.name !== 'string') continue;
       const link = document.createElement('a');
-      link.className = 'github-repo';
-      link.href = `https://github.com/x0XP/${encodeURIComponent(repo.name)}`;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.className = 'github-repo ui-list-row';
+      link.href = '#repo=' + encodeURIComponent(repo.name);
+      link.addEventListener('click', event => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey ||
+            event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        openRepository(repo.name, repo);
+      });
 
       const main = document.createElement('span');
       main.className = 'github-repo-main';
@@ -184,7 +204,7 @@
         updated.textContent = formatUpdateAge(date);
       }
       const external = document.createElement('i');
-      external.className = 'fas fa-arrow-up-right-from-square github-repo-external';
+      external.className = 'fas fa-chevron-right github-repo-external';
       external.setAttribute('aria-hidden', 'true');
       meta.append(updated, external);
       link.append(main, meta);
@@ -198,7 +218,7 @@
     githubStatus.textContent = 'Could not load repositories from GitHub.';
     const retry = document.createElement('button');
     retry.type = 'button';
-    retry.className = 'github-retry';
+    retry.className = 'github-retry ui-button';
     retry.textContent = 'Retry';
     retry.addEventListener('click', loadGitHub);
     githubStatus.append(document.createElement('br'), retry);
@@ -224,8 +244,17 @@
 
   async function readRoute(focus = false) {
     const route = location.hash;
-    const view = /^#(?:checker|item=|boss=)/.test(route) ? 'checker' : route === '#github' ? 'github' : 'home';
+    const repoMatch = /^#repo=(.+)$/.exec(route);
+    const view = repoMatch ? 'repo-detail' :
+      /^#(?:checker|item=|boss=)/.test(route) ? 'checker' :
+      route === '#github' ? 'github' : 'home';
     showView(view, focus);
+    if (view === 'repo-detail') {
+      let name = '';
+      try { name = decodeURIComponent(repoMatch[1]); } catch (_) { /* Show invalid link. */ }
+      window.X0XPRepoDetails.show(name);
+      return;
+    }
     if (view === 'github') {
       loadGitHub();
       return;
@@ -250,8 +279,14 @@
     loadGitHub();
   });
   back.addEventListener('click', () => {
-    history.pushState(null, '', location.pathname + location.search);
-    showView('home');
+    if (document.body.classList.contains('repo-detail-open')) {
+      history.pushState({github: true}, '', '#github');
+      showView('github');
+      loadGitHub();
+    } else {
+      history.pushState(null, '', location.pathname + location.search);
+      showView('home');
+    }
   });
   window.addEventListener('popstate', () => readRoute(true));
   window.addEventListener('hashchange', () => readRoute());

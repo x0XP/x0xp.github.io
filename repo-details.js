@@ -1,0 +1,185 @@
+/* GitHub repository details. Only text from GitHub is rendered as text nodes. */
+(() => {
+  const owner = 'x0XP';
+  const title = document.getElementById('repoDetailTitle');
+  const body = document.getElementById('repoDetailBody');
+  const repoCache = new Map();
+  let generation = 0;
+
+  function validName(name) {
+    return typeof name === 'string' && /^[a-zA-Z0-9_.-]{1,100}$/.test(name);
+  }
+  function element(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = String(text);
+    return node;
+  }
+  function link(text, url, icon) {
+    const a = element('a', 'ui-button', text);
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    if (icon) {
+      const i = element('i', 'fas fa-arrow-up-right-from-square');
+      i.setAttribute('aria-hidden', 'true');
+      a.append(i);
+    }
+    return a;
+  }
+  function repoUrl(name) {
+    return `https://github.com/${owner}/${encodeURIComponent(name)}`;
+  }
+  function displayDate(dateString) {
+    const date = new Date(dateString);
+    return Number.isFinite(date.getTime())
+      ? date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'})
+      : 'Unknown';
+  }
+  function metric(label, value) {
+    const card = element('div', 'repo-detail-stat');
+    card.append(element('span', 'repo-detail-stat-label', label),
+      element('strong', 'repo-detail-stat-value', value));
+    return card;
+  }
+  async function apiJson(url) {
+    const response = await fetch(url, {headers: {Accept: 'application/vnd.github+json'}});
+    if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+    return response.json();
+  }
+  function fetchRepository(name) {
+    if (!repoCache.has(name)) {
+      const promise = apiJson(`https://api.github.com/repos/${owner}/${encodeURIComponent(name)}`)
+        .then(repo => {
+          if (!repo || repo.name !== name || repo.private) throw new Error('Repository unavailable');
+          return repo;
+        });
+      repoCache.set(name, promise);
+      promise.catch(() => { if (repoCache.get(name) === promise) repoCache.delete(name); });
+    }
+    return repoCache.get(name);
+  }
+  function decodeReadme(response) {
+    if (!response || response.encoding !== 'base64' || typeof response.content !== 'string') return '';
+    if (response.content.length > 800000) return ''; // Do not decode enormous documents.
+    const binary = atob(response.content.replace(/\s/g, ''));
+    return new TextDecoder('utf-8').decode(Uint8Array.from(binary, c => c.charCodeAt(0)));
+  }
+  async function fetchReadme(name) {
+    try {
+      const data = await apiJson(`https://api.github.com/repos/${owner}/${encodeURIComponent(name)}/readme`);
+      return decodeReadme(data);
+    } catch (_) {
+      return ''; // No README, API limits, and offline connections should not break details.
+    }
+  }
+  function readmeSummary(markdown) {
+    const clean = markdown.replace(/```[\s\S]*?```/g, '')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\*\*|__|`/g, '')
+      .replace(/^\s*#{1,6}\s+/gm, '')
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/\r/g, '');
+    return clean.split(/\n\s*\n/).map(t => t.replace(/\s*\n\s*/g, ' ').trim())
+      .filter(t => t.length > 8 && !/^\|/.test(t))
+      .slice(0, 3).map(t => t.slice(0, 420));
+  }
+  function previewImage(markdown, repo) {
+    const imageMatch = /!\[([^\]]*)\]\(([^)]+)\)/.exec(markdown);
+    if (!imageMatch) return null;
+    const path = imageMatch[2].split(/\s+"/)[0].replace(/^\.\//, '').trim();
+    // Only preview files belonging to the selected repository; don't embed
+    // arbitrary URLs or README-supplied HTML into the site.
+    const segments = path.split('/');
+    if (!segments.length || segments.some(p => !p || p === '..' || p === '.' ||
+        !/^[a-zA-Z0-9_ .()%+@-]+$/.test(p))) return null;
+    const branch = repo.default_branch || 'main';
+    if (!/^[a-zA-Z0-9._\/-]+$/.test(branch)) return null;
+    const resource = [owner, repo.name, branch, ...segments].map(p => encodeURIComponent(p)).join('/');
+    return {
+      src: `https://raw.githubusercontent.com/${resource}`,
+      alt: imageMatch[1].slice(0, 120) || 'Project screenshot'
+    };
+  }
+  function showStatus(message, retryName) {
+    body.replaceChildren();
+    body.append(element('p', 'repo-detail-status ui-muted', message));
+    if (retryName) {
+      const retry = element('button', 'ui-button repo-detail-retry', 'Retry');
+      retry.type = 'button';
+      retry.addEventListener('click', () => show(retryName));
+      body.append(retry);
+    }
+  }
+  function render(repo, markdown) {
+    title.textContent = repo.name;
+    body.replaceChildren();
+    const summary = element('p', 'repo-detail-description',
+      repo.description || 'No repository description provided.');
+    body.append(summary);
+
+    const stats = element('div', 'repo-detail-stats');
+    const number = n => Number.isFinite(n) ? new Intl.NumberFormat('en-GB').format(n) : '—';
+    stats.append(metric('Language', repo.language || 'Not specified'),
+      metric('Stars', number(repo.stargazers_count)),
+      metric('Forks', number(repo.forks_count)),
+      metric('Updated', displayDate(repo.updated_at)));
+    body.append(stats);
+
+    const actions = element('div', 'repo-detail-actions');
+    const url = repoUrl(repo.name);
+    actions.append(link('View repository', url, true), link('Browse files', url + '/tree/' + encodeURIComponent(repo.default_branch || 'main'), true));
+    if (typeof repo.homepage === 'string' && /^https:\/\//i.test(repo.homepage)) {
+      actions.append(link('Visit website', repo.homepage, true));
+    }
+    body.append(actions);
+
+    const readmeSection = element('section', 'repo-detail-section');
+    readmeSection.append(element('h3', 'ui-section-heading', 'README'));
+    const readmeBox = element('div', 'repo-detail-readme');
+    const paragraphs = readmeSummary(markdown || '');
+    if (paragraphs.length) {
+      for (const p of paragraphs) readmeBox.append(element('p', '', p));
+    } else {
+      readmeBox.append(element('p', '', 'No README preview is available for this repository.'));
+    }
+    if (markdown) {
+      const image = previewImage(markdown, repo);
+      if (image) {
+        const img = element('img', 'repo-detail-preview');
+        img.src = image.src;
+        img.alt = image.alt;
+        img.loading = 'lazy';
+        img.addEventListener('error', () => img.remove(), {once:true});
+        readmeBox.append(img);
+      }
+    }
+    readmeSection.append(readmeBox, link('Read on GitHub', url + '#readme', true));
+    body.append(readmeSection);
+  }
+  async function show(name, listedRepo) {
+    const current = ++generation;
+    if (!validName(name)) {
+      title.textContent = 'Repository';
+      showStatus('This repository link is invalid.');
+      return;
+    }
+    title.textContent = name;
+    showStatus('Loading repository details…');
+    try {
+      // Reuse the verified GitHub list data when entering from the profile.
+      const repository = listedRepo && listedRepo.name === name && !listedRepo.private
+        ? listedRepo : await fetchRepository(name);
+      if (current !== generation) return;
+      render(repository, '');
+      const markdown = await fetchReadme(name);
+      if (current !== generation) return;
+      render(repository, markdown);
+    } catch (_) {
+      if (current === generation) showStatus('Could not load this repository. Please try again.', name);
+    }
+  }
+  window.X0XPRepoDetails = Object.freeze({show, validName});
+})();

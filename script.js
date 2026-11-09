@@ -113,7 +113,7 @@ function buildFloatingCardElement(
 ) {
   const isBoss = type === "boss";
   const div = document.createElement("div");
-  div.className = "floating-card";
+  div.className = "floating-card ui-surface";
   div.style.left = x + "px";
   div.style.top = y + "px";
   div.dataset.id = cardId;
@@ -449,7 +449,7 @@ function startDrag(e) {
   // Measure the floating layout itself, never the larger checker result.
   const existing = [...floatingContainer.querySelectorAll('.floating-card')].find(el => el.dataset.type === type && el.dataset.name === name);
   dragPreview = existing ? existing.cloneNode(true) : document.createElement('div');
-  dragPreview.className = 'floating-card drag-preview';
+  dragPreview.className = 'floating-card ui-surface drag-preview';
   dragPreview.dataset.type = type;
   dragPreview.removeAttribute('id');
   dragPreview.setAttribute('aria-hidden', 'true');

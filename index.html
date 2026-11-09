@@ -33,7 +33,7 @@
         <script>
             (() => {
                 const token = Date.now() + '-' + Math.random().toString(36).slice(2);
-                for (const file of ['style.css', 'hub.css']) {
+                for (const file of ['style.css', 'components.css', 'hub.css', 'repo-detail.css']) {
                     const link = document.createElement('link');
                     link.rel = 'stylesheet';
                     link.href = file + '?site_asset=' + token;
@@ -52,15 +52,15 @@
             <button id="backHome" class="back-home" aria-label="Back to home" hidden><span aria-hidden="true">←</span> Back</button>
         </header>
         <main>
-            <section id="hubView" class="view hub-view" aria-label="Projects">
+            <section id="hubView" class="view ui-slide-view hub-view" aria-label="Projects">
                 <nav class="project-list" aria-label="Projects">
                     <button id="openChecker" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><img src="assets/coin-stack.png" alt="" /><span>OSRS Price Checker</span></button>
                     <button id="openGithub" type="button" class="project-link"><svg class="surface" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M10 .5H483.5L499.5 16.5V59.5Q499.5 69.5 489.5 69.5H10Q.5 69.5 .5 60V10Q.5 .5 10 .5Z" vector-effect="non-scaling-stroke"/></svg><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></button>
                 </nav>
             </section>
-            <section id="checkerView" class="view checker-view" aria-label="OSRS Price Checker" inert aria-hidden="true">
-        <div class="card">
-            <div class="checker-heading"><img src="assets/coin-stack.png" alt="" /><h2>OSRS Price Checker</h2><button id="updatesIcon" class="icon-button" title="Updates" aria-label="Updates"><i class="far fa-clipboard" aria-hidden="true"></i></button></div>
+            <section id="checkerView" class="view ui-slide-view checker-view" aria-label="OSRS Price Checker" inert aria-hidden="true">
+        <div class="card ui-card ui-surface">
+            <div class="checker-heading ui-card-heading"><img src="assets/coin-stack.png" alt="" /><h2>OSRS Price Checker</h2><button id="updatesIcon" class="icon-button" title="Updates" aria-label="Updates"><i class="far fa-clipboard" aria-hidden="true"></i></button></div>
             <div class="ge-tracker">
                 <div style="position: relative">
                     <input
@@ -116,9 +116,9 @@
         </div>
 
             </section>
-            <section id="githubView" class="view github-view" aria-label="GitHub profile and repositories" inert aria-hidden="true">
-                <div class="card github-card">
-                    <div class="checker-heading github-heading">
+            <section id="githubView" class="view ui-slide-view github-view" aria-label="GitHub profile and repositories" inert aria-hidden="true">
+                <div class="card ui-card ui-surface github-card">
+                    <div class="checker-heading ui-card-heading github-heading">
                         <i class="fab fa-github" aria-hidden="true"></i>
                         <h2 id="githubTitle" tabindex="-1">GitHub</h2>
                     </div>
@@ -129,7 +129,7 @@
                             <span id="githubHandle">@x0XP</span>
                             <p id="githubBio"></p>
                         </div>
-                        <a class="github-profile-button" href="https://github.com/x0XP" target="_blank" rel="noopener noreferrer" aria-label="View x0XP on GitHub (opens in new tab)">
+                        <a class="github-profile-button ui-button" href="https://github.com/x0XP" target="_blank" rel="noopener noreferrer" aria-label="View x0XP on GitHub (opens in new tab)">
                             View Profile <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
                         </a>
                     </div>
@@ -139,6 +139,17 @@
                     </div>
                     <div id="githubStatus" class="github-status" role="status" aria-live="polite">Loading repositories…</div>
                     <div id="githubRepos" class="github-repos"></div>
+                </div>
+            </section>
+            <section id="repoDetailView" class="view ui-slide-view repo-detail-view" aria-label="GitHub repository details" inert aria-hidden="true">
+                <div class="card ui-card ui-surface repo-detail-card">
+                    <div class="ui-card-heading repo-detail-heading">
+                        <i class="fab fa-github" aria-hidden="true"></i>
+                        <h2 id="repoDetailTitle" tabindex="-1">Repository</h2>
+                    </div>
+                    <div id="repoDetailBody" class="repo-detail-content" aria-live="polite">
+                        <p class="ui-muted">Loading repository details…</p>
+                    </div>
                 </div>
             </section>
         </main>
@@ -166,7 +177,7 @@
 
         <button
             id="clearAllFloating"
-            class="clear-all-float-btn"
+            class="clear-all-float-btn ui-button"
             style="display: none"
             title="Close all floating windows"
         >
@@ -179,7 +190,7 @@
                 function start() {
                     window.x0xpInitialBody = document.body.innerHTML;
                     // The Price Checker must execute before hub.js uses trackerReady.
-                    for (const file of ['price-history.js', 'script.js', 'hub.js', 'site-refresh.js']) {
+                    for (const file of ['price-history.js', 'script.js', 'repo-details.js', 'hub.js', 'site-refresh.js']) {
                         const script = document.createElement('script');
                         script.async = false;
                         script.src = file + '?site_asset=' + window.x0xpAssetToken;

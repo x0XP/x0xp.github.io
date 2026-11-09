@@ -1,0 +1,138 @@
+/* GitHub repository detail screen. Surface, buttons, headings, typography and
+   motion are provided by components.css. */
+.repo-detail-view {
+  display: flex;
+  overflow-y: auto;
+  padding: var(--edge);
+  transform: translateX(100%);
+  opacity: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #796341 #0d131c;
+}
+body.repo-detail-open .hub-view,
+body.repo-detail-open .github-view {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+body.repo-detail-open .repo-detail-view {
+  transform: translateX(0);
+  opacity: 1;
+}
+.repo-detail-card {
+  width: 820px;
+  max-width: 100%;
+  margin: auto;
+  padding: 30px;
+  flex-shrink: 0;
+}
+.repo-detail-heading > i {
+  width: 34px;
+  color: #e5d1b1;
+  font-size: 30px;
+  text-align: center;
+}
+.repo-detail-content {
+  min-width: 0;
+  padding-top: 22px;
+}
+.repo-detail-description {
+  margin: 0;
+  color: #ddd0b8;
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.repo-detail-description:empty { display: none; }
+.repo-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 22px 0 0;
+}
+.repo-detail-actions .ui-button { min-height: 39px; }
+.repo-detail-section {
+  padding-top: 22px;
+  margin-top: 26px;
+  border-top: 1px solid var(--ui-rule);
+}
+.repo-detail-section .ui-section-heading {
+  margin-bottom: 14px;
+}
+.repo-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+.repo-detail-stat {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #b7986440;
+  border-radius: 8px;
+  background: #131920a6;
+}
+.repo-detail-stat-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #b5aa99;
+  font-size: 11px;
+}
+.repo-detail-stat-value {
+  display: block;
+  color: #ebd5ad;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.repo-detail-readme {
+  display: grid;
+  gap: 11px;
+  padding: 17px 18px;
+  border: 1px solid #b7986440;
+  border-radius: 8px;
+  background: #131920a6;
+}
+.repo-detail-readme p {
+  margin: 0;
+  color: #c6c0b4;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.repo-detail-preview {
+  display: block;
+  max-width: min(100%, 680px);
+  max-height: 350px;
+  width: auto;
+  height: auto;
+  margin-top: 12px;
+  border: 1px solid #b7986450;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #0d131c;
+}
+.repo-detail-status { padding: 16px 0; }
+.repo-detail-status[hidden] { display: none; }
+.repo-detail-retry { margin-top: 15px; }
+@media (max-width: 850px) {
+  .repo-detail-view {
+    top: calc(var(--edge) + 120px);
+    padding-top: 12px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 600px) {
+  .repo-detail-view { top: calc(var(--edge) + 112px); }
+  .repo-detail-card { width: 100%; padding: 20px; }
+  .repo-detail-heading > i { font-size: 24px; }
+  .repo-detail-content { padding-top: 17px; }
+  .repo-detail-description { font-size: 12px; }
+  .repo-detail-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .repo-detail-stat { padding: 12px; }
+  .repo-detail-actions .ui-button { flex: 1 1 auto; }
+  .repo-detail-readme { padding: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .repo-detail-view { transition: none; }
+}

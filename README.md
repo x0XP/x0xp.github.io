@@ -7,6 +7,7 @@ Tools by x0XP.
 ## Current tools
 
 - **OSRS Price Checker** – Search items and bosses, check live prices and price history, pin favourites, and open draggable floating windows.
+- **GitHub** – Browse repositories and open in-site details with README previews and links to source files.
 
 ## Screens
 
@@ -28,6 +29,8 @@ Tools by x0XP.
 ## Tech
 
 - HTML, CSS and vanilla JavaScript
+- Shared card, button, typography and transition styles in `components.css`
+- Repository detail screens in `repo-details.js` and `repo-detail.css`
 - OSRS Wiki APIs for live item and boss data
 - GitHub Pages for hosting
 - Cloudflare Worker for share embeds
