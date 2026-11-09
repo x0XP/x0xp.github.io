@@ -49,29 +49,42 @@
   }
   function fetchRepository(name) {
     if (!repoCache.has(name)) {
-      const promise = apiJson(`https://api.github.com/repos/${owner}/${encodeURIComponent(name)}`)
-        .then(repo => {
-          if (!repo || repo.name !== name || repo.private) throw new Error('Repository unavailable');
-          return repo;
-        });
+      const promise = (async () => {
+        // Direct #repo links should work without a GitHub API request.
+        const saved = await window.X0XPGithubData.find(name).catch(() => null);
+        if (saved) return saved;
+        const repo = await apiJson(`https://api.github.com/repos/${owner}/${encodeURIComponent(name)}`);
+        if (!repo || repo.name !== name || repo.private) throw new Error('Repository unavailable');
+        return repo;
+      })();
       repoCache.set(name, promise);
       promise.catch(() => { if (repoCache.get(name) === promise) repoCache.delete(name); });
     }
     return repoCache.get(name);
   }
-  function decodeReadme(response) {
-    if (!response || response.encoding !== 'base64' || typeof response.content !== 'string') return '';
-    if (response.content.length > 800000) return ''; // Do not decode enormous documents.
-    const binary = atob(response.content.replace(/\s/g, ''));
-    return new TextDecoder('utf-8').decode(Uint8Array.from(binary, c => c.charCodeAt(0)));
-  }
-  async function fetchReadme(name) {
-    try {
-      const data = await apiJson(`https://api.github.com/repos/${owner}/${encodeURIComponent(name)}/readme`);
-      return decodeReadme(data);
-    } catch (_) {
-      return ''; // No README, API limits, and offline connections should not break details.
+  const readmeCache = new Map();
+
+  async function fetchReadme(name, branch) {
+    const key = name + ':' + branch;
+    if (!readmeCache.has(key)) {
+      // raw.githubusercontent.com is not subject to the public REST API's
+      // 60-request-per-hour limit. README previews are optional, never fatal.
+      const promise = (async () => {
+        for (const filename of ['README.md', 'readme.md']) {
+          try {
+            const path = [owner, name, branch, filename]
+              .map(part => encodeURIComponent(part)).join('/');
+            const response = await fetch('https://raw.githubusercontent.com/' + path);
+            if (!response.ok) continue;
+            const text = await response.text();
+            if (text.length <= 250000) return text;
+          } catch (_) { /* Try the next filename. */ }
+        }
+        return '';
+      })();
+      readmeCache.set(key, promise);
     }
+    return readmeCache.get(key);
   }
   function readmeSummary(markdown) {
     const clean = markdown.replace(/```[\s\S]*?```/g, '')
@@ -174,7 +187,7 @@
         ? listedRepo : await fetchRepository(name);
       if (current !== generation) return;
       render(repository, '');
-      const markdown = await fetchReadme(name);
+      const markdown = await fetchReadme(name, repository.default_branch || 'main');
       if (current !== generation) return;
       render(repository, markdown);
     } catch (_) {

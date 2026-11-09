@@ -109,24 +109,6 @@
     }
   }
 
-  async function requestGitHub(url) {
-    const response = await fetch(url, {headers: {Accept: 'application/vnd.github+json'}});
-    if (!response.ok) throw new Error(`GitHub request failed (${response.status})`);
-    return response.json();
-  }
-
-  async function fetchRepositories() {
-    const repositories = [];
-    // GitHub allows up to 100 repositories per request. Continue for larger profiles.
-    for (let page = 1; page <= 20; page++) {
-      const batch = await requestGitHub(`https://api.github.com/users/x0XP/repos?sort=updated&direction=desc&per_page=100&page=${page}`);
-      if (!Array.isArray(batch)) throw new Error('Unexpected GitHub response');
-      repositories.push(...batch);
-      if (batch.length < 100) break;
-    }
-    return repositories.sort((a, b) => Date.parse(b.updated_at || 0) - Date.parse(a.updated_at || 0));
-  }
-
   function renderProfile(profile) {
     if (!profile || typeof profile !== 'object') return;
     const avatar = document.getElementById('githubAvatar');
@@ -213,14 +195,27 @@
     githubRepos.append(fragment);
   }
 
+  function renderGitHubData(data) {
+    renderProfile(data.profile);
+    renderRepositories(data.repositories);
+  }
+
   function showGitHubFailure() {
     githubStatus.hidden = false;
-    githubStatus.textContent = 'Could not load repositories from GitHub.';
+    githubStatus.textContent = 'Repository information is temporarily unavailable.';
     const retry = document.createElement('button');
     retry.type = 'button';
     retry.className = 'github-retry ui-button';
     retry.textContent = 'Retry';
-    retry.addEventListener('click', loadGitHub);
+    retry.addEventListener('click', () => {
+      githubRequest = null;
+      githubStatus.textContent = 'Loading repositories…';
+      // An explicit Retry also attempts the public API if the local file
+      // and any previously saved snapshot could not be loaded.
+      window.X0XPGithubData.refresh({force: true})
+        .then(result => renderGitHubData(result.data))
+        .catch(showGitHubFailure);
+    });
     githubStatus.append(document.createElement('br'), retry);
   }
 
@@ -228,17 +223,24 @@
     if (githubRequest) return githubRequest;
     githubStatus.hidden = false;
     githubStatus.textContent = 'Loading repositories…';
-    githubRequest = Promise.allSettled([
-      requestGitHub('https://api.github.com/users/x0XP'),
-      fetchRepositories()
-    ]).then(([profileResult, repoResult]) => {
-      if (profileResult.status === 'fulfilled') renderProfile(profileResult.value);
-      if (repoResult.status === 'fulfilled') renderRepositories(repoResult.value);
-      else {
-        githubRequest = null; // Allow an explicit retry after network/rate-limit errors.
-        showGitHubFailure();
-      }
-    });
+    // Render the same-origin snapshot immediately, without waiting for an
+    // external API. The optional live refresh must never blank this list.
+    githubRequest = window.X0XPGithubData.load()
+      .then(data => {
+        renderGitHubData(data);
+        window.X0XPGithubData.refresh()
+          .then(result => {
+            if (result.changed && document.body.classList.contains('github-open'))
+              renderGitHubData(result.data);
+          })
+          .catch(() => { /* Keep the working snapshot. */ });
+      })
+      .catch(() => window.X0XPGithubData.refresh({force: true})
+        .then(result => renderGitHubData(result.data))
+        .catch(() => {
+          githubRequest = null;
+          showGitHubFailure();
+        }));
     return githubRequest;
   }
 

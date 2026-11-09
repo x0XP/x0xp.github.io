@@ -9,11 +9,14 @@
   const originalBody = window.x0xpInitialBody;
   if (typeof originalBody !== 'string') return;
 
-  const checkInterval = 2 * 60 * 1000;
+  const checkInterval = 10 * 60 * 1000;
+  const githubCheckInterval = 30 * 60 * 1000;
+  const lastGithubCheckKey = 'x0xp-last-github-revision-attempt';
   const releaseGrace = 90 * 1000;
   const lastReloadKey = 'x0xp-last-site-refresh';
   const seenRevisionKey = 'x0xp-last-seen-commit';
   let lastAttempt = 0;
+  let lastGithubCheckInMemory = 0;
   let busy = false;
   let seenRevision;
 
@@ -51,8 +54,18 @@
         }
       } catch (_) { /* Offline: leave the currently loaded page usable. */ }
 
-      // Detect stylesheet/script-only updates in already-open tabs too. This is
-      // optional: HTML checks and fresh asset URLs still work if the API is down.
+      // Detect stylesheet/script-only updates, but avoid exhausting the public
+      // API allowance with frequent checks across tabs on the same browser.
+      // HTML and fresh asset URLs remain the primary, same-origin update path.
+      let priorGithubCheck = lastGithubCheckInMemory;
+      try {
+        priorGithubCheck = Math.max(priorGithubCheck,
+          Number(localStorage.getItem(lastGithubCheckKey)) || 0);
+      } catch (_) { /* Storage is optional. */ }
+      if (Date.now() - priorGithubCheck < githubCheckInterval) return;
+      lastGithubCheckInMemory = Date.now();
+      try { localStorage.setItem(lastGithubCheckKey, String(lastGithubCheckInMemory)); }
+      catch (_) { /* Storage is optional. */ }
       try {
         const response = await fetch('https://api.github.com/repos/x0XP/x0xp.github.io/commits/main', {
           cache: 'no-store',

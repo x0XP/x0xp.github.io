@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-09T11:47:25.907Z",
+  "profile": {
+    "login": "x0XP",
+    "name": "x0XP",
+    "bio": "honestly i just play osrs and break bad games these days",
+    "avatar_url": "https://github.com/x0XP.png?size=128",
+    "html_url": "https://github.com/x0XP"
+  },
+  "repositories": [
+    {
+      "name": "x0xp.github.io",
+      "full_name": "x0XP/x0xp.github.io",
+      "description": "bruh",
+      "language": "JavaScript",
+      "updated_at": "2026-11-09T11:31:47Z",
+      "pushed_at": "2026-11-09T11:31:45Z",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "default_branch": "main",
+      "html_url": "https://github.com/x0XP/x0xp.github.io",
+      "homepage": null,
+      "private": false
+    },
+    {
+      "name": "VideoShelf",
+      "full_name": "x0XP/VideoShelf",
+      "description": null,
+      "language": "C#",
+      "updated_at": "2026-09-14T18:02:05Z",
+      "pushed_at": "2026-09-14T18:02:00Z",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "default_branch": "main",
+      "html_url": "https://github.com/x0XP/VideoShelf",
+      "homepage": null,
+      "private": false
+    },
+    {
+      "name": "xdolf-forge-1.21.10",
+      "full_name": "x0XP/xdolf-forge-1.21.10",
+      "description": "AI-assisted rebuild of the original Xdolf client for Minecraft 1.21.10 Forge",
+      "language": "Java",
+      "updated_at": "2026-09-13T19:39:08Z",
+      "pushed_at": "2026-09-13T19:39:04Z",
+      "stargazers_count": 2,
+      "forks_count": 0,
+      "default_branch": "main",
+      "html_url": "https://github.com/x0XP/xdolf-forge-1.21.10",
+      "homepage": null,
+      "private": false
+    },
+    {
+      "name": "xdolf",
+      "full_name": "x0XP/xdolf",
+      "description": "old xdolf client files",
+      "language": "Java",
+      "updated_at": "2026-09-12T18:51:30Z",
+      "pushed_at": "2026-09-07T23:09:35Z",
+      "stargazers_count": 1,
+      "forks_count": 0,
+      "default_branch": "main",
+      "html_url": "https://github.com/x0XP/xdolf",
+      "homepage": null,
+      "private": false
+    },
+    {
+      "name": "VortexBot",
+      "full_name": "x0XP/VortexBot",
+      "description": null,
+      "language": "JavaScript",
+      "updated_at": "2026-06-18T10:59:53Z",
+      "pushed_at": "2020-12-23T18:18:24Z",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "default_branch": "main",
+      "html_url": "https://github.com/x0XP/VortexBot",
+      "homepage": null,
+      "private": false
+    },
+    {
+      "name": "XPAuth",
+      "full_name": "x0XP/XPAuth",
+      "description": "An offline authentication plugin for beta Minecraft servers.",
+      "language": "Java",
+      "updated_at": "2019-08-25T04:01:37Z",
+      "pushed_at": "2018-08-20T13:39:52Z",
+      "stargazers_count": 1,
+      "forks_count": 0,
+      "default_branch": "master",
+      "html_url": "https://github.com/x0XP/XPAuth",
+      "homepage": "",
+      "private": false
+    }
+  ]
+}

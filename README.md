@@ -31,6 +31,7 @@ Tools by x0XP.
 - HTML, CSS and vanilla JavaScript
 - Shared card, button, typography and transition styles in `components.css`
 - Repository detail screens in `repo-details.js` and `repo-detail.css`
+- A local `github-data.json` snapshot keeps the GitHub list available if the public API is rate-limited; `github-data.js` refreshes it in visitors' browsers when permitted
 - OSRS Wiki APIs for live item and boss data
 - GitHub Pages for hosting
 - Cloudflare Worker for share embeds

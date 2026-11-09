@@ -350,11 +350,11 @@
                 function start() {
                     window.x0xpInitialBody = document.body.innerHTML;
                     // The Price Checker must execute before hub.js uses trackerReady.
-                    for (const file of ['price-history.js', 'script.js', 'repo-details.js', 'hub.js', 'site-refresh.js']) {
+                    for (const file of ['price-history.js', 'script.js', 'github-data.js', 'repo-details.js', 'hub.js', 'site-refresh.js']) {
                         const script = document.createElement('script');
                         script.async = false;
                         script.src = file + '?site_asset=' + window.x0xpAssetToken;
-                        if (['script.js', 'repo-details.js', 'hub.js'].includes(file)) {
+                        if (['script.js', 'github-data.js', 'repo-details.js', 'hub.js'].includes(file)) {
                             script.addEventListener('error', () => window.x0xpShowLoadError?.());
                         }
                         document.body.appendChild(script);
