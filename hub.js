@@ -291,4 +291,7 @@
   window.addEventListener('popstate', () => readRoute(true));
   window.addEventListener('hashchange', () => readRoute());
   readRoute();
+  // Routing has established the intended view. CSS and wallpaper readiness
+  // determine when the loading overlay can safely reveal it.
+  window.x0xpMarkAppReady?.();
 })();

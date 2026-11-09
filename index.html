@@ -1,9 +1,105 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="site-booting">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>x0XP</title>
+        <!-- Critical startup styles prevent unstyled panels or the large wordmark flashing. -->
+        <style>
+            html { background-color: #0d1726; }
+            html.site-booting .site-header,
+            html.site-booting main,
+            html.site-booting #floatingContainer,
+            html.site-booting #tooltip,
+            html.site-booting #helpBox,
+            html.site-booting #changelogBox,
+            html.site-booting #clearAllFloating {
+                visibility: hidden !important;
+            }
+            #siteLoader {
+                position: fixed;
+                inset: 0;
+                z-index: 2147483647;
+                display: grid;
+                place-items: center;
+                background: #0d1726;
+                color: #f2e7d1;
+                font-family: Arial, Helvetica, sans-serif;
+                opacity: 1;
+                visibility: visible;
+            }
+            html.wallpaper-ready #siteLoader {
+                background: #0d1726 url("assets/hub-background.png") center / cover no-repeat fixed;
+            }
+            .site-loader-content {
+                display: grid;
+                justify-items: center;
+                gap: 13px;
+                width: 186px;
+                padding: 22px;
+                border-radius: 9px;
+                background: #10151ad9;
+                border: 1px solid #b7986470;
+            }
+            .site-loader-brand {
+                color: #d9ac59;
+                font: bold 21px/1.2 "Courier New", monospace;
+                letter-spacing: 1px;
+            }
+            .site-loader-track {
+                display: block;
+                position: relative;
+                overflow: hidden;
+                width: 140px;
+                height: 3px;
+                background: #69573a70;
+                border-radius: 3px;
+            }
+            .site-loader-track::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                width: 38%;
+                border-radius: 3px;
+                background: #e5b355;
+                animation: site-loader-sweep 1.35s ease-in-out infinite;
+            }
+            .site-loader-label {
+                font: 11px/1.4 Arial, Helvetica, sans-serif;
+                color: #c1b7a4;
+                text-align: center;
+            }
+            .site-loader-retry {
+                padding: 7px 12px;
+                border: 1px solid #b7986480;
+                border-radius: 6px;
+                background: #10151a;
+                color: #f2e7d1;
+                cursor: pointer;
+                font: 12px Arial, Helvetica, sans-serif;
+            }
+            .site-loader-retry:hover,
+            .site-loader-retry:focus-visible {
+                border-color: #d9ac59;
+            }
+            .site-loader-retry[hidden] { display: none; }
+            @keyframes site-loader-sweep {
+                from { transform: translateX(-110%); }
+                to { transform: translateX(280%); }
+            }
+            html.site-ready #siteLoader {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity .32s ease, visibility 0s .32s;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .site-loader-track::after { animation: none; width: 100%; opacity: .55; }
+                html.site-ready #siteLoader { transition: none; }
+            }
+        </style>
+        <link rel="preload" as="image" href="assets/hub-background.png" fetchpriority="high" />
+
 
         <meta property="og:title" content="x0XP" />
         <meta
@@ -29,21 +125,85 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
-        <!-- Revalidate local styles on each visit; external libraries retain normal caching. -->
+        <!-- Keep versioned assets, but reveal the interface only after styles,
+             background image and initial navigation have completed. -->
         <script>
             (() => {
                 const token = Date.now() + '-' + Math.random().toString(36).slice(2);
-                for (const file of ['style.css', 'components.css', 'hub.css', 'repo-detail.css']) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = file + '?site_asset=' + token;
-                    document.head.appendChild(link);
-                }
                 window.x0xpAssetToken = token;
+                const stylesReady = Promise.all(
+                    ['style.css', 'components.css', 'hub.css', 'repo-detail.css'].map(file =>
+                        new Promise(resolve => {
+                            const sheet = document.createElement('link');
+                            sheet.rel = 'stylesheet';
+                            sheet.href = file + '?site_asset=' + token;
+                            sheet.onload = () => resolve(true);
+                            sheet.onerror = () => resolve(false);
+                            document.head.appendChild(sheet);
+                        })
+                    )
+                );
+
+                const backgroundReady = new Promise(resolve => {
+                    const background = new Image();
+                    const finish = () => {
+                        if (background.naturalWidth) {
+                            document.documentElement.classList.add('wallpaper-ready');
+                        }
+                        resolve();
+                    };
+                    background.onload = () => {
+                        if (typeof background.decode === 'function') {
+                            background.decode().catch(() => {}).then(finish);
+                        } else {
+                            finish();
+                        }
+                    };
+                    background.onerror = finish;
+                    background.src = 'assets/hub-background.png';
+                });
+
+                let appStarted = false;
+                let appFailed = false;
+                window.x0xpShowLoadError = () => {
+                    if (appFailed) return;
+                    appFailed = true;
+                    const label = document.getElementById('siteLoaderMessage');
+                    const retry = document.getElementById('siteLoaderRetry');
+                    if (label) label.textContent = 'Unable to load the site.';
+                    if (retry) {
+                        retry.hidden = false;
+                        retry.addEventListener('click', () => location.reload(), {once: true});
+                    }
+                };
+                window.x0xpMarkAppReady = () => {
+                    if (appStarted) return;
+                    appStarted = true;
+                    Promise.all([stylesReady, backgroundReady]).then(([loaded]) => {
+                        if (appFailed) return;
+                        if (!loaded.every(Boolean)) {
+                            window.x0xpShowLoadError();
+                            return;
+                        }
+                        requestAnimationFrame(() => requestAnimationFrame(() => {
+                            if (appFailed) return;
+                            document.documentElement.classList.remove('site-booting');
+                            document.documentElement.classList.add('site-ready');
+                        }));
+                    });
+                };
             })();
         </script>
     </head>
     <body>
+        <div id="siteLoader" role="status" aria-label="Loading x0XP">
+            <div class="site-loader-content">
+                <span class="site-loader-brand">x0XP</span>
+                <span class="site-loader-track" aria-hidden="true"></span>
+                <span id="siteLoaderMessage" class="site-loader-label">Loading…</span>
+                <button id="siteLoaderRetry" class="site-loader-retry" type="button" hidden>Retry</button>
+            </div>
+        </div>
         <div id="floatingContainer"></div>
         <div id="tooltip" class="tooltip"></div>
 
@@ -194,6 +354,9 @@
                         const script = document.createElement('script');
                         script.async = false;
                         script.src = file + '?site_asset=' + window.x0xpAssetToken;
+                        if (['script.js', 'repo-details.js', 'hub.js'].includes(file)) {
+                            script.addEventListener('error', () => window.x0xpShowLoadError?.());
+                        }
                         document.body.appendChild(script);
                     }
                 }
