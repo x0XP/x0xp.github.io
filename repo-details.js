@@ -143,7 +143,7 @@
 
     const actions = element('div', 'repo-detail-actions');
     const url = repoUrl(repo.name);
-    actions.append(link('View repository', url, true), link('Browse files', url + '/tree/' + encodeURIComponent(repo.default_branch || 'main'), true));
+    actions.append(link('View repository', url, true));
     if (typeof repo.homepage === 'string' && /^https:\/\//i.test(repo.homepage)) {
       actions.append(link('Visit website', repo.homepage, true));
     }
