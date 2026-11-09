@@ -1,0 +1,957 @@
+{
+  "schemaVersion": 3,
+  "bundleVersion": "osrs-236-01103675eeff",
+  "cache": {
+    "revision": 236,
+    "source": "openrs2:2437",
+    "contentHash": "01103675eeff79275b272ea2a7eeef5942beb5c93bccea1a165561b14afba25c"
+  },
+  "assets": {
+    "model-50963": {
+      "file": "664f3643c3af45609fc699f7ced76efedc819e791a2ccfd51a0c760477fbc201.bin",
+      "crc32": "5df69041",
+      "bytes": 73557
+    },
+    "model-50964": {
+      "file": "68570a27638f38f12968fb6eb47481336b34d745ecc82a76da45a462ee8cc286.bin",
+      "crc32": "701d83ec",
+      "bytes": 84296
+    },
+    "npc-12810": {
+      "file": "acf330794fabd385d0a8c2d7462c3cc160052e654a8d5c5b449eb41ba9b26694.bin",
+      "crc32": "3c539a8c",
+      "bytes": 425076
+    },
+    "npc-12811": {
+      "file": "1fdc0516cd7797212420ddc6cf7b9fe768014a762e3120f29a21732393fba72a.bin",
+      "crc32": "7be7ef4b",
+      "bytes": 413581
+    },
+    "npc-12812": {
+      "file": "925b4e0870a433b571a80d30d11d3f7e6383ac77c0e3228a047ad3af02cf39da.bin",
+      "crc32": "7990be32",
+      "bytes": 1197225
+    },
+    "npc-12814": {
+      "file": "13d171e3bdcb189948c66765de60f71784dc471b34240ac0061b9f50adf8a5e4.bin",
+      "crc32": "f5540223",
+      "bytes": 250034
+    },
+    "npc-12815": {
+      "file": "76f3f754fe96f193672e72f6f9ee41ac484f0a0e5d0b10d922db56e7fe3adf19.bin",
+      "crc32": "0f227f1b",
+      "bytes": 328203
+    },
+    "npc-12816": {
+      "file": "e36b0a912c0a9cfd0b0083e9608c4605bf02e65e5c540b05bc79e3d6500bdfad.bin",
+      "crc32": "8c7896d8",
+      "bytes": 374203
+    },
+    "npc-12817": {
+      "file": "0edf08fc604dfb2b5417925fc11dacd0ca0810172ac20a3c3548313c2078808e.bin",
+      "crc32": "f6928f36",
+      "bytes": 1630249
+    },
+    "npc-12818": {
+      "file": "09fef783f3e5b72e60edb2e3ae1181d249e8a328e901f2db35ab33eb7bb17793.bin",
+      "crc32": "b5e6a9e5",
+      "bytes": 857372
+    },
+    "npc-12819": {
+      "file": "e006ab969f4fb0ca662d1a845f540d80cb1127d8f02f6ef181acac17cb6d91d9.bin",
+      "crc32": "dd66740d",
+      "bytes": 1419341
+    },
+    "npc-12821": {
+      "file": "230a73c834b88309756f31816bfad3e2068a606e098208979dbec5d21422cb4b.bin",
+      "crc32": "fa136a1c",
+      "bytes": 6276599
+    },
+    "player-animations": {
+      "file": "d0ed5e60f668f4600c7b19601b1c0c8b2de1f6845842cdb2f187b3a4e4d6e959.bin",
+      "crc32": "94e6a194",
+      "bytes": 62765
+    },
+    "player-item-abyssaltentacle": {
+      "file": "aad545400ee1842845658020b7e8310af4fa63d6019fd082a5cc17a7e111a4c2.bin",
+      "crc32": "af96faf4",
+      "bytes": 4911
+    },
+    "player-item-ahrimsrobeskirt": {
+      "file": "760e39293a0e794435a8ee0b73f376f145e3e6d975be2c4bd1025527bb1f1d09.bin",
+      "crc32": "e20e8693",
+      "bytes": 13869
+    },
+    "player-item-ahrimsrobetop": {
+      "file": "1c7b198a4cac9451a244e75933e3f516f5850c23b0db3a3d5d109401ad01ba4a.bin",
+      "crc32": "27e9d2ca",
+      "bytes": 15960
+    },
+    "player-item-amuletoffury": {
+      "file": "9b54a8b7e55bfedb6f3448d23656c17fd989b02559c82a1402c266c043c49948.bin",
+      "crc32": "7f9b5f61",
+      "bytes": 981
+    },
+    "player-item-amuletofrancour": {
+      "file": "3b16f20df81ef108fb53c831099cefbb01556669825d008aa48d83cfea1c0f22.bin",
+      "crc32": "d362c840",
+      "bytes": 2291
+    },
+    "player-item-amuletoftorture": {
+      "file": "b859017e68468082c5715bd0329e5c1b8773aba1f0313d8af97c77e2e92b3884.bin",
+      "crc32": "1c8f4459",
+      "bytes": 1425
+    },
+    "player-item-ancestralrobebottom": {
+      "file": "a839f6a733496b665a1526d0cb17ca634afcecfdc46f96808c6c9c58ff2fbf21.bin",
+      "crc32": "f83f3bf9",
+      "bytes": 13233
+    },
+    "player-item-ancestralrobetop": {
+      "file": "2e9fab2242fcdbe76f31db4e5bc80d6949652b01e8dfa4d950a2c10236c87f0d.bin",
+      "crc32": "9fe23f9c",
+      "bytes": 14608
+    },
+    "player-item-ancientstaff": {
+      "file": "573d0949c877a2d325d3f50d2a0c22b96322a5f29ae8d579bf8eb4a4d55f05f9.bin",
+      "crc32": "225dfa8d",
+      "bytes": 6246
+    },
+    "player-item-araneaboots": {
+      "file": "dd9a4b6838c5197a65960c477d2b330b0f83c7ed19b9967989b3b0056b3aa438.bin",
+      "crc32": "de1f01ff",
+      "bytes": 12877
+    },
+    "player-item-armadylbrew": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-armadylchainskirt": {
+      "file": "4715c6fd0c67098d3fa1ce1588fd69af18f789be9be7db90a7d5e48aebf78c49.bin",
+      "crc32": "ecd9d78e",
+      "bytes": 6908
+    },
+    "player-item-armadylchestplate": {
+      "file": "d6a9ee5facbb20972aca07bfcdbbbb3aff2af3ba9a04859e16d41b7c66fb5dec.bin",
+      "crc32": "3ed1c1a1",
+      "bytes": 8500
+    },
+    "player-item-avasaccumulator": {
+      "file": "d0ca0ffab8a93f72b7f92f442267e9b18cc3877716d3963ca78612d6a8c1d052.bin",
+      "crc32": "d62c5ba1",
+      "bytes": 5328
+    },
+    "player-item-avasassembler": {
+      "file": "2064efc2c468c494e1fbc04004c47f8981833d179e3f4b484bfeeabf354dda4f.bin",
+      "crc32": "406d2206",
+      "bytes": 16062
+    },
+    "player-item-avernicdefender": {
+      "file": "ee5cf4e92fb23159f9aeaa8002fe80918c5f81ff49d5ee3e8e46594a8a9e817e.bin",
+      "crc32": "45e8ce3b",
+      "bytes": 2832
+    },
+    "player-item-avernictreadsmax": {
+      "file": "5871180b213c082fcb13af03a2ec5b3a14b0157a4f804ecfd43406b11737e3d1.bin",
+      "crc32": "fb9579a7",
+      "bytes": 16230
+    },
+    "player-item-barrowsgloves": {
+      "file": "ba368b030c6e9e22054332e3869b9e295f11fe34fd28d4d7f188bdf411e78676.bin",
+      "crc32": "999ab671",
+      "bytes": 2330
+    },
+    "player-item-bastionpotion": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-berserkerringi": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-blackchinchompa": {
+      "file": "29fd441322079fa1d95d34a3a2534970889c436dddd471a0111a28835fe1b282.bin",
+      "crc32": "10074ab2",
+      "bytes": 5959
+    },
+    "player-item-blackdhidebody": {
+      "file": "2c24e951ef2a1422f79c4b38a49628a1aac6fa1f0edd4dd9678634df75fe966b.bin",
+      "crc32": "16dacb1d",
+      "bytes": 4015
+    },
+    "player-item-blackdhidechaps": {
+      "file": "eba0fce512fe9b595f75cc9079f936785932546be1870c9fda363a39b595a390.bin",
+      "crc32": "fd44ab78",
+      "bytes": 7616
+    },
+    "player-item-blackdhidevambraces": {
+      "file": "b859a569a4e85b85314e203163308528462857c25deebfff0cf7313c994de4b9.bin",
+      "crc32": "b3eb4a13",
+      "bytes": 1546
+    },
+    "player-item-bladeofsaeldor": {
+      "file": "8a728d6888f48755f645b684ea261f001d747257b7b5b63f71bf150278edf624.bin",
+      "crc32": "d2de7594",
+      "bytes": 6081
+    },
+    "player-item-bowoffaerdhinen": {
+      "file": "09ea1ef080369866d57d4db10c95e7948560c5a50b27e5631c74e5f9b51e9764.bin",
+      "crc32": "7d270c14",
+      "bytes": 12197
+    },
+    "player-item-conflictiongauntlets": {
+      "file": "0cad8de4629e6e4eb165af662244907b92f3a402c5184a7aa45ae1ca2f407e13.bin",
+      "crc32": "f9baf3cd",
+      "bytes": 6318
+    },
+    "player-item-crystalbody": {
+      "file": "328c1534e34e0dfa52fb5ae36a433268f2457127a0f10add88ad12ef27e54b6a.bin",
+      "crc32": "01e90f85",
+      "bytes": 9156
+    },
+    "player-item-crystalhelm": {
+      "file": "9f2e13eaac5181cb0123c7b6e5007af0711e3417643d40c7a1f7ae4008225167.bin",
+      "crc32": "01d4e742",
+      "bytes": 5182
+    },
+    "player-item-crystallegs": {
+      "file": "1b7f60716bcb012c2834df718a39af30ec7bb24830a36b1345b721a219c1b943.bin",
+      "crc32": "d9c734ee",
+      "bytes": 9713
+    },
+    "player-item-crystalshield": {
+      "file": "a7afa1af860d102614d9865bf4a121eb9508d38bcab08d5ee82b938f5ad8151f.bin",
+      "crc32": "7a37ac62",
+      "bytes": 3316
+    },
+    "player-item-dagonhairobetop": {
+      "file": "8266b595931500b269d5055bc6a80c246c45017bd8491bf95fafd2bdb4e1a190.bin",
+      "crc32": "1e177958",
+      "bytes": 16270
+    },
+    "player-item-devoutboots": {
+      "file": "881813f72e992b6464a61db98ebeba7de7e6a0db67ab74eeb435f8561d78207b.bin",
+      "crc32": "cc900de5",
+      "bytes": 15257
+    },
+    "player-item-diamondboltse": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-dizanasquiver": {
+      "file": "a26af7868b51a9b691de7ba757cb6cb008c6b04b8a58c8436e09c6515ac17d24.bin",
+      "crc32": "844ed064",
+      "bytes": 8860
+    },
+    "player-item-dragonarrows": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-dragonclaws": {
+      "file": "6bb521a76980ca45e205ffcaf4fe1b20e038b77f7c7b8adea21c4fc5e10842ea.bin",
+      "crc32": "02f80c23",
+      "bytes": 8845
+    },
+    "player-item-dragondefender": {
+      "file": "623305801e467ebdbc08a3966e39fae2e41d0fd1a4c1423c67fd2bc07c521e3f.bin",
+      "crc32": "24b6ebd2",
+      "bytes": 3243
+    },
+    "player-item-eyeofayak": {
+      "file": "e7809a545d7f338c091242ed5241c8ae4965679e88c46b16746d4bbb3b172472.bin",
+      "crc32": "3fb65e95",
+      "bytes": 8501
+    },
+    "player-item-ferociousgloves": {
+      "file": "b0dff2c6392937fde2734fc5612d20395b80f743fe8dd7a4b8ae5690fd1c7307.bin",
+      "crc32": "0abf08f4",
+      "bytes": 4667
+    },
+    "player-item-guthixrobetop": {
+      "file": "2927bef7741b2173a36e8df9f62e1f05caac4f56f76d5d14e2d156eccdd97fe2.bin",
+      "crc32": "61c2284d",
+      "bytes": 10274
+    },
+    "player-item-holyblessing": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-infernalcape": {
+      "file": "a3923eef239322305e744754d9c971bbcf0ce04b5caef6c5c25628a3f7c7fb58.bin",
+      "crc32": "893633b6",
+      "bytes": 25534
+    },
+    "player-item-justiciarchestguard": {
+      "file": "3da8528e428572b65c78fce8c4f2dc2fd22a9eae7e1f9d07037f2f04452e9189.bin",
+      "crc32": "988cf5aa",
+      "bytes": 21432
+    },
+    "player-item-justiciarfaceguard": {
+      "file": "49e1ff8e263b1906645c6cd7d2a32d1c91e1fda6797044b2492b39647c0b2305.bin",
+      "crc32": "cbf658c2",
+      "bytes": 8247
+    },
+    "player-item-justiciarlegguards": {
+      "file": "87a26141d359692e44e1a85f67324fa561195c9c9e43187d4b35d090c9972653.bin",
+      "crc32": "876a7b9f",
+      "bytes": 16489
+    },
+    "player-item-kodaiwand": {
+      "file": "9bc9e3427b42848a538eaca19553b2ef7b80391382c3f7c10ed6b27144138948.bin",
+      "crc32": "a1e72f55",
+      "bytes": 2680
+    },
+    "player-item-magesbook": {
+      "file": "b9f0c729605834290bfead444967e4de69ea6d39b51c87e2d5f8148f426f2554.bin",
+      "crc32": "a3727317",
+      "bytes": 3929
+    },
+    "player-item-masoribodyf": {
+      "file": "6443147dd4d1101579f71faf3c13109f09b69abd3ac7ba71a64f7c535c95dec2.bin",
+      "crc32": "eecefcdc",
+      "bytes": 27526
+    },
+    "player-item-masorichapsf": {
+      "file": "a068dd36e4116378b939b613032b77a05b57def6f7239ced5df551745b68f48e.bin",
+      "crc32": "40d53eb1",
+      "bytes": 25572
+    },
+    "player-item-masorimaskf": {
+      "file": "24187bff1d3e0f0005e8dce169310a1a7ba12507e5f3c008d0aeba4d40748342.bin",
+      "crc32": "8beb319d",
+      "bytes": 13970
+    },
+    "player-item-necklaceofanguish": {
+      "file": "eb166c75983f11c25b01d726b1bb569dc6b8a0597e5336c2e22f45a079cbe3c6.bin",
+      "crc32": "ea29ed29",
+      "bytes": 2931
+    },
+    "player-item-noxioushalberd": {
+      "file": "1ce1d3de8cc326fee57fcb2d9f29a1c1bf26e24faad5fb818024cd586eed6151.bin",
+      "crc32": "dbc2b3ff",
+      "bytes": 3382
+    },
+    "player-item-oathplatechest": {
+      "file": "3830c5754f840b77a6616146de1b7384510c472952a9f8c11015a833af8f0a5e.bin",
+      "crc32": "b8dc50ef",
+      "bytes": 23413
+    },
+    "player-item-oathplatehelm": {
+      "file": "415e442b60697c7776f992be3c145f91a890a08f7d49a1b708c0ddda54a2c39a.bin",
+      "crc32": "35d4b42c",
+      "bytes": 9745
+    },
+    "player-item-oathplatelegs": {
+      "file": "4fa0ff4d9eb15544f562bed1680cf6a08c42d7d76bbcd39044fb237901a9c1d2.bin",
+      "crc32": "5dd5e19e",
+      "bytes": 21142
+    },
+    "player-item-occultnecklace": {
+      "file": "4cb7e43a09c1f3d858c5743dc3e09d3308dcc6f90fc776aec8339f3efdbffcd3.bin",
+      "crc32": "ead981ff",
+      "bytes": 1534
+    },
+    "player-item-pegasianboots": {
+      "file": "cee9bb8ef1329a6bc159b2a561795b9dde4fcace34f81ec299696409505cf96a.bin",
+      "crc32": "836d75fb",
+      "bytes": 15887
+    },
+    "player-item-primordialboots": {
+      "file": "cef8b53d112bc8efa5831e3e29b9d3cb5c0872d46e9c740f752397f5c178edf2.bin",
+      "crc32": "30e33aeb",
+      "bytes": 16023
+    },
+    "player-item-rangerboots": {
+      "file": "620746b17cd6760ed3d47dc7dad912ebb1c552f7aefe2a99d7947d76135a01e1.bin",
+      "crc32": "4cddd828",
+      "bytes": 2383
+    },
+    "player-item-ringofendurance": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-ringofsufferingi": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-robinhoodhat": {
+      "file": "859c7eae59add471159f21510a0c39a21dcdd214b973769353ccaebd3ee70aa9.bin",
+      "crc32": "f1b56b13",
+      "bytes": 2561
+    },
+    "player-item-rubyboltse": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-runecrossbow": {
+      "file": "ffa922ff3b257f2ad11464829881d6d3f307e3a58a41e803b5353ed27ea048ad.bin",
+      "crc32": "b1467f9f",
+      "bytes": 4953
+    },
+    "player-item-runekiteshield": {
+      "file": "9afea2df9e08773407ff278c06a392b1e8452b4d69fb735b1c4f769b55243fa3.bin",
+      "crc32": "b7dc92e0",
+      "bytes": 2656
+    },
+    "player-item-saradominbrew": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-saradominchaps": {
+      "file": "164719012262d01c6014a75b325f2958fa17611d5e30596aad6a6f84bb8c11d3.bin",
+      "crc32": "18eca59b",
+      "bytes": 7250
+    },
+    "player-item-saradomincoif": {
+      "file": "73faef0be3dc3d6a12d0d0fee98c348b033fccfe0ec39aae8df992065d461f96.bin",
+      "crc32": "bf85df1b",
+      "bytes": 6416
+    },
+    "player-item-saradomindhidebody": {
+      "file": "46300a6684f207348f586a930817cdddda872a6989350cd46b4da6aecaafbca3.bin",
+      "crc32": "165d678c",
+      "bytes": 7651
+    },
+    "player-item-saradomindhideboots": {
+      "file": "44ded856afc33ee48c963639e25a2a4728ce3e26a61770f2cdb586338b9f67f5.bin",
+      "crc32": "d39923a0",
+      "bytes": 4725
+    },
+    "player-item-scytheofvitur": {
+      "file": "1b62cb90f2609986f3ddaacb5b8c012f405015808c12ce5fd771714da040baa8.bin",
+      "crc32": "b6c4c01f",
+      "bytes": 23853
+    },
+    "player-item-slayerhelmeti": {
+      "file": "90673c19ec75dc58ff49626a2bb61546be053bae0b8f296bc5497ebc20b248ad.bin",
+      "crc32": "a541e663",
+      "bytes": 14350
+    },
+    "player-item-staminapotion": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-supercombatpotion": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-superrestore": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-torvafullhelm": {
+      "file": "f2b6ee00d417ec42bd9f7f40c1e1f76d7363ab339cf8dbcc0b3f72cc81f30de2.bin",
+      "crc32": "c0476192",
+      "bytes": 5598
+    },
+    "player-item-torvaplatebody": {
+      "file": "dbd7c1c7dcc8f0a65d7dbf28970db29ecac3f04435f383d7f58480bef8a3c8c3.bin",
+      "crc32": "6004831e",
+      "bytes": 20651
+    },
+    "player-item-torvaplatelegs": {
+      "file": "0434a0d302a653af6bc959bfbd7ef8286b7c2eebc6da199e0b2e36800a61ad68.bin",
+      "crc32": "3d6642a4",
+      "bytes": 8565
+    },
+    "player-item-toxicblowpipe": {
+      "file": "86ddd45819d8cbe8cc205e78d1637c9e365bbc252cede8537193806ce8204ec6.bin",
+      "crc32": "006b7fdd",
+      "bytes": 4112
+    },
+    "player-item-tumekensshadow": {
+      "file": "5ec7e13f95374a5af291f61ab74feab31902c31c6e02c79827ac595a311b3e1d.bin",
+      "crc32": "6d63bfd5",
+      "bytes": 19815
+    },
+    "player-item-twistedbow": {
+      "file": "f122568ed24ec156d715f7f2e93dab26fce6d72534f99ca506a71f84ab28e6e9.bin",
+      "crc32": "b319a08d",
+      "bytes": 9565
+    },
+    "player-item-ultorring": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-venatorbow": {
+      "file": "71ff4402df5ba64fc2665c321b946fbe8c43f45ee536e3472fafd42b32de1f9b.bin",
+      "crc32": "b47e76e3",
+      "bytes": 4630
+    },
+    "player-item-venatorring": {
+      "file": "52b88847327e9b17f70b5002d42f51df9ee6c67eebc3706fd0a9211541ca80ad.bin",
+      "crc32": "eed73492",
+      "bytes": 227
+    },
+    "player-item-zarytevambraces": {
+      "file": "338420d51f0173b8bb8bc7b1646ea45d80a6f34ebed2fd41f23ecbe26b31df6b.bin",
+      "crc32": "a051b4c7",
+      "bytes": 2821
+    },
+    "player-item-zombieaxe": {
+      "file": "f1eb61ccf8afcaa87ac526d0c5b5daf1408654d4477e3b91a34b220fc82925dd.bin",
+      "crc32": "42c78129",
+      "bytes": 5449
+    },
+    "scene-7216-compiled-opaque": {
+      "file": "1e1e9bf87216b54b98778cccaeb651f8dbdbacd6f3fb9a8200ae01175d72fdcd.bin",
+      "crc32": "5646bd49",
+      "bytes": 8619434
+    },
+    "scene-7216-compiled-terrain": {
+      "file": "e6ee38935718104e7cf29b68bee389721d4a96ef7fc45437bb41ab8fef4cfc87.bin",
+      "crc32": "3b4ec968",
+      "bytes": 144471
+    },
+    "scene-7216-compiled-transparent": {
+      "file": "67596c0ef6031eec55df5def8a96ee5df137017bc6fc708453cea8b08700bc37.bin",
+      "crc32": "20d3f317",
+      "bytes": 370795
+    },
+    "spotanim-1172": {
+      "file": "646aa3cdcd8ed9dab493ca141862a63f3189cae82d4d53b055c4007c1463133b.bin",
+      "crc32": "f6406ded",
+      "bytes": 1231
+    },
+    "spotanim-1231": {
+      "file": "cefb234afc9292ce2c42f5d06d77148a181c2f03dc693b84d11eb69fe6c065a8.bin",
+      "crc32": "f4821026",
+      "bytes": 1232
+    },
+    "spotanim-130": {
+      "file": "6a8198b71fbf81c21355a787f677fa59b9997f1d32756c7efc16553a969d0670.bin",
+      "crc32": "6d3d1cec",
+      "bytes": 7922
+    },
+    "spotanim-1341": {
+      "file": "fb87d4c3a8b35709f2a995080daa43ac88b963e9ed3e57c9901699f94281ab4d.bin",
+      "crc32": "cc391026",
+      "bytes": 4086
+    },
+    "spotanim-1459": {
+      "file": "77c0d5d53aa7aca0017ea1db84901829947b779777b0e3aa599b37e250e16360.bin",
+      "crc32": "298fdaf5",
+      "bytes": 19069
+    },
+    "spotanim-2007": {
+      "file": "bdc0bb2e936a9b4d1e03c71ebb0693cdc4a2fc65c6d58a84c30c772ee5a2b9e5.bin",
+      "crc32": "787f3951",
+      "bytes": 22878
+    },
+    "spotanim-2125": {
+      "file": "c316a8d541f184731de5fa2ee8c7fe31864029eac8f904dad2edb06e8c53ab2f.bin",
+      "crc32": "5b4e2565",
+      "bytes": 26778
+    },
+    "spotanim-2126": {
+      "file": "0785a0feabeeffab933b48c2c5d00a55b7f2ccaf38d6132f28445dc3dbde1206.bin",
+      "crc32": "b4410a97",
+      "bytes": 21069
+    },
+    "spotanim-2265": {
+      "file": "0efa74f75c3b225a5561deec2b1f884d43333f766ebddd359a7d90e1f3bcd414.bin",
+      "crc32": "95ae09dc",
+      "bytes": 31354
+    },
+    "spotanim-2289": {
+      "file": "07c8904eee8cbeb2717dae21ec652c0569d623815d518910038c3fa7a182e716.bin",
+      "crc32": "9a82b4ae",
+      "bytes": 15031
+    },
+    "spotanim-2291": {
+      "file": "75d908e5867364d65f6f03be2287e5d5a9689b2d7cdcc9b0bfe867991ea2b291.bin",
+      "crc32": "90eacef1",
+      "bytes": 3965
+    },
+    "spotanim-2667": {
+      "file": "a041fe02a0c82803010c349dd7428c468748b061b9396baad0e1d7913a04981a.bin",
+      "crc32": "ccae261c",
+      "bytes": 279099
+    },
+    "spotanim-2668": {
+      "file": "c2cd76a1409320373bbe95346572fb46722b6bf0443e9369a5ceb8384bc27e1d.bin",
+      "crc32": "38bf10db",
+      "bytes": 278839
+    },
+    "spotanim-2669": {
+      "file": "2d800e1aca7a3070625939afa119d5712f50747a3ea491bcff21df8280f95fe0.bin",
+      "crc32": "ef02e609",
+      "bytes": 18739
+    },
+    "spotanim-2673": {
+      "file": "e4fe59164874546b6b98510524b8a7225f3f2ceeccdf8f770227677fde3e6ff0.bin",
+      "crc32": "cec2a003",
+      "bytes": 3094
+    },
+    "spotanim-2674": {
+      "file": "8cf3d902972fdaac5d41ba5d540dd492d316f71f0bdfe2a426a7b3035bb8c17d.bin",
+      "crc32": "5b74bd4f",
+      "bytes": 12708
+    },
+    "spotanim-2681": {
+      "file": "4aa69176a0f2e0cb040051a5f0baf40493a019fb058a67a08eb435b251d59285.bin",
+      "crc32": "ef8c6551",
+      "bytes": 51453
+    },
+    "spotanim-2683": {
+      "file": "ddd2c2cb338cd292ec1918c097489f294482e7e0cf20b812ce4c5e9a815ec048.bin",
+      "crc32": "0f4551e7",
+      "bytes": 32803
+    },
+    "spotanim-2685": {
+      "file": "c85580b4236df34f7376251da75e090bd843bcf6408d779ca4bb3db5a5b3181d.bin",
+      "crc32": "3534c0ed",
+      "bytes": 43059
+    },
+    "spotanim-2689": {
+      "file": "0ac5d5a3836272b9583c6d65eeaa63cb861491ae49b1a4b5f23b5b8114eaec4c.bin",
+      "crc32": "044191ac",
+      "bytes": 152046
+    },
+    "spotanim-2690": {
+      "file": "29729e2e2e1d6832cd9cd1c9d9245da1f5ba764f3c71659be2f9233c57fee6ab.bin",
+      "crc32": "8f4cff49",
+      "bytes": 121363
+    },
+    "spotanim-2691": {
+      "file": "f8026dcc09f6f3cbdf0b8c6ecee92d8491f31c31af4ede2618f3993eb285745b.bin",
+      "crc32": "626ffa71",
+      "bytes": 121429
+    },
+    "spotanim-2692": {
+      "file": "de88d8dc0dfadbc2ff6e41e0f721b75c59eccce1f3c0701e0d423e7e3c2ccb6f.bin",
+      "crc32": "8dbe3d4f",
+      "bytes": 122766
+    },
+    "spotanim-2693": {
+      "file": "5e012bb69b4e6ee5cd4397a93942a6df1a200f3fb7351415774e09c80f3130dc.bin",
+      "crc32": "d8765d04",
+      "bytes": 101726
+    },
+    "spotanim-2694": {
+      "file": "a15d87be3c1312ad033c123818bf416393c213bc4a9ab5064c1074ae4c4b48d7.bin",
+      "crc32": "483d3797",
+      "bytes": 94371
+    },
+    "spotanim-2695": {
+      "file": "ecae4219c153863530c9f24db770d44449d47aa637f95b2ca495c6980b0fef21.bin",
+      "crc32": "65b1b48a",
+      "bytes": 94234
+    },
+    "spotanim-2696": {
+      "file": "ecf6e1fd2ad2fd2197d8b654aa23775c59a3a6f7438105f6b553e4fb0c853a1d.bin",
+      "crc32": "99027c7d",
+      "bytes": 95533
+    },
+    "spotanim-2697": {
+      "file": "05d451a4884536acc697973573a46373a7eb6b1fb94af70c1aac6b6b3b539671.bin",
+      "crc32": "39e9191d",
+      "bytes": 88996
+    },
+    "spotanim-2698": {
+      "file": "ff225ae7461484323fa9227f18637a8d48a6e754c7ee9ad520abc691c22ae475.bin",
+      "crc32": "4b30bbc0",
+      "bytes": 241553
+    },
+    "spotanim-478": {
+      "file": "cf92f6120e68b1c909a142fc24c8dba558a4d348283d4c503d9f11ea692a446d.bin",
+      "crc32": "6cd66cc4",
+      "bytes": 1238
+    },
+    "spotanim-506": {
+      "file": "371ca39df3a99b6df6ac31bbb55e33d6d01608697a3024661dd9e4ec239ca6ef.bin",
+      "crc32": "b9246ff3",
+      "bytes": 1230
+    },
+    "spotanim-9": {
+      "file": "329c3b009633dd7ab2c10fee28448cef44f49f3aef297778f2c88c3322c7b5b6.bin",
+      "crc32": "5ed39061",
+      "bytes": 1413
+    }
+  },
+  "references": {
+    "npc:12814": [
+      "npc-12814"
+    ],
+    "npc:12815": [
+      "npc-12815"
+    ],
+    "npc:12816": [
+      "npc-12816"
+    ],
+    "npc:12810": [
+      "npc-12810"
+    ],
+    "npc:12818": [
+      "npc-12818"
+    ],
+    "npc:12817": [
+      "npc-12817"
+    ],
+    "npc:12811": [
+      "npc-12811"
+    ],
+    "npc:12812": [
+      "npc-12812"
+    ],
+    "npc:12819": [
+      "npc-12819"
+    ],
+    "npc:12821": [
+      "npc-12821"
+    ],
+    "model:50963": [
+      "model-50963"
+    ],
+    "model:50964": [
+      "model-50964"
+    ]
+  },
+  "scenes": {
+    "region:7216": {
+      "regionId": 7216,
+      "mirrorY": true,
+      "width": 64,
+      "height": 64,
+      "compiledAssets": {
+        "terrain": "scene-7216-compiled-terrain",
+        "opaque": "scene-7216-compiled-opaque",
+        "transparent": "scene-7216-compiled-transparent"
+      }
+    }
+  },
+  "playerItems": {
+    "item:4712": "player-item-ahrimsrobetop",
+    "ahrimsrobetop": "player-item-ahrimsrobetop",
+    "item:4714": "player-item-ahrimsrobeskirt",
+    "ahrimsrobeskirt": "player-item-ahrimsrobeskirt",
+    "item:6585": "player-item-amuletoffury",
+    "amuletoffury": "player-item-amuletoffury",
+    "item:29801": "player-item-amuletofrancour",
+    "amuletofrancour": "player-item-amuletofrancour",
+    "item:21024": "player-item-ancestralrobebottom",
+    "ancestralrobebottom": "player-item-ancestralrobebottom",
+    "item:21021": "player-item-ancestralrobetop",
+    "ancestralrobetop": "player-item-ancestralrobetop",
+    "item:4675": "player-item-ancientstaff",
+    "ancientstaff": "player-item-ancientstaff",
+    "item:31650": "player-item-armadylbrew",
+    "armadylbrew": "player-item-armadylbrew",
+    "item:29806": "player-item-araneaboots",
+    "araneaboots": "player-item-araneaboots",
+    "item:11830": "player-item-armadylchainskirt",
+    "armadylchainskirt": "player-item-armadylchainskirt",
+    "item:11828": "player-item-armadylchestplate",
+    "armadylchestplate": "player-item-armadylchestplate",
+    "item:10499": "player-item-avasaccumulator",
+    "avasaccumulator": "player-item-avasaccumulator",
+    "item:22109": "player-item-avasassembler",
+    "avasassembler": "player-item-avasassembler",
+    "item:7462": "player-item-barrowsgloves",
+    "barrowsgloves": "player-item-barrowsgloves",
+    "item:22461": "player-item-bastionpotion",
+    "bastionpotion": "player-item-bastionpotion",
+    "item:2503": "player-item-blackdhidebody",
+    "blackdhidebody": "player-item-blackdhidebody",
+    "item:2497": "player-item-blackdhidechaps",
+    "blackdhidechaps": "player-item-blackdhidechaps",
+    "item:2491": "player-item-blackdhidevambraces",
+    "blackdhidevambraces": "player-item-blackdhidevambraces",
+    "item:23975": "player-item-crystalbody",
+    "crystalbody": "player-item-crystalbody",
+    "item:23971": "player-item-crystalhelm",
+    "crystalhelm": "player-item-crystalhelm",
+    "item:23979": "player-item-crystallegs",
+    "crystallegs": "player-item-crystallegs",
+    "item:23991": "player-item-crystalshield",
+    "crystalshield": "player-item-crystalshield",
+    "item:24291": "player-item-dagonhairobetop",
+    "dagonhairobetop": "player-item-dagonhairobetop",
+    "item:22954": "player-item-devoutboots",
+    "devoutboots": "player-item-devoutboots",
+    "item:9243": "player-item-diamondboltse",
+    "diamondboltse": "player-item-diamondboltse",
+    "item:28951": "player-item-dizanasquiver",
+    "dizanasquiver": "player-item-dizanasquiver",
+    "item:12954": "player-item-dragondefender",
+    "dragondefender": "player-item-dragondefender",
+    "item:10462": "player-item-guthixrobetop",
+    "guthixrobetop": "player-item-guthixrobetop",
+    "item:20220": "player-item-holyblessing",
+    "holyblessing": "player-item-holyblessing",
+    "item:22327": "player-item-justiciarchestguard",
+    "justiciarchestguard": "player-item-justiciarchestguard",
+    "item:22326": "player-item-justiciarfaceguard",
+    "justiciarfaceguard": "player-item-justiciarfaceguard",
+    "item:22328": "player-item-justiciarlegguards",
+    "justiciarlegguards": "player-item-justiciarlegguards",
+    "item:6889": "player-item-magesbook",
+    "magesbook": "player-item-magesbook",
+    "item:27238": "player-item-masoribodyf",
+    "masoribodyf": "player-item-masoribodyf",
+    "item:27241": "player-item-masorichapsf",
+    "masorichapsf": "player-item-masorichapsf",
+    "item:27235": "player-item-masorimaskf",
+    "masorimaskf": "player-item-masorimaskf",
+    "item:19547": "player-item-necklaceofanguish",
+    "necklaceofanguish": "player-item-necklaceofanguish",
+    "item:12002": "player-item-occultnecklace",
+    "occultnecklace": "player-item-occultnecklace",
+    "item:13237": "player-item-pegasianboots",
+    "pegasianboots": "player-item-pegasianboots",
+    "item:2577": "player-item-rangerboots",
+    "rangerboots": "player-item-rangerboots",
+    "item:11773": "player-item-berserkerringi",
+    "berserkerringi": "player-item-berserkerringi",
+    "item:24736": "player-item-ringofendurance",
+    "ringofendurance": "player-item-ringofendurance",
+    "item:28310": "player-item-venatorring",
+    "venatorring": "player-item-venatorring",
+    "item:19710": "player-item-ringofsufferingi",
+    "ringofsufferingi": "player-item-ringofsufferingi",
+    "item:2581": "player-item-robinhoodhat",
+    "robinhoodhat": "player-item-robinhoodhat",
+    "item:9242": "player-item-rubyboltse",
+    "rubyboltse": "player-item-rubyboltse",
+    "item:9185": "player-item-runecrossbow",
+    "runecrossbow": "player-item-runecrossbow",
+    "item:1201": "player-item-runekiteshield",
+    "runekiteshield": "player-item-runekiteshield",
+    "item:10390": "player-item-saradomincoif",
+    "saradomincoif": "player-item-saradomincoif",
+    "item:10386": "player-item-saradomindhidebody",
+    "saradomindhidebody": "player-item-saradomindhidebody",
+    "item:19933": "player-item-saradomindhideboots",
+    "saradomindhideboots": "player-item-saradomindhideboots",
+    "item:10388": "player-item-saradominchaps",
+    "saradominchaps": "player-item-saradominchaps",
+    "item:11865": "player-item-slayerhelmeti",
+    "slayerhelmeti": "player-item-slayerhelmeti",
+    "item:26235": "player-item-zarytevambraces",
+    "zarytevambraces": "player-item-zarytevambraces",
+    "item:12006": "player-item-abyssaltentacle",
+    "abyssaltentacle": "player-item-abyssaltentacle",
+    "item:21006": "player-item-kodaiwand",
+    "kodaiwand": "player-item-kodaiwand",
+    "item:26382": "player-item-torvafullhelm",
+    "torvafullhelm": "player-item-torvafullhelm",
+    "item:19553": "player-item-amuletoftorture",
+    "amuletoftorture": "player-item-amuletoftorture",
+    "item:21295": "player-item-infernalcape",
+    "infernalcape": "player-item-infernalcape",
+    "item:26384": "player-item-torvaplatebody",
+    "torvaplatebody": "player-item-torvaplatebody",
+    "item:26386": "player-item-torvaplatelegs",
+    "torvaplatelegs": "player-item-torvaplatelegs",
+    "item:13239": "player-item-primordialboots",
+    "primordialboots": "player-item-primordialboots",
+    "item:22981": "player-item-ferociousgloves",
+    "ferociousgloves": "player-item-ferociousgloves",
+    "item:25485": "player-item-ultorring",
+    "ultorring": "player-item-ultorring",
+    "item:11212": "player-item-dragonarrows",
+    "dragonarrows": "player-item-dragonarrows",
+    "item:22325": "player-item-scytheofvitur",
+    "scytheofvitur": "player-item-scytheofvitur",
+    "item:20997": "player-item-twistedbow",
+    "twistedbow": "player-item-twistedbow",
+    "item:12926": "player-item-toxicblowpipe",
+    "toxicblowpipe": "player-item-toxicblowpipe",
+    "item:11959": "player-item-blackchinchompa",
+    "blackchinchompa": "player-item-blackchinchompa",
+    "item:25865": "player-item-bowoffaerdhinen",
+    "bowoffaerdhinen": "player-item-bowoffaerdhinen",
+    "item:29796": "player-item-noxioushalberd",
+    "noxioushalberd": "player-item-noxioushalberd",
+    "item:28810": "player-item-zombieaxe",
+    "zombieaxe": "player-item-zombieaxe",
+    "item:23995": "player-item-bladeofsaeldor",
+    "bladeofsaeldor": "player-item-bladeofsaeldor",
+    "item:13652": "player-item-dragonclaws",
+    "dragonclaws": "player-item-dragonclaws",
+    "item:22322": "player-item-avernicdefender",
+    "avernicdefender": "player-item-avernicdefender",
+    "item:31097": "player-item-avernictreadsmax",
+    "avernictreadsmax": "player-item-avernictreadsmax",
+    "item:30750": "player-item-oathplatehelm",
+    "oathplatehelm": "player-item-oathplatehelm",
+    "item:30753": "player-item-oathplatechest",
+    "oathplatechest": "player-item-oathplatechest",
+    "item:30756": "player-item-oathplatelegs",
+    "oathplatelegs": "player-item-oathplatelegs",
+    "item:6685": "player-item-saradominbrew",
+    "saradominbrew": "player-item-saradominbrew",
+    "item:12625": "player-item-staminapotion",
+    "staminapotion": "player-item-staminapotion",
+    "item:12695": "player-item-supercombatpotion",
+    "supercombatpotion": "player-item-supercombatpotion",
+    "item:3024": "player-item-superrestore",
+    "superrestore": "player-item-superrestore",
+    "item:31113": "player-item-eyeofayak",
+    "eyeofayak": "player-item-eyeofayak",
+    "item:31106": "player-item-conflictiongauntlets",
+    "conflictiongauntlets": "player-item-conflictiongauntlets",
+    "item:27275": "player-item-tumekensshadow",
+    "tumekensshadow": "player-item-tumekensshadow",
+    "item:27612": "player-item-venatorbow",
+    "venatorbow": "player-item-venatorbow",
+    "necklaceofrupture": "player-item-necklaceofanguish",
+    "seekingdragonarrows": "player-item-dragonarrows"
+  },
+  "spotAnims": {
+    "9": "spotanim-9",
+    "130": "spotanim-130",
+    "478": "spotanim-478",
+    "506": "spotanim-506",
+    "1172": "spotanim-1172",
+    "1231": "spotanim-1231",
+    "1341": "spotanim-1341",
+    "1459": "spotanim-1459",
+    "2007": "spotanim-2007",
+    "2125": "spotanim-2125",
+    "2126": "spotanim-2126",
+    "2265": "spotanim-2265",
+    "2289": "spotanim-2289",
+    "2291": "spotanim-2291",
+    "2667": "spotanim-2667",
+    "2668": "spotanim-2668",
+    "2669": "spotanim-2669",
+    "2673": "spotanim-2673",
+    "2674": "spotanim-2674",
+    "2681": "spotanim-2681",
+    "2683": "spotanim-2683",
+    "2685": "spotanim-2685",
+    "2689": "spotanim-2689",
+    "2690": "spotanim-2690",
+    "2691": "spotanim-2691",
+    "2692": "spotanim-2692",
+    "2693": "spotanim-2693",
+    "2694": "spotanim-2694",
+    "2695": "spotanim-2695",
+    "2696": "spotanim-2696",
+    "2697": "spotanim-2697",
+    "2698": "spotanim-2698"
+  },
+  "sharedAssets": {
+    "playerAnimations": "player-animations"
+  },
+  "soundEffects": {
+    "file": "cache-sound-effects.d3bd74127c8b3d97d73640aa5fc54c77cb806cef8836d6a41991c237cb849aa2.soundpack",
+    "crc32": "4917773e",
+    "bytes": 161746
+  }
+}

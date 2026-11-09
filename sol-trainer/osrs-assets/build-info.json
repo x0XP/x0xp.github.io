@@ -1,0 +1,1176 @@
+{
+  "tool": {
+    "name": "osrs-sdk-assets",
+    "version": "0.1.8"
+  },
+  "sdkVersion": "0.1.8",
+  "cache": {
+    "openrs2": 2437,
+    "revision": 236
+  },
+  "requirementsHash": "34203c1d72166d740853ea29925d8bff3d056a914783d52f11c86d8b0af69a82",
+  "requirements": {
+    "assets": {
+      "npcs": {
+        "fremennikWarbandArcher": {
+          "id": 12814,
+          "animations": {
+            "attack": 10850,
+            "defend": 10851,
+            "death": 10852
+          }
+        },
+        "fremennikWarbandSeer": {
+          "id": 12815,
+          "animations": {
+            "attack": 10853,
+            "defend": 10854,
+            "death": 10855
+          }
+        },
+        "fremennikWarbandBerserker": {
+          "id": 12816,
+          "animations": {
+            "attack": 10856,
+            "defend": 10857,
+            "death": 10858
+          }
+        },
+        "jaguarWarrior": {
+          "id": 12810,
+          "animations": {
+            "attack": 7514,
+            "death": 836
+          }
+        },
+        "manticore": {
+          "id": 12818,
+          "animations": {
+            "tripleCharge": 10868,
+            "tripleThrow": 10869,
+            "death": 10866
+          }
+        },
+        "javelinColossus": {
+          "id": 12817,
+          "animations": {
+            "rangeAttack": 10892,
+            "artilleryAttack": 10893,
+            "death": 10894
+          }
+        },
+        "serpentShaman": {
+          "id": 12811,
+          "animations": {
+            "attack": 10859,
+            "death": 10860
+          }
+        },
+        "minotaur": {
+          "id": 12812,
+          "animations": {
+            "defend": 10841,
+            "attack": 10843,
+            "heal": 10844,
+            "spawn": 10845,
+            "death": 10846
+          }
+        },
+        "shockwaveColossus": {
+          "id": 12819,
+          "animations": {
+            "attack": 10903,
+            "death": 10895
+          }
+        },
+        "solHeredit": {
+          "id": 12821,
+          "animations": {
+            "attack": 10883,
+            "attackAlt1": 10884,
+            "attackAlt2": 10885,
+            "attackAlt3": 10886,
+            "attackAlt4": 10887,
+            "attackAlt5": 10888,
+            "death": 10877
+          }
+        }
+      },
+      "regions": {
+        "colosseum": {
+          "id": 7216
+        }
+      },
+      "models": {
+        "solWallA": {
+          "id": 50963,
+          "animations": {
+            "idle": 7508
+          }
+        },
+        "solWallB": {
+          "id": 50964,
+          "animations": {
+            "idle": 7508
+          }
+        }
+      },
+      "spotAnims": {
+        "scytheNorth": {
+          "id": 506
+        },
+        "scytheEast": {
+          "id": 1172
+        },
+        "scytheSouth": {
+          "id": 478
+        },
+        "scytheWest": {
+          "id": 1231
+        },
+        "tumekensShadowProjectile": {
+          "id": 2126
+        },
+        "tumekensShadowAttack": {
+          "id": 2125
+        },
+        "venatorBowProjectile": {
+          "id": 2291
+        },
+        "venatorBowAttack": {
+          "id": 2289
+        },
+        "venatorBowRicochetProjectile": {
+          "id": 2007
+        },
+        "fremennikArcherProjectile": {
+          "id": 9
+        },
+        "fremennikSeerProjectile": {
+          "id": 130
+        },
+        "shockwaveColossusProjectile": {
+          "id": 1341
+        },
+        "serpentShamanProjectile": {
+          "id": 1459
+        },
+        "javelinColossusProjectile": {
+          "id": 2673
+        },
+        "javelinColossusArtillerySpear": {
+          "id": 2674
+        },
+        "javelinColossusArtilleryExplosion": {
+          "id": 2265
+        },
+        "solTripleAttackLong": {
+          "id": 2667
+        },
+        "solTripleAttackShort": {
+          "id": 2668
+        },
+        "solDust": {
+          "id": 2669
+        },
+        "mageOrb": {
+          "id": 2681
+        },
+        "rangeOrb": {
+          "id": 2683
+        },
+        "meleeOrb": {
+          "id": 2685
+        },
+        "sandPool": {
+          "id": 2698
+        },
+        "laserSouthCharge": {
+          "id": 2689
+        },
+        "laserWestCharge": {
+          "id": 2690
+        },
+        "laserNorthCharge": {
+          "id": 2691
+        },
+        "laserEastCharge": {
+          "id": 2692
+        },
+        "laserSouthFire": {
+          "id": 2693
+        },
+        "laserWestFire": {
+          "id": 2694
+        },
+        "laserNorthFire": {
+          "id": 2695
+        },
+        "laserEastFire": {
+          "id": 2696
+        },
+        "laserImpact": {
+          "id": 2697
+        }
+      },
+      "playerAnimations": {
+        "idle": {
+          "id": 808
+        },
+        "walk": {
+          "id": 819
+        },
+        "run": {
+          "id": 824
+        },
+        "walkBack": {
+          "id": 820
+        },
+        "strafeLeft": {
+          "id": 822
+        },
+        "strafeRight": {
+          "id": 821
+        },
+        "fireBow": {
+          "id": 426
+        },
+        "fireBlowpipe": {
+          "id": 5061
+        },
+        "throwChinchompa": {
+          "id": 7618
+        },
+        "scytheIdle": {
+          "id": 8057
+        },
+        "scytheSwing": {
+          "id": 8056
+        },
+        "swordSlash": {
+          "id": 390
+        },
+        "eat": {
+          "id": 829
+        },
+        "dying": {
+          "id": 836
+        },
+        "castSpell": {
+          "id": 711
+        },
+        "dragonClawsAttack": {
+          "id": 7514
+        },
+        "tumekensShadowIdle": {
+          "id": 9494
+        },
+        "tumekensShadowWalk": {
+          "id": 1703
+        },
+        "tumekensShadowRun": {
+          "id": 1707
+        },
+        "tumekensShadowAttack": {
+          "id": 9493
+        },
+        "venatorBowIdle": {
+          "id": 9857
+        },
+        "venatorBowWalk": {
+          "id": 9859
+        },
+        "venatorBowRun": {
+          "id": 9860
+        },
+        "venatorBowAttack": {
+          "id": 9858
+        },
+        "zombieAxeSlash": {
+          "id": 7004
+        },
+        "zombieAxeCrush": {
+          "id": 3852
+        }
+      },
+      "items": {
+        "ahrimsRobeTop": {
+          "id": 4712
+        },
+        "ahrimsRobeSkirt": {
+          "id": 4714
+        },
+        "amuletOfFury": {
+          "id": 6585
+        },
+        "amuletOfRancour": {
+          "id": 29801
+        },
+        "ancestralRobeBottom": {
+          "id": 21024
+        },
+        "ancestralRobeTop": {
+          "id": 21021
+        },
+        "ancientStaff": {
+          "id": 4675
+        },
+        "armadylBrew": {
+          "id": 31650
+        },
+        "araneaBoots": {
+          "id": 29806
+        },
+        "armadylChainskirt": {
+          "id": 11830
+        },
+        "armadylChestplate": {
+          "id": 11828
+        },
+        "avasAccumulator": {
+          "id": 10499
+        },
+        "avasAssembler": {
+          "id": 22109
+        },
+        "barrowsGloves": {
+          "id": 7462
+        },
+        "bastionPotion": {
+          "id": 22461
+        },
+        "blackDhideBody": {
+          "id": 2503
+        },
+        "blackDhideChaps": {
+          "id": 2497
+        },
+        "blackDhideVambraces": {
+          "id": 2491
+        },
+        "crystalBody": {
+          "id": 23975
+        },
+        "crystalHelm": {
+          "id": 23971
+        },
+        "crystalLegs": {
+          "id": 23979
+        },
+        "crystalShield": {
+          "id": 23991
+        },
+        "dagonhaiRobeTop": {
+          "id": 24291
+        },
+        "devoutBoots": {
+          "id": 22954
+        },
+        "diamondBoltsE": {
+          "id": 9243
+        },
+        "dizanasQuiver": {
+          "id": 28951
+        },
+        "dragonDefender": {
+          "id": 12954
+        },
+        "guthixRobeTop": {
+          "id": 10462
+        },
+        "holyBlessing": {
+          "id": 20220
+        },
+        "justiciarChestguard": {
+          "id": 22327
+        },
+        "justiciarFaceguard": {
+          "id": 22326
+        },
+        "justiciarLegguards": {
+          "id": 22328
+        },
+        "magesBook": {
+          "id": 6889
+        },
+        "masoriBodyF": {
+          "id": 27238
+        },
+        "masoriChapsF": {
+          "id": 27241
+        },
+        "masoriMaskF": {
+          "id": 27235
+        },
+        "necklaceOfAnguish": {
+          "id": 19547
+        },
+        "necklaceOfRupture": {
+          "id": 19547
+        },
+        "occultNecklace": {
+          "id": 12002
+        },
+        "pegasianBoots": {
+          "id": 13237
+        },
+        "rangerBoots": {
+          "id": 2577
+        },
+        "berserkerRingI": {
+          "id": 11773
+        },
+        "ringOfEndurance": {
+          "id": 24736
+        },
+        "venatorRing": {
+          "id": 28310
+        },
+        "ringOfSufferingI": {
+          "id": 19710
+        },
+        "robinHoodHat": {
+          "id": 2581
+        },
+        "rubyBoltsE": {
+          "id": 9242
+        },
+        "runeCrossbow": {
+          "id": 9185
+        },
+        "runeKiteshield": {
+          "id": 1201
+        },
+        "saradominCoif": {
+          "id": 10390
+        },
+        "saradominDhideBody": {
+          "id": 10386
+        },
+        "saradominDhideBoots": {
+          "id": 19933
+        },
+        "saradominChaps": {
+          "id": 10388
+        },
+        "slayerHelmetI": {
+          "id": 11865
+        },
+        "zaryteVambraces": {
+          "id": 26235
+        },
+        "abyssalTentacle": {
+          "id": 12006
+        },
+        "kodaiWand": {
+          "id": 21006
+        },
+        "torvaFullHelm": {
+          "id": 26382
+        },
+        "amuletOfTorture": {
+          "id": 19553
+        },
+        "infernalCape": {
+          "id": 21295
+        },
+        "torvaPlatebody": {
+          "id": 26384
+        },
+        "torvaPlatelegs": {
+          "id": 26386
+        },
+        "primordialBoots": {
+          "id": 13239
+        },
+        "ferociousGloves": {
+          "id": 22981
+        },
+        "ultorRing": {
+          "id": 25485
+        },
+        "dragonArrows": {
+          "id": 11212
+        },
+        "seekingDragonArrows": {
+          "id": 11212
+        },
+        "scytheOfVitur": {
+          "id": 22325
+        },
+        "twistedBow": {
+          "id": 20997
+        },
+        "toxicBlowpipe": {
+          "id": 12926
+        },
+        "blackChinchompa": {
+          "id": 11959
+        },
+        "bowOfFaerdhinen": {
+          "id": 25865
+        },
+        "noxiousHalberd": {
+          "id": 29796
+        },
+        "zombieAxe": {
+          "id": 28810
+        },
+        "bladeOfSaeldor": {
+          "id": 23995
+        },
+        "dragonClaws": {
+          "id": 13652
+        },
+        "avernicDefender": {
+          "id": 22322
+        },
+        "avernicTreadsMax": {
+          "id": 31097
+        },
+        "oathplateHelm": {
+          "id": 30750
+        },
+        "oathplateChest": {
+          "id": 30753
+        },
+        "oathplateLegs": {
+          "id": 30756
+        },
+        "saradominBrew": {
+          "id": 6685
+        },
+        "staminaPotion": {
+          "id": 12625
+        },
+        "superCombatPotion": {
+          "id": 12695
+        },
+        "superRestore": {
+          "id": 3024
+        },
+        "eyeOfAyak": {
+          "id": 31113
+        },
+        "conflictionGauntlets": {
+          "id": 31106
+        },
+        "tumekensShadow": {
+          "id": 27275
+        },
+        "venatorBow": {
+          "id": 27612
+        }
+      },
+      "objects": {},
+      "sounds": {
+        "equipBackpack": {
+          "id": 3284
+        },
+        "equipAxe": {
+          "id": 2229
+        },
+        "equipElementalStaff": {
+          "id": 2230
+        },
+        "equipBanner": {
+          "id": 2231
+        },
+        "equipBattleaxe": {
+          "id": 2232
+        },
+        "equipBlunt": {
+          "id": 2233
+        },
+        "equipBody": {
+          "id": 2234
+        },
+        "equipBolt": {
+          "id": 2235
+        },
+        "equipHands": {
+          "id": 2236
+        },
+        "equipFeet": {
+          "id": 2237
+        },
+        "equipFun": {
+          "id": 2238
+        },
+        "equipMetalBody": {
+          "id": 2239
+        },
+        "equipHelmet": {
+          "id": 2240
+        },
+        "equipLeather": {
+          "id": 2241
+        },
+        "equipLegs": {
+          "id": 2242
+        },
+        "equipMetalLegs": {
+          "id": 2243
+        },
+        "equipRanged": {
+          "id": 2244
+        },
+        "equipShield": {
+          "id": 2245
+        },
+        "equipSpiked": {
+          "id": 2246
+        },
+        "equipStaff": {
+          "id": 2247
+        },
+        "equipSword": {
+          "id": 2248
+        },
+        "equipWhip": {
+          "id": 2249
+        },
+        "equipWood": {
+          "id": 2250
+        },
+        "bloodBarrageImpact": {
+          "id": 102
+        },
+        "bloodBarrageCast": {
+          "id": 106
+        },
+        "iceBarrageImpact": {
+          "id": 168
+        },
+        "iceBarrageCast": {
+          "id": 171
+        },
+        "chinchompaImpact": {
+          "id": 360
+        },
+        "blowpipeSpecial": {
+          "id": 800
+        },
+        "bowOfFaerdhinenAttack": {
+          "id": 1352
+        },
+        "meleeAttack": {
+          "id": 2524
+        },
+        "baxeCrush": {
+          "id": 2497
+        },
+        "blowpipeAttack": {
+          "id": 2696
+        },
+        "twistedBowAttack": {
+          "id": 2702
+        },
+        "chinchompaAttack": {
+          "id": 2706
+        },
+        "dragonClawsSpecialFirst": {
+          "id": 4138
+        },
+        "dragonClawsAttack": {
+          "id": 4139
+        },
+        "dragonClawsSpecialSecond": {
+          "id": 4140
+        },
+        "dragonClawsSpecialThird": {
+          "id": 4141
+        },
+        "prayerDeactivated": {
+          "id": 2663
+        },
+        "piety": {
+          "id": 3825
+        },
+        "rigour": {
+          "id": 2685
+        },
+        "augury": {
+          "id": 2670
+        },
+        "tumekensShadowAttack": {
+          "id": 6410
+        },
+        "venatorBowAttack": {
+          "id": 6797
+        },
+        "venatorBowRicochetFirst": {
+          "id": 6672
+        },
+        "venatorBowRicochetSecond": {
+          "id": 6735
+        },
+        "manticoreTripleThrowProjectile01": {
+          "id": 8382
+        },
+        "javelinColossusAttack": {
+          "id": 8348
+        },
+        "manticoreProjectile01": {
+          "id": 8406
+        },
+        "manticoreProjectile02": {
+          "id": 8400
+        },
+        "manticoreProjectile03": {
+          "id": 8383
+        },
+        "waveStartPrompt": {
+          "id": 2266
+        },
+        "waveStartStartHover": {
+          "id": 7986
+        },
+        "waveStartAcknowledged": {
+          "id": 8010
+        },
+        "solSpearStart": {
+          "id": 8147
+        },
+        "solShieldStart": {
+          "id": 8150
+        },
+        "solShieldEnd": {
+          "id": 8145
+        },
+        "solTripleStart": {
+          "id": 8211
+        },
+        "solTripleCharge1": {
+          "id": 8317
+        },
+        "solTripleCharge2": {
+          "id": 8274
+        },
+        "solTripleCharge3Short": {
+          "id": 8218
+        },
+        "solTripleCharge3Long": {
+          "id": 8113
+        },
+        "solTripleParry1": {
+          "id": 8140
+        },
+        "solTripleParry2": {
+          "id": 8171
+        },
+        "solTripleParry3": {
+          "id": 8242
+        },
+        "solGrappleCharge": {
+          "id": 8329
+        },
+        "solGrappleParry": {
+          "id": 8081
+        },
+        "solPoolSpawn": {
+          "id": 8053
+        },
+        "solPoolShriek": {
+          "id": 8093
+        },
+        "solLaserCharge": {
+          "id": 8253
+        },
+        "solLaserFire": {
+          "id": 8230
+        },
+        "varlColossiBossMeleeAttackTelegraphStab08": {
+          "id": 8047
+        },
+        "varlColossiBossDeathMetallicImpact10": {
+          "id": 8048
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep09": {
+          "id": 8051
+        },
+        "varlColossiBossShieldslamArmPrep03": {
+          "id": 8054
+        },
+        "varlColossiBossMeleeAttackTelegraphDislodge02": {
+          "id": 8055
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove05": {
+          "id": 8056
+        },
+        "varlColossiBossMeleeAttackTelegraphStabImpact05": {
+          "id": 8057
+        },
+        "varlColossiBossMeleeAttackTelegraphStabImpact02": {
+          "id": 8058
+        },
+        "varlColossiBossShieldDropImpact02": {
+          "id": 8063
+        },
+        "varlColossiBossDeathFirstShieldDrop02": {
+          "id": 8068
+        },
+        "varlColossiBossDeathSecondFall02": {
+          "id": 8069
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge13": {
+          "id": 8073
+        },
+        "varlColossiBossGrappleAttackFirstShieldDrop01": {
+          "id": 8075
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge05": {
+          "id": 8078
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep08": {
+          "id": 8079
+        },
+        "varlColossiBossHiss02": {
+          "id": 8085
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge03": {
+          "id": 8086
+        },
+        "varlColossiBossMeleeAttackTelegraphStab01": {
+          "id": 8087
+        },
+        "varlColossiBossMeleeAttackTelegraphLunge03": {
+          "id": 8088
+        },
+        "varlColossiBossDeathSecondFall01": {
+          "id": 8090
+        },
+        "varlColossiBossMeleeAttackTelegraphStab02": {
+          "id": 8092
+        },
+        "varlColossiBossMeleeAttackTelegraphDislodge01": {
+          "id": 8096
+        },
+        "varlColossiBossMeleeAttackTelegraphBass02": {
+          "id": 8097
+        },
+        "varlColossiBossDeathMetallicImpact03": {
+          "id": 8098
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge01": {
+          "id": 8099
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge06": {
+          "id": 8102
+        },
+        "varlColossiBossMeleeAttackTelegraphBass01": {
+          "id": 8103
+        },
+        "varlColossiBossDeathFirstFall03": {
+          "id": 8105
+        },
+        "varlColossiBossFootsteps03": {
+          "id": 8107
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove03": {
+          "id": 8109
+        },
+        "varlColossiBossDeathRinging02": {
+          "id": 8115
+        },
+        "varlColossiBossShortHiss02": {
+          "id": 8117
+        },
+        "varlColossiBossFootsteps02": {
+          "id": 8118
+        },
+        "varlColossiBossDeathMetallicImpact09": {
+          "id": 8119
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge02": {
+          "id": 8120
+        },
+        "varlColossiBossMeleeAttackTelegraphStabImpact01": {
+          "id": 8121
+        },
+        "varlColossiBossDeathMetallicImpact02": {
+          "id": 8122
+        },
+        "varlColossiBossMeleeAttackTelegraphStab03": {
+          "id": 8123
+        },
+        "varlColossiBossDeathSecondFall03": {
+          "id": 8126
+        },
+        "varlColossiBossMeleeAttackTelegraphLunge01": {
+          "id": 8127
+        },
+        "varlColossiBossDeathMetallicImpact08": {
+          "id": 8130
+        },
+        "varlColossiBossMeleeAttackTelegraphDislodge06": {
+          "id": 8131
+        },
+        "varlColossiBossDeathMetallicImpact04": {
+          "id": 8132
+        },
+        "varlColossiBossDeathWhoosh01": {
+          "id": 8133
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep03": {
+          "id": 8135
+        },
+        "varlColossiBossMeleeAttackTelegraphBackFootstep01": {
+          "id": 8137
+        },
+        "varlColossiBossDeathMetallicImpact06": {
+          "id": 8138
+        },
+        "varlColossiBossMeleeAttackTelegraphBassStep01": {
+          "id": 8139
+        },
+        "varlColossiBossFootsteps06": {
+          "id": 8143
+        },
+        "varlColossiBossShieldslamCharge05": {
+          "id": 8148
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge08": {
+          "id": 8153
+        },
+        "varlColossiBossShieldslamCharge01": {
+          "id": 8154
+        },
+        "varlColossiBossMeleeAttackTelegraphStabImpact03": {
+          "id": 8155
+        },
+        "varlColossiBossDeathWhoosh03": {
+          "id": 8157
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep02": {
+          "id": 8160
+        },
+        "varlColossiBossMeleeAttackTelegraphStabImpact04": {
+          "id": 8162
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge15": {
+          "id": 8163
+        },
+        "varlColossiBossMeleeAttackTelegraphBackFootstep02": {
+          "id": 8165
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove02": {
+          "id": 8168
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep06": {
+          "id": 8169
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove14": {
+          "id": 8170
+        },
+        "varlColossiBossShieldDropImpact01": {
+          "id": 8174
+        },
+        "varlColossiBossDeathMetallicImpact05": {
+          "id": 8175
+        },
+        "varlColossiBossDeathMetallicImpact07": {
+          "id": 8177
+        },
+        "varlColossiBossHiss03": {
+          "id": 8180
+        },
+        "varlColossiBossShortHiss01": {
+          "id": 8184
+        },
+        "varlColossiBossShieldslamCharge03": {
+          "id": 8189
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep01": {
+          "id": 8195
+        },
+        "varlColossiBossFootsteps05": {
+          "id": 8204
+        },
+        "varlColossiBossMeleeAttackTelegraphBass03": {
+          "id": 8206
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge04": {
+          "id": 8207
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep07": {
+          "id": 8208
+        },
+        "varlColossiBossDeathMetallicImpact01": {
+          "id": 8212
+        },
+        "varlColossiBossDeathFirstFall02": {
+          "id": 8214
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep04": {
+          "id": 8215
+        },
+        "varlColossiBossFootsteps07": {
+          "id": 8216
+        },
+        "varlColossiBossHiss03b": {
+          "id": 8220
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove07": {
+          "id": 8221
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove06": {
+          "id": 8222
+        },
+        "varlColossiBossMeleeAttackTelegraphStabMetal02": {
+          "id": 8224
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove01": {
+          "id": 8232
+        },
+        "varlColossiBossShieldslamCharge04": {
+          "id": 8233
+        },
+        "varlColossiBossFootsteps01": {
+          "id": 8234
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge07": {
+          "id": 8238
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove10": {
+          "id": 8240
+        },
+        "varlColossiBossDeathSecondFall05": {
+          "id": 8243
+        },
+        "varlColossiBossDeathSecondFall06": {
+          "id": 8244
+        },
+        "varlColossiBossFootsteps08": {
+          "id": 8248
+        },
+        "varlColossiBossDeathFirstShieldDrop01": {
+          "id": 8255
+        },
+        "varlColossiBossShieldslamSlam02": {
+          "id": 8260
+        },
+        "varlColossiBossDeathRinging01": {
+          "id": 8263
+        },
+        "varlColossiBossMeleeAttackTelegraphDislodge04": {
+          "id": 8264
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge12": {
+          "id": 8267
+        },
+        "varlColossiBossHiss01": {
+          "id": 8271
+        },
+        "varlColossiBossMeleeAttackTelegraphDislodge03": {
+          "id": 8272
+        },
+        "varlColossiBossDeathSecondFall04": {
+          "id": 8280
+        },
+        "varlColossiBossShieldslamSlam01": {
+          "id": 8282
+        },
+        "varlColossiBossTripleAttackFootstep01": {
+          "id": 8283
+        },
+        "varlColossiBossDeathLandRumble01": {
+          "id": 8284
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge10": {
+          "id": 8285
+        },
+        "varlColossiBossShortHiss04": {
+          "id": 8286
+        },
+        "varlColossiBossMeleeAttackTelegraphStabMetal01": {
+          "id": 8288
+        },
+        "varlColossiBossGrappleAttackShieldDrop01": {
+          "id": 8290
+        },
+        "varlColossiBossMeleeAttackTelegraphLunge04": {
+          "id": 8291
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge09": {
+          "id": 8294
+        },
+        "varlColossiBossDeathFirstShieldDrop03": {
+          "id": 8300
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove09": {
+          "id": 8302
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge14": {
+          "id": 8303
+        },
+        "varlColossiBossHiss04": {
+          "id": 8304
+        },
+        "varlColossiBossMeleeAttackTelegraphStabImpact06": {
+          "id": 8308
+        },
+        "varlColossiBossShieldslamArmPrep02": {
+          "id": 8310
+        },
+        "varlColossiBossMeleeAttackTelegraphDislodge05": {
+          "id": 8315
+        },
+        "varlColossiBossDeathWhoosh02": {
+          "id": 8316
+        },
+        "varlColossiBossShieldslamCharge02": {
+          "id": 8318
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove11": {
+          "id": 8319
+        },
+        "varlColossiBossMeleeAttackTelegraphStab04": {
+          "id": 8320
+        },
+        "varlColossiBossShieldslamArmPrep04": {
+          "id": 8322
+        },
+        "varlColossiBossDeathFirstFall01": {
+          "id": 8323
+        },
+        "varlColossiBossDeathFirstShieldDrop04": {
+          "id": 8324
+        },
+        "varlColossiBossMeleeAttackTelegraphLunge02": {
+          "id": 8325
+        },
+        "varlColossiBossShieldslamArmPrep01": {
+          "id": 8326
+        },
+        "varlColossiBossTripleAttackFootstep02": {
+          "id": 8327
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove08": {
+          "id": 8328
+        },
+        "varlColossiBossMeleeAttackTelegraphLunge05": {
+          "id": 8331
+        },
+        "varlColossiBossFootsteps04": {
+          "id": 8332
+        },
+        "varlColossiBossMeleeAttackTelegraphTridentEndMove04": {
+          "id": 8333
+        },
+        "varlColossiBossMeleeAttackTelegraphCharge11": {
+          "id": 8335
+        },
+        "varlColossiBossMeleeAttackTelegraphFootstep05": {
+          "id": 8336
+        },
+        "varlColossiBossDeathFirstWhoosh01": {
+          "id": 8337
+        }
+      }
+    },
+    "scenes": {},
+    "hooks": {}
+  },
+  "bundleVersion": "osrs-236-01103675eeff"
+}
