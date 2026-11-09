@@ -118,6 +118,10 @@ body.repo-detail-open .repo-detail-view {
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
+/* Keep Read on GitHub spaced like the View repository action above. */
+.repo-detail-readme + .ui-button {
+  margin-top: 22px;
+}
 .repo-detail-preview {
   display: block;
   max-width: min(100%, 680px);
