@@ -28,18 +28,20 @@ async function openPage() {
   await page.setRequestInterception(true);
   page.on('request', request => {
     const url = request.url();
+    const cors = {'Access-Control-Allow-Origin':'*',
+      'Access-Control-Allow-Headers':'*', 'Access-Control-Allow-Methods':'GET, OPTIONS'};
     if (url.startsWith(origin + '/')) {
       request.continue();
       return;
     }
     if (url.startsWith('https://prices.runescape.wiki/api/v1/osrs/latest')) {
-      request.respond({status:200, contentType:'application/json',
+      request.respond({status:200, contentType:'application/json', headers:cors,
         body:JSON.stringify(samplePrices)});
     } else if (url.startsWith('https://prices.runescape.wiki/api/v1/osrs/mapping')) {
-      request.respond({status:200, contentType:'application/json',
+      request.respond({status:200, contentType:'application/json', headers:cors,
         body:JSON.stringify(sampleMapping)});
     } else if (url.startsWith('https://oldschool.runescape.wiki/api.php')) {
-      request.respond({status:200, contentType:'application/json',
+      request.respond({status:200, contentType:'application/json', headers:cors,
         body:JSON.stringify({parse:{text:{'*':
           '<h3>Abyssal Sire</h3><table class="wikitable"><tr><td><a>Abyssal whip</a></td></tr></table>'}}})});
     } else if (request.resourceType() === 'stylesheet') {
@@ -53,6 +55,7 @@ async function openPage() {
     {timeout:25000});
   await page.waitForFunction(() =>
     !document.getElementById('itemSearch').disabled, {timeout:25000});
+  await page.waitForFunction(() => Object.keys(itemMap).length > 0, {timeout:25000});
   return {page, errors};
 }
 
