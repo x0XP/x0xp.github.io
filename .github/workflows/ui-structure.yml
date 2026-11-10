@@ -1,38 +1,19 @@
-name: Shared UI structure checks
+name: Website regression checks
 
 on:
   push:
     branches:
-      - refactor/ui-controls
+      - main
   pull_request:
-    paths:
-      - "components.css"
-      - "index.html"
-      - "hub.js"
-      - "ui/**"
-      - "tests/**"
-      - "features/**"
-      - "hub.css"
-      - "script.js"
-      - "price-history.js"
-      - ".github/workflows/ui-structure.yml"
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the website
-        uses: actions/checkout@v4
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Run UI structure regression checks
-        run: |
-          node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs tests/legacy-css.test.cjs
-          for file in script.js features/checker/*.js; do node --check "$file"; done
-
-  browser:
+    name: Validate source and layout structure
     runs-on: ubuntu-latest
     steps:
       - name: Check out website
@@ -41,16 +22,47 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check out main for visual comparison
+      - name: Run structural checks and verify JavaScript syntax
+        run: |
+          node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs tests/legacy-css.test.cjs
+          for file in script.js features/checker/*.js; do node --check "$file"; done
+
+  browser:
+    name: Browser interactions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install headless browser driver
+        run: npm install --no-save --no-package-lock puppeteer-core@24
+      - name: Locate Chrome
+        run: echo "CHROME_BIN=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
+      - name: Check website functionality
+        run: node --test tests/browser-smoke.test.cjs
+
+  visual:
+    name: Compare PR against current main
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out proposed changes
+        uses: actions/checkout@v4
+      - name: Check out main as visual baseline
         uses: actions/checkout@v4
         with:
           ref: main
           path: baseline-site
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Install headless browser driver
         run: npm install --no-save --no-package-lock puppeteer-core@24 pngjs@7
       - name: Locate Chrome
         run: echo "CHROME_BIN=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
-      - name: Test homepage, search, Updates and floating windows
-        run: node --test tests/browser-smoke.test.cjs
-      - name: Compare desktop and mobile views with main
+      - name: Compare desktop and mobile views
         run: node --test tests/visual-parity.test.cjs
