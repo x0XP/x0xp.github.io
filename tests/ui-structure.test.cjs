@@ -26,6 +26,8 @@ const layoutCSS = read('ui/view-layout.css');
 const legacy = read('style.css');
 
 test('shared button bases are loaded after tokens and before view CSS', () => {
+  assert.ok(html.indexOf("'style.css'") < html.indexOf("'features/checker/legacy.css'"));
+  assert.ok(html.indexOf("'features/checker/legacy.css'") < html.indexOf("'components.css'"));
   assert.ok(html.indexOf("'components.css'") < html.indexOf("'ui/buttons.css'"));
   assert.ok(html.indexOf("'ui/buttons.css'") < html.indexOf("'hub.css'"));
   assert.ok(html.indexOf("'hub.css'") < html.indexOf("'ui/effects.css'"));

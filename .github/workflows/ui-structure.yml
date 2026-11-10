@@ -29,7 +29,7 @@ jobs:
           node-version: "22"
       - name: Run UI structure regression checks
         run: |
-          node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs
+          node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs tests/legacy-css.test.cjs
           for file in script.js features/checker/*.js; do node --check "$file"; done
 
   browser:

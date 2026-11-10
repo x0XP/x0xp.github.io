@@ -10,7 +10,7 @@ The website is intentionally plain HTML, CSS, and JavaScript. Avoid introducing 
 - **ui/interactions.js** registers the single delegated pointer/focus listener for dynamically created controls, including repository links and floating-window actions.
 - **hub.css** owns the homepage; **ui/checker-responsive.css** and **ui/view-layout.css** preserve the original shared responsive and scroll-edge rules.
 - **features/price-checker.css** owns search and item display, **features/floating-windows.css** owns floating cards and Updates panels, **features/price-history.css** owns charts, and **features/github.css** owns the GitHub profile and list.
-- **style.css** remains the Price Checker's legacy base CSS. **repo-detail.css** and **sol-trainer.css** retain page-specific styles. The Price Checker JavaScript is split into classic-script fragments under **features/checker/**, with `script.js` remaining the final startup entrypoint. See `features/README.md`. Do not create another global glow handler.
+- **style.css** owns global reset and homepage foundation, while **features/checker/legacy.css** retains the original Price Checker base declarations (not yet de-duplicated). **repo-detail.css** and **sol-trainer.css** retain page-specific styles. The Price Checker JavaScript is split into classic-script fragments under **features/checker/**, with `script.js` remaining the final startup entrypoint. See `features/README.md`. Do not create another global glow handler.
 
 ## Loading contract
 

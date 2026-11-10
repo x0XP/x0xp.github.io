@@ -13,7 +13,7 @@ The original 602-line `hub.css` was split into feature stylesheets in the exact 
 
 The wallpaper reference in `ui/view-layout.css` deliberately uses `../assets/hub-background.png` because CSS URLs resolve relative to the stylesheet location.
 
-`style.css` still contains older Price Checker styling. Its selectors and their later overrides were deliberately kept. Do not remove or reorder those rules without visual regression coverage.
+`style.css` now contains the global reset and original homepage styles. Earlier Price Checker styling has been moved without changes to `features/checker/legacy.css`. Its selectors and their later overrides remain in original order. Do not remove or reorder those rules without visual regression coverage.
 
 ## Price Checker JavaScript (Phase 4)
 
