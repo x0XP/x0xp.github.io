@@ -223,3 +223,79 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
     assert.deepEqual(errors, []);
   } finally { await page.close(); }
 });
+
+
+test('right-click pinning, reload persistence and unpinning retain search history', async () => {
+  const {page,errors}=await openPage();
+  try {
+    await page.click('#openChecker');
+    await page.evaluate(()=>getPrice('Abyssal whip'));
+    await page.waitForSelector('#history .hist-btn',{visible:true,timeout:10000});
+    await page.click('#history .hist-btn',{button:'right'});
+    await page.waitForFunction(()=>document.querySelectorAll('#pinned .hist-btn').length===1,
+      {timeout:5000});
+    assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('osrsPinned'))),
+      ['Abyssal whip']);
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>document.documentElement.classList.contains('site-ready'),{timeout:25000});
+    await page.waitForSelector('#pinned .hist-btn',{visible:true,timeout:10000});
+    await page.click('#pinned .hist-btn',{button:'right'});
+    await page.waitForFunction(()=>document.querySelectorAll('#history .hist-btn').length>0,
+      {timeout:5000});
+    assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('osrsPinned'))),[]);
+    assert.equal(await page.$eval('#history .hist-btn',el=>el.textContent.trim()),'Abyssal whip');
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('repository details, README action and back navigation stay functional', async () => {
+  const {page,errors}=await openPage();
+  try {
+    await page.click('#openGithub');
+    await page.waitForSelector('#githubRepos .github-repo',{visible:true,timeout:15000});
+    const repository=await page.$eval('#githubRepos .github-repo',e=>({
+      name:e.querySelector('.github-repo-name')?.textContent,
+      href:e.getAttribute('href')
+    }));
+    await page.click('#githubRepos .github-repo');
+    await page.waitForFunction(()=>document.body.classList.contains('repo-detail-open'),{timeout:5000});
+    await page.waitForFunction(()=>document.querySelector('#repoDetailBody .repo-detail-actions a'),
+      {timeout:12000});
+    const details=await page.evaluate(()=>({
+      title:document.getElementById('repoDetailTitle').textContent,
+      actions:[...document.querySelectorAll('#repoDetailBody a.ui-button')].map(e=>({
+        text:e.textContent.trim(),href:e.href
+      })),
+      githubInert:document.getElementById('githubView').inert,
+      detailInert:document.getElementById('repoDetailView').inert
+    }));
+    assert.equal(details.title,repository.name);
+    assert.equal(details.githubInert,true);
+    assert.equal(details.detailInert,false);
+    assert.ok(details.actions.some(x=>x.text.includes('View repository')&&x.href.includes(repository.name)));
+    assert.ok(details.actions.some(x=>x.text.includes('Read on GitHub')&&x.href.includes('#readme')));
+    await page.click('#backHome');
+    await page.waitForFunction(()=>document.body.classList.contains('github-open'),{timeout:5000});
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
+
+test('embedded trainer loads from its standalone URL and resets on leaving', async () => {
+  const {page,errors}=await openPage();
+  try {
+    await page.click('#openSolTrainer');
+    await page.waitForFunction(()=>document.body.classList.contains('sol-trainer-open'),{timeout:5000});
+    const trainer=await page.evaluate(()=>({
+      source:document.getElementById('solTrainerFrame').getAttribute('src'),
+      external:document.getElementById('solTrainerFullscreen').href,
+      viewInert:document.getElementById('solTrainerView').inert
+    }));
+    assert.equal(trainer.source,'https://x0xp.github.io/ColosseumTrainer/');
+    assert.equal(trainer.external,trainer.source);
+    assert.equal(trainer.viewInert,false);
+    await page.click('#backHome');
+    await page.waitForFunction(()=>!document.body.classList.contains('sol-trainer-open'),{timeout:5000});
+    assert.equal(await page.$eval('#solTrainerFrame',frame=>frame.getAttribute('src')),'about:blank');
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});
