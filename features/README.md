@@ -13,7 +13,7 @@ The original 602-line `hub.css` was split into feature stylesheets in the exact 
 
 The wallpaper reference in `ui/view-layout.css` deliberately uses `../assets/hub-background.png` because CSS URLs resolve relative to the stylesheet location.
 
-`style.css` now contains the global reset and original homepage styles. Earlier Price Checker styling has been moved without changes to `features/checker/legacy.css`. Its selectors and their later overrides remain in original order. Do not remove or reorder those rules without visual regression coverage.
+`style.css` contains the global reset and original homepage styles. Older Price Checker styling is isolated in `features/checker/legacy.css`. Phase 6 removed obsolete button variants, the unused wave canvas and drag decoration, a superseded red close-hover, and duplicate transition/mobile declarations. Active Price Checker and floating-window rules remain. `tests/legacy-css.test.cjs` hashes the reviewed CSS, and the browser suite compares both populated and empty views against `main`. Further removals require the same review.
 
 ## Price Checker JavaScript (Phase 4)
 

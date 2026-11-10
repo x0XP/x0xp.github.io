@@ -33,8 +33,27 @@ async function screenshot(site,view,viewport){
     await page.goto(origin+'/'+site+'/',{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.documentElement.classList.contains('site-ready'),{timeout:25000});
     await page.waitForFunction(()=>!document.getElementById('itemSearch').disabled,{timeout:25000});
-    if(view==='checker'){await page.click('#openChecker');await page.waitForFunction(()=>document.body.classList.contains('checker-open'));}
+    if(['checker','item','floating','updates'].includes(view)){
+      await page.click('#openChecker');
+      await page.waitForFunction(()=>document.body.classList.contains('checker-open'));
+    }
     if(view==='github'){await page.click('#openGithub');await page.waitForSelector('#githubRepos .github-repo',{timeout:15000});}
+    if(view==='item' || view==='floating'){
+      await page.waitForFunction(()=>Object.keys(itemMap).length>0,{timeout:15000});
+      if(view==='item'){
+        await page.evaluate(()=>getPrice('Abyssal whip'));
+        await page.waitForSelector('#priceDisplay .price-actions a.icon-btn',{visible:true,timeout:15000});
+      }else{
+        await page.evaluate(()=>createFloatingCard('item','Abyssal whip',70,90));
+        await page.waitForSelector('#floatingContainer .floating-card .price-grid',{visible:true,timeout:15000});
+        await page.hover('#floatingContainer .floating-close');
+      }
+    }
+    if(view==='updates'){
+      await page.click('#updatesIcon');
+      await page.waitForSelector('#changelogBox.visible',{timeout:5000});
+      await page.waitForFunction(()=>document.querySelectorAll('#changelogContent .update-entry').length>0,{timeout:10000});
+    }
     await new Promise(resolve=>setTimeout(resolve,900));
     await page.evaluate(async()=>{await document.fonts.ready;});
     assert.deepEqual(errors,[],site+' JavaScript errors');
@@ -69,7 +88,9 @@ test.before(async()=>{
 });
 test.after(async()=>{if(browser)await browser.close();if(server)await new Promise(r=>server.close(r));});
 for(const viewport of [{width:1280,height:900},{width:390,height:844}]){
-  for(const view of ['home','checker','github']){
+  const views=viewport.width>600?['home','checker','github','item','floating','updates']:
+    ['home','checker','github','item','updates'];
+  for(const view of views){
     test('visual parity '+view+' '+viewport.width+'px',async()=>{
       const baseline=await screenshot('baseline',view,viewport);
       const candidate=await screenshot('candidate',view,viewport);
