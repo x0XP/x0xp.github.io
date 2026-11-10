@@ -50,7 +50,12 @@ test('price checker JavaScript dependencies and key behaviours remain present', 
     assert.ok(next > previous, label + ' missing or out of order');
     previous = next;
   }
-  const source = read('script.js');
+  const source = [
+    'features/checker/floating.js',
+    'features/checker/panels.js',
+    'features/checker/rendering.js',
+    'script.js'
+  ].map(read).join('');
   for (const fn of ['createFloatingCard','renderSearchResults','restoreFloatingCards','loadChangelog']) {
     assert.match(source, new RegExp('function ' + fn + '\\('));
   }
