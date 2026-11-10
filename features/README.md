@@ -29,6 +29,6 @@ The former 1,951-line `script.js` is split at existing top-level section heading
 
 These remain classic scripts, **not** ES modules. Their shared global lexical and function bindings, initialization order, request handling, storage keys, and application logic remain unchanged. Do not wrap them in IIFEs or change `type="module"` without a separate architectural review.
 
-The browser boot loader treats each fragment as a critical asset. `tests/checker-modules.test.cjs` reconstructs and hashes the original source before the split; `tests/browser-smoke.test.cjs` verifies navigation, item search, Updates and floating-window persistence using deterministic network fixtures.
+The browser boot loader treats each fragment as a critical asset. `tests/checker-modules.test.cjs` reconstructs the split scripts and hashes the reviewed Phase 5 source snapshot; `tests/browser-smoke.test.cjs` verifies navigation, item search, Updates and floating-window persistence using deterministic network fixtures.
 
-Run `node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs` for structural checks; browser smoke tests run separately through the GitHub Actions workflow.
+Run `node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs tests/legacy-css.test.cjs` for dependency-free structural checks. Browser smoke tests and pull-request visual comparisons run in GitHub Actions.

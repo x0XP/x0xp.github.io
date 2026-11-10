@@ -18,6 +18,6 @@ The stylesheet order in `index.html` is intentional: legacy feature CSS; tokens;
 
 ## Validation
 
-Run `node --test tests/*.test.cjs`. Phase 3 also verifies the split rules match the original Git blob. These structural tests are not a substitute for checking the Price Checker, GitHub panel, homepage, and embedded trainer in a browser.
+Run `node --test tests/ui-structure.test.cjs tests/feature-css.test.cjs tests/checker-modules.test.cjs tests/legacy-css.test.cjs` for dependency-free structural tests. GitHub Actions runs browser interaction tests after installing Puppeteer and also runs screenshot comparisons against `main` for pull requests. The visual test requires a `baseline-site` checkout of `main`, so `node --test tests/*.test.cjs` is not a standalone local test command.
 
 The Sol Heredit Trainer is deployed from **x0XP/ColosseumTrainer** and remains an independent application. Do not couple its SDK/gameplay runtime to the main website's scripts.

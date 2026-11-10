@@ -30,7 +30,7 @@ Tools by x0XP.
 ## Tech
 
 - HTML, CSS and vanilla JavaScript
-- Shared card, button, typography and transition styles in `components.css`
+- Design tokens and transitions in `components.css`, with shared cards, buttons, typography and effects under `ui/`
 - Repository detail screens in `repo-details.js` and `repo-detail.css`
 - A local `github-data.json` snapshot keeps the GitHub list available if the public API is rate-limited; `github-data.js` refreshes it in visitors' browsers when permitted
 - OSRS Wiki APIs for live item and boss data
@@ -50,3 +50,7 @@ To add a new entry, place it at the top of the JSON array using this format:
   "changes": ["First change", "Second change"]
 }
 ```
+
+## Regression checks
+
+GitHub Actions runs structural/source checks and headless-browser interaction tests on pushes to `main` and pull requests targeting `main`. Pull requests also compare desktop and mobile screenshots against `main` to flag unintended visual changes. The screenshot comparisons are intentionally not run on pushes to `main`, where the baseline would be identical to the candidate.
