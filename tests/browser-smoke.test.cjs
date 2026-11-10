@@ -180,14 +180,29 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
     await page.click('#priceDisplay .price-actions button.icon-btn');
     assert.match(await page.evaluate(() => window.__copiedShareURL),
       /^https:\/\/embed\.x0xp\.workers\.dev/);
-    await page.hover('#priceDisplay .price-actions a.icon-btn');
+    await page.evaluate(() => {
+      window.__pointerLog = [];
+      document.addEventListener('pointermove', e => {
+        window.__pointerLog.push({tag:e.target.tagName, type:e.pointerType,
+          x:e.clientX, y:e.clientY, match:!!e.target.closest('a.icon-btn')});
+      }, {passive:true});
+    });
+    const coords = await page.$eval('#priceDisplay .price-actions a.icon-btn', e => {
+      const r=e.getBoundingClientRect();
+      return {x:r.left+r.width/2, y:r.top+r.height/2, width:r.width, height:r.height};
+    });
+    await page.mouse.move(1,1);
+    await page.mouse.move(coords.x,coords.y,{steps:5});
     const hit = await page.$eval('#priceDisplay .price-actions a.icon-btn', e => {
       const box = e.getBoundingClientRect();
-      const target = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-      return {hovered: e.matches(':hover'), hitsLink: !!target?.closest('a.icon-btn')};
+      const target = document.elementFromPoint(box.left + box.width/2,box.top+box.height/2);
+      return {hovered:e.matches(':hover'), hitsLink:!!target?.closest('a.icon-btn'),
+        lit:e.classList.contains('pointer-lit')};
     });
     assert.ok(hit.hitsLink, 'Wiki icon is obstructed by another element: '+JSON.stringify(hit));
-    await page.waitForFunction(() => document.querySelector('#priceDisplay .price-actions a.icon-btn').classList.contains('pointer-lit'), {timeout:4000});
+    assert.ok(hit.lit,'Wiki icon did not receive delegated pointer glow: '+JSON.stringify({
+      hit,coords,events:await page.evaluate(() => window.__pointerLog.slice(-12))
+    }));
     await new Promise(resolve=>setTimeout(resolve,320));
     const glow = await page.$eval('#priceDisplay .price-actions a.icon-btn', e => ({
       before:Number(getComputedStyle(e,'::before').opacity),
