@@ -1,0 +1,59 @@
+/* Shared card shells and inset panels. View styles own dimensions and responsive changes. */
+.ui-surface {
+  isolation: isolate;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  box-shadow: var(--ui-surface-shadow);
+}
+.ui-surface:hover { box-shadow: var(--ui-surface-shadow); }
+.ui-surface::before,
+.ui-surface::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: var(--ui-surface-radius);
+}
+.ui-surface::before { inset: 0; z-index: -2; background: var(--ui-surface-frame); }
+.ui-surface::after {
+  inset: 1px;
+  z-index: -1;
+  background: var(--ui-surface-bg);
+  backdrop-filter: blur(18px);
+}
+.ui-card {
+  position: relative;
+  z-index: 3;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 100%;
+  color: var(--ui-text);
+  text-align: left;
+}
+.ui-card-heading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--ui-rule);
+}
+.ui-card-heading > img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+.ui-view-card {
+  flex-shrink: 0;
+  margin: auto;
+  padding: var(--ui-card-padding);
+}
+.ui-inset-panel {
+  border: 1px solid var(--ui-inset-border);
+}
+.ui-inset-panel--filled {
+  background: var(--ui-inset-bg);
+}

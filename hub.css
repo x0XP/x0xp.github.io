@@ -40,7 +40,7 @@ button { font: inherit; }
 .checker-view { scrollbar-width: thin; scrollbar-color: #796341 #0d131c; }
 body.checker-open .hub-view { transform: translateX(-100%); opacity: 0; }
 body.checker-open .checker-view { transform: translateX(0); opacity: 1; }
-.checker-view .ui-card { width: 500px; padding: 30px; margin: auto; flex-shrink: 0; }
+.checker-view .ui-card { width: 500px; }
 .checker-heading img { image-rendering: pixelated; }
 .icon-button, #infoIcon { border: 0; background: none; color: #c7b99f; cursor: pointer; padding: 6px; }
 .ge-tracker { margin-top: 20px; }
@@ -258,7 +258,7 @@ body:not(.checker-open) .help-box, body:not(.checker-open) #tooltip { visibility
 }
 body.github-open .hub-view { transform: translateX(-100%); opacity: 0; }
 body.github-open .github-view { transform: translateX(0); opacity: 1; }
-.github-view .ui-card { width: 820px; max-width: 100%; flex-shrink: 0; margin: auto; padding: 30px; }
+.github-view .ui-card { width: 820px; }
 .github-heading > i { color: #e5d1b1; font-size: 32px; width: 34px; text-align: center; }
 
 /* Profile and its only action share one compact row. */
@@ -270,7 +270,6 @@ body.github-open .github-view { transform: translateX(0); opacity: 1; }
   min-width: 0;
   margin-top: 22px;
   padding: 18px 20px;
-  border: 1px solid #b7986440;
   border-radius: 10px;
   background: linear-gradient(110deg, #29262288, #1119239c);
 }

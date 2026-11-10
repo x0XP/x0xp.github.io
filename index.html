@@ -132,7 +132,7 @@
                 const token = Date.now() + '-' + Math.random().toString(36).slice(2);
                 window.x0xpAssetToken = token;
                 const stylesReady = Promise.all(
-                    ['style.css', 'components.css', 'ui/buttons.css', 'hub.css', 'repo-detail.css', 'sol-trainer.css', 'ui/effects.css'].map(file =>
+                    ['style.css', 'components.css', 'ui/surfaces.css', 'ui/typography.css', 'ui/buttons.css', 'hub.css', 'repo-detail.css', 'sol-trainer.css', 'ui/effects.css'].map(file =>
                         new Promise(resolve => {
                             const sheet = document.createElement('link');
                             sheet.rel = 'stylesheet';
@@ -220,7 +220,7 @@
                 </nav>
             </section>
             <section id="checkerView" class="view ui-slide-view checker-view" aria-label="OSRS Price Checker" inert aria-hidden="true">
-        <div class="card ui-card ui-surface">
+        <div class="card ui-card ui-surface ui-view-card">
             <div class="checker-heading ui-card-heading"><img src="assets/coin-stack.png" alt="" /><h2>OSRS Price Checker</h2><button id="updatesIcon" class="icon-button" title="Updates" aria-label="Updates"><i class="far fa-clipboard" aria-hidden="true"></i></button></div>
             <div class="ge-tracker">
                 <div style="position: relative">
@@ -278,12 +278,12 @@
 
             </section>
             <section id="githubView" class="view ui-slide-view github-view" aria-label="GitHub profile and repositories" inert aria-hidden="true">
-                <div class="card ui-card ui-surface github-card">
+                <div class="card ui-card ui-surface ui-view-card github-card">
                     <div class="checker-heading ui-card-heading github-heading">
                         <i class="fab fa-github" aria-hidden="true"></i>
                         <h2 id="githubTitle" tabindex="-1">GitHub</h2>
                     </div>
-                    <div class="github-profile">
+                    <div class="github-profile ui-inset-panel">
                         <img id="githubAvatar" src="https://github.com/x0XP.png?size=128" alt="x0XP GitHub avatar" width="76" height="76" />
                         <div class="github-profile-detail">
                             <strong id="githubName">x0XP</strong>
@@ -303,7 +303,7 @@
                 </div>
             </section>
             <section id="repoDetailView" class="view ui-slide-view repo-detail-view" aria-label="GitHub repository details" inert aria-hidden="true">
-                <div class="card ui-card ui-surface repo-detail-card">
+                <div class="card ui-card ui-surface ui-view-card repo-detail-card">
                     <div class="ui-card-heading repo-detail-heading">
                         <i class="fab fa-github" aria-hidden="true"></i>
                         <h2 id="repoDetailTitle" tabindex="-1">Repository</h2>
@@ -314,7 +314,7 @@
                 </div>
             </section>
             <section id="solTrainerView" class="view ui-slide-view sol-trainer-view" aria-label="Sol Heredit Trainer" inert aria-hidden="true">
-                <div class="card ui-card ui-surface sol-trainer-card">
+                <div class="card ui-card ui-surface ui-view-card sol-trainer-card">
                     <div class="ui-card-heading sol-trainer-heading">
                         <i class="fas fa-shield-halved" aria-hidden="true"></i>
                         <h2 id="solTrainerTitle" tabindex="-1">Sol Heredit Trainer</h2>

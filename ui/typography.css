@@ -1,0 +1,20 @@
+/* Shared headings and muted text. */
+.ui-card-heading h2 {
+  flex: 1;
+  margin: 0;
+  font: 500 21px/1.35 Arial, Helvetica, sans-serif;
+  color: var(--ui-text);
+  overflow-wrap: anywhere;
+}
+.ui-section-heading {
+  margin: 0;
+  font: 500 17px/1.4 Arial, Helvetica, sans-serif;
+  color: var(--ui-text);
+}
+.ui-muted {
+  color: var(--ui-muted);
+  font: 400 12px/1.55 Arial, Helvetica, sans-serif;
+}
+@media (max-width: 600px) {
+  .ui-card-heading h2 { font-size: 16px; }
+}

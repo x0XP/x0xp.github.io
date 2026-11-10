@@ -2,7 +2,9 @@
 
 The website is intentionally plain HTML, CSS, and JavaScript. Avoid introducing a framework to change its visual components.
 
-- **components.css** owns design tokens, reusable surfaces, headings, and view transitions.
+- **components.css** owns design tokens and view transitions.
+- **ui/surfaces.css** owns shared card shells (`.ui-card`, `.ui-surface`, `.ui-view-card`) and inset panels (`.ui-inset-panel`, optional `--filled`). Page styles own dimensions and mobile overrides.
+- **ui/typography.css** owns common headings, muted text and responsive heading sizes.
 - **ui/buttons.css** owns the base appearance of `.ui-button` and interactive `.ui-list-row` links.
 - **ui/effects.css** owns the gold cursor-following glow, hover and focus treatment, and reduced-motion behaviour for website controls. The homepage project cards keep their existing SVG treatment in `hub.css`.
 - **ui/interactions.js** registers the single delegated pointer/focus listener for dynamically created controls, including repository links and floating-window actions.
@@ -10,7 +12,7 @@ The website is intentionally plain HTML, CSS, and JavaScript. Avoid introducing 
 
 ## Loading contract
 
-The stylesheet order in `index.html` is intentional: legacy feature CSS; shared tokens/surfaces; shared button bases; view-specific layouts; and finally shared effects. The interaction script runs before `hub.js`. Each asset is versioned through the existing site bootstrapper.
+The stylesheet order in `index.html` is intentional: legacy feature CSS; tokens; surfaces; typography; button bases; view-specific layouts; and finally shared effects. The interaction script runs before `hub.js`. Each asset is versioned through the existing site bootstrapper.
 
 ## Validation
 

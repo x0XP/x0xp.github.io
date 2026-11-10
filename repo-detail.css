@@ -1,5 +1,4 @@
-/* GitHub repository detail screen. Surface, buttons, headings, typography and
-   motion are provided by components.css. */
+/* Repository detail layout. Shared shells and typography are in ui/. */
 .repo-detail-view {
   display: flex;
   overflow-y: auto;
@@ -20,10 +19,6 @@ body.repo-detail-open .repo-detail-view {
 }
 .repo-detail-card {
   width: 820px;
-  max-width: 100%;
-  margin: auto;
-  padding: 30px;
-  flex-shrink: 0;
 }
 .repo-detail-heading > i {
   width: 34px;
@@ -67,9 +62,7 @@ body.repo-detail-open .repo-detail-view {
 .repo-detail-stat {
   min-width: 0;
   padding: 15px;
-  border: 1px solid #b7986440;
   border-radius: 8px;
-  background: #131920a6;
 }
 .repo-detail-stat-label {
   display: block;
@@ -89,9 +82,7 @@ body.repo-detail-open .repo-detail-view {
   display: grid;
   gap: 11px;
   padding: 17px 18px;
-  border: 1px solid #b7986440;
   border-radius: 8px;
-  background: #131920a6;
 }
 .repo-detail-readme h4,
 .repo-detail-readme h5 {
