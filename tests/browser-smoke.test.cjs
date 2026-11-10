@@ -154,6 +154,9 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
     await page.evaluate(() => getPrice('Abyssal whip'));
     await page.waitForSelector('#priceDisplay .price-actions a.icon-btn',
       {visible:true,timeout:10000});
+    // getPrice animates card height for 400ms after rendering the actions.
+    // A moving hit target cannot be tested with a stationary mouse cursor.
+    await new Promise(resolve=>setTimeout(resolve,700));
     const controls = await page.$$eval('#priceDisplay .price-actions .icon-btn', elements =>
       elements.map(element => ({
         tag:element.tagName,
