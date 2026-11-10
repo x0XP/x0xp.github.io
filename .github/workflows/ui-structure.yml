@@ -1,0 +1,26 @@
+name: Shared UI structure checks
+
+on:
+  push:
+    branches:
+      - refactor/ui-controls
+  pull_request:
+    paths:
+      - "components.css"
+      - "index.html"
+      - "hub.js"
+      - "ui/**"
+      - "tests/ui-structure.test.cjs"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the website
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run UI structure regression checks
+        run: node --test tests/ui-structure.test.cjs
