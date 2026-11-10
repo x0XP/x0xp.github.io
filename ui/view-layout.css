@@ -1,0 +1,34 @@
+/* On phones and small tablets, reserve a fixed header lane for the x0XP
+   wordmark and Back button. Only the content below this lane scrolls, so
+   neither header control can overlap the Price Checker or GitHub cards. */
+@media (max-width: 850px) {
+  .checker-view,
+  .github-view {
+    top: calc(var(--edge) + 120px);
+    padding-top: 12px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    scroll-padding-top: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .checker-view,
+  .github-view {
+    top: calc(var(--edge) + 112px);
+  }
+}
+
+/* Only soften the visible card edge when scrolled. An ordinary,
+   pointer-transparent overlay avoids Safari's mask/backdrop compositing bug
+   and never affects wallpaper pixels outside the card's rectangle. */
+.scroll-card-edge {
+  position: fixed;
+  z-index: 5;
+  height: 18px;
+  pointer-events: none;
+  /* Paint the *same wallpaper* as the page across this clipped strip,
+     then blend it away. Never mask the backdrop-filter card or the view. */
+  background: #0d1726 url('../assets/hub-background.png') center / cover no-repeat fixed;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #0009 46%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #0009 46%, transparent 100%);
+}
+.scroll-card-edge[hidden] { display: none !important; }

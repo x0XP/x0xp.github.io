@@ -17,6 +17,12 @@ const effects = read('ui/effects.css');
 const interactions = read('ui/interactions.js');
 const hub = read('hub.js');
 const hubCSS = read('hub.css');
+const checkerCSS = read('features/price-checker.css');
+const floatingCSS = read('features/floating-windows.css');
+const responsiveCSS = read('ui/checker-responsive.css');
+const githubCSS = read('features/github.css');
+const historyCSS = read('features/price-history.css');
+const layoutCSS = read('ui/view-layout.css');
 const legacy = read('style.css');
 
 test('shared button bases are loaded after tokens and before view CSS', () => {
@@ -65,11 +71,11 @@ test('shared surfaces and typography load before page styles', () => {
 test('all four cards share a shell, preserving page dimensions and mobile rules', () => {
   assert.equal((html.match(/ui-view-card/g) || []).length, 4);
   assert.ok(surfaces.includes('padding: var(--ui-card-padding);'));
-  assert.ok(hubCSS.includes('.checker-view .ui-card { width: 500px; }'));
-  assert.ok(hubCSS.includes('.github-view .ui-card { width: 820px; }'));
+  assert.ok(checkerCSS.includes('.checker-view .ui-card { width: 500px; }'));
+  assert.ok(githubCSS.includes('.github-view .ui-card { width: 820px; }'));
   assert.ok(repoCSS.includes('.repo-detail-card { width: 100%; padding: 20px; }'));
   assert.ok(trainerCSS.includes('.sol-trainer-card { width:100%; padding:20px; }'));
-  assert.ok(hubCSS.includes('.checker-view .card { width: 100%; padding: 20px; }'));
+  assert.ok(responsiveCSS.includes('.checker-view .card { width: 100%; padding: 20px; }'));
   assert.ok(trainerCSS.includes('width:min(1240px,100%); min-width:0; padding:25px;'));
 });
 
@@ -80,4 +86,17 @@ test('profile and dynamic GitHub inset panels reuse shared border styles', () =>
   assert.ok(surfaces.includes('border: 1px solid var(--ui-inset-border);'));
   assert.ok(surfaces.includes('background: var(--ui-inset-bg);'));
   assert.ok(!repoCSS.includes('border: 1px solid #b7986440;'));
+});
+
+test('feature boundaries preserve Price Checker, history, floating and GitHub rules', () => {
+  assert.ok(hubCSS.includes('.project-link {'));
+  assert.ok(!hubCSS.includes('.floating-card {'));
+  assert.ok(!hubCSS.includes('.price-history {'));
+  assert.ok(checkerCSS.includes('.results-list .suggested-item'));
+  assert.ok(floatingCSS.includes('.floating-card {'));
+  assert.ok(floatingCSS.includes('#clearAllFloating'));
+  assert.ok(historyCSS.includes('.price-history {'));
+  assert.ok(githubCSS.includes('.github-view {'));
+  assert.ok(layoutCSS.includes('.scroll-card-edge {'));
+  assert.ok(responsiveCSS.includes('@media (prefers-reduced-motion: reduce)'));
 });
