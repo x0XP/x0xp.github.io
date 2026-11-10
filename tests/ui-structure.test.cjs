@@ -16,6 +16,7 @@ const trainerCSS = read('sol-trainer.css');
 const effects = read('ui/effects.css');
 const interactions = read('ui/interactions.js');
 const hub = read('hub.js');
+const hubCSS = read('hub.css');
 const legacy = read('style.css');
 
 test('shared button bases are loaded after tokens and before view CSS', () => {
@@ -64,11 +65,11 @@ test('shared surfaces and typography load before page styles', () => {
 test('all four cards share a shell, preserving page dimensions and mobile rules', () => {
   assert.equal((html.match(/ui-view-card/g) || []).length, 4);
   assert.ok(surfaces.includes('padding: var(--ui-card-padding);'));
-  assert.ok(hub.includes('.checker-view .ui-card { width: 500px; }'));
-  assert.ok(hub.includes('.github-view .ui-card { width: 820px; }'));
+  assert.ok(hubCSS.includes('.checker-view .ui-card { width: 500px; }'));
+  assert.ok(hubCSS.includes('.github-view .ui-card { width: 820px; }'));
   assert.ok(repoCSS.includes('.repo-detail-card { width: 100%; padding: 20px; }'));
   assert.ok(trainerCSS.includes('.sol-trainer-card { width:100%; padding:20px; }'));
-  assert.ok(hub.includes('.checker-view .card { width: 100%; padding: 20px; }'));
+  assert.ok(hubCSS.includes('.checker-view .card { width: 100%; padding: 20px; }'));
   assert.ok(trainerCSS.includes('width:min(1240px,100%); min-width:0; padding:25px;'));
 });
 
