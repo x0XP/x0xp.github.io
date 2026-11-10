@@ -143,3 +143,54 @@ test('floating windows persist on reload and Close All clears them', async () =>
     assert.deepEqual(errors, []);
   } finally { await page.close(); }
 });
+
+test('generated share and Wiki actions use central styles and fade-in glow', async () => {
+  const {page,errors} = await openPage();
+  try {
+    await page.click('#openChecker');
+    await page.waitForFunction(() => document.body.classList.contains('checker-open'));
+    await page.evaluate(() => getPrice('Abyssal whip'));
+    await page.waitForSelector('#priceDisplay .price-actions a.icon-btn',
+      {visible:true,timeout:10000});
+    const controls = await page.$$eval('#priceDisplay .price-actions .icon-btn', elements =>
+      elements.map(element => ({
+        tag:element.tagName,
+        style:element.getAttribute('style'),
+        over:element.getAttribute('onmouseover'),
+        out:element.getAttribute('onmouseout'),
+        display:getComputedStyle(element).display,
+        link:element.getAttribute('href')
+      }))
+    );
+    assert.equal(controls.length,2);
+    for(const item of controls) {
+      assert.equal(item.style,null);
+      assert.equal(item.over,null);
+      assert.equal(item.out,null);
+      assert.equal(item.display,'inline-flex');
+    }
+    assert.match(controls.find(x=>x.tag==='A').link,/^https:\/\/oldschool\.runescape\.wiki\/w\//);
+    await page.evaluate(() => {
+      window.__copiedShareURL = null;
+      window.copyShareLink = value => { window.__copiedShareURL = value; };
+    });
+    await page.click('#priceDisplay .price-actions button.icon-btn');
+    assert.match(await page.evaluate(() => window.__copiedShareURL),
+      /^https:\/\/embed\.x0xp\.workers\.dev/);
+    await page.hover('#priceDisplay .price-actions a.icon-btn');
+    await page.waitForFunction(() => document.querySelector('#priceDisplay .price-actions a.icon-btn').classList.contains('pointer-lit'), {timeout:4000});
+    await new Promise(resolve=>setTimeout(resolve,320));
+    const glow = await page.$eval('#priceDisplay .price-actions a.icon-btn', e => ({
+      before:Number(getComputedStyle(e,'::before').opacity),
+      variable:e.style.getPropertyValue('--glow-x')
+    }));
+    assert.ok(glow.before>=0.95,'Wiki glow must fade in');
+    assert.ok(glow.variable.endsWith('px'),'Wiki link should track pointer position');
+    await page.mouse.move(1,1);
+    await new Promise(resolve=>setTimeout(resolve,320));
+    const after = await page.$eval('#priceDisplay .price-actions a.icon-btn',
+      e => Number(getComputedStyle(e,'::before').opacity));
+    assert.ok(after<=0.05,'Wiki glow must fade out');
+    assert.deepEqual(errors, []);
+  } finally { await page.close(); }
+});

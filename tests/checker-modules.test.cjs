@@ -15,13 +15,15 @@ const parts = [
   'features/checker/rendering.js',
   'script.js'
 ];
-const originalBlobSha = '61e3d8267302de7ca1f55cead404ca8ebf3101b8';
+// Deliberate Phase 5 change: two icon controls now use shared CSS.
+// All remaining Price Checker source must match this reviewed snapshot.
+const reviewedBlobSha = 'd4f3959b0efb5e946f61c5eb9b6960e4a8d6697b';
 
-test('splitting the Price Checker does not change its source or execution order', () => {
+test('modular Price Checker source matches the reviewed Phase 5 baseline', () => {
   const combined = parts.map(read).join('');
   const prefix = 'blob ' + Buffer.byteLength(combined, 'utf8') + '\0';
   const sha = createHash('sha1').update(prefix).update(combined).digest('hex');
-  assert.equal(sha, originalBlobSha, 'original Price Checker source has changed');
+  assert.equal(sha, reviewedBlobSha, 'reviewed Price Checker source has changed');
 });
 
 test('critical classic scripts load in dependency order without duplicates', () => {
@@ -53,4 +55,18 @@ test('initial state and tracker initialization remain at the first and last sect
   assert.match(read('features/checker/history.js'), /window.togglePin = function/);
   assert.match(read('features/checker/rendering.js'), /function refreshAllCards\(/);
   assert.match(entry, /async function getPrice\(/);
+});
+
+test('Wiki and share icons use the shared CSS and delegated glow', () => {
+  const module = read('features/checker/rendering.js');
+  const controls = module.split('// ---------- Tooltips ----------')[0];
+  assert.doesNotMatch(controls, /iconButtonStyle|onmouseover=|onmouseout=|style=/);
+  assert.match(controls, /class="icon-btn"/);
+  assert.match(controls, /onclick="copyShareLink/);
+  assert.match(controls, /https:\/\/oldschool\.runescape\.wiki\/w\//);
+  const buttons = read('ui/buttons.css');
+  assert.match(buttons, /\.icon-btn\s*\{/);
+  assert.match(buttons, /\.icon-btn:focus-visible/);
+  assert.match(read('ui/effects.css'), /a\.icon-btn/);
+  assert.match(read('ui/interactions.js'), /a\.icon-btn/);
 });

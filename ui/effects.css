@@ -7,7 +7,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ) {
   position: relative;
   isolation: isolate;
@@ -18,7 +19,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 )::before {
   content: '';
   position: absolute;
@@ -41,7 +43,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ).pointer-lit:hover::before,
 :is(
   button:not(.project-link),
@@ -49,7 +52,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ):focus-visible::before {
   opacity: 1;
 }
@@ -59,7 +63,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ).pointer-lit:hover,
 :is(
   button:not(.project-link),
@@ -67,7 +72,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ):focus-visible {
   border-color: #ebc683;
   box-shadow: 0 0 24px -9px #d8983640;
@@ -90,7 +96,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ):focus-visible:not(.pointer-lit) {
   --glow-x: 50%;
   --glow-y: 50%;
@@ -103,7 +110,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 )::before {
     transition: none;
   }
@@ -113,7 +121,8 @@
   a.ui-list-row,
   a.btn,
   a.wiki-btn,
-  a.share-btn
+  a.share-btn,
+  a.icon-btn
 ) {
     transition: none;
   }

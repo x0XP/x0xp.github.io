@@ -5,7 +5,7 @@ The website is intentionally plain HTML, CSS, and JavaScript. Avoid introducing 
 - **components.css** owns design tokens and view transitions.
 - **ui/surfaces.css** owns shared card shells (`.ui-card`, `.ui-surface`, `.ui-view-card`) and inset panels (`.ui-inset-panel`, optional `--filled`). Page styles own dimensions and mobile overrides.
 - **ui/typography.css** owns common headings, muted text and responsive heading sizes.
-- **ui/buttons.css** owns the base appearance of `.ui-button` and interactive `.ui-list-row` links.
+- **ui/buttons.css** owns the appearance of `.ui-button`, `.ui-list-row`, and compact `.icon-btn` controls, including dynamically generated Wiki and share actions.
 - **ui/effects.css** owns the gold cursor-following glow, hover and focus treatment, and reduced-motion behaviour for website controls. The homepage project cards keep their existing SVG treatment in `hub.css`.
 - **ui/interactions.js** registers the single delegated pointer/focus listener for dynamically created controls, including repository links and floating-window actions.
 - **hub.css** owns the homepage; **ui/checker-responsive.css** and **ui/view-layout.css** preserve the original shared responsive and scroll-edge rules.

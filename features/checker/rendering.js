@@ -1,24 +1,8 @@
 // ---------- Icon buttons ----------
-const iconButtonStyle = `
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px 4px;
-    color: #a8c7fa;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
-    transition: color 0.2s ease;
-`;
-
 function shareButtonHTML(url) {
   return `<button onclick="copyShareLink('${url.replace(/'/g, "\\'")}')"
                 class="icon-btn" aria-label="Copy share link"
-                data-tooltip="Copy share link"
-                style="${iconButtonStyle}"
-                onmouseover="this.style.color='#ffae00'"
-                onmouseout="this.style.color='#a8c7fa'">
+                data-tooltip="Copy share link">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
@@ -29,10 +13,7 @@ function shareButtonHTML(url) {
 function wikiButtonHTML(pageName) {
   return `<a href="https://oldschool.runescape.wiki/w/${encodeURIComponent(pageName)}" target="_blank" rel="noopener noreferrer" aria-label="Open Wiki page"
                 class="icon-btn"
-                data-tooltip="Open Wiki page"
-                style="${iconButtonStyle} text-decoration: none;"
-                onmouseover="this.style.color='#ffae00'"
-                onmouseout="this.style.color='#a8c7fa'">
+                data-tooltip="Open Wiki page">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"></line>
                     <polyline points="7 7 17 7 17 17"></polyline>

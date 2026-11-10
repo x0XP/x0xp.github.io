@@ -48,6 +48,26 @@
   border-color: #d9ac5980;
 }
 
+
+/* Shared compact icon actions (e.g. Price Checker copy and Wiki controls). */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: #a8c7fa;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+.icon-btn:hover,
+.icon-btn:focus-visible {
+  color: var(--ui-gold);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ui-button, .ui-list-row { transition: none; }
+  .ui-button, .ui-list-row, .icon-btn { transition: none; }
 }

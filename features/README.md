@@ -24,7 +24,7 @@ The former 1,951-line `script.js` is split at existing top-level section heading
 3. `features/checker/panels.js` — pin gestures, help and Updates controls
 4. `features/checker/data.js` — API loading, collection log and initialization
 5. `features/checker/history.js` — history/pins, formatting and price helper functions
-6. `features/checker/rendering.js` — cards, icons, tooltips, refreshing and animations
+6. `features/checker/rendering.js` — cards, icon markup, tooltips, refreshing and animations. Its compact icon buttons now use shared CSS instead of inline mouseover styles.
 7. `script.js` — search interaction, prices and final tracker initialization
 
 These remain classic scripts, **not** ES modules. Their shared global lexical and function bindings, initialization order, request handling, storage keys, and application logic remain unchanged. Do not wrap them in IIFEs or change `type="module"` without a separate architectural review.
