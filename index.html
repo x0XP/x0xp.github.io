@@ -371,11 +371,11 @@
                 function start() {
                     window.x0xpInitialBody = document.body.innerHTML;
                     // The Price Checker must execute before hub.js uses trackerReady.
-                    for (const file of ['ui/interactions.js', 'price-history.js', 'script.js', 'github-data.js', 'repo-details.js', 'hub.js', 'site-refresh.js']) {
+                    for (const file of ['ui/interactions.js', 'price-history.js', 'features/checker/state.js', 'features/checker/floating.js', 'features/checker/panels.js', 'features/checker/data.js', 'features/checker/history.js', 'features/checker/rendering.js', 'script.js', 'github-data.js', 'repo-details.js', 'hub.js', 'site-refresh.js']) {
                         const script = document.createElement('script');
                         script.async = false;
                         script.src = file + '?site_asset=' + window.x0xpAssetToken;
-                        if (['ui/interactions.js', 'script.js', 'github-data.js', 'repo-details.js', 'hub.js'].includes(file)) {
+                        if (['ui/interactions.js', 'features/checker/state.js', 'features/checker/floating.js', 'features/checker/panels.js', 'features/checker/data.js', 'features/checker/history.js', 'features/checker/rendering.js', 'script.js', 'github-data.js', 'repo-details.js', 'hub.js'].includes(file)) {
                             script.addEventListener('error', () => window.x0xpShowLoadError?.());
                         }
                         document.body.appendChild(script);
