@@ -95,6 +95,8 @@ test('homepage and navigation reveal the checker and GitHub views', async () => 
     assert.equal(await page.$eval('#checkerView', e => e.inert), false);
     await page.click('#backHome');
     await page.waitForFunction(() => !document.body.classList.contains('checker-open'));
+    // Wait for the 650ms slide transition before clicking the moving homepage card.
+    await new Promise(resolve => setTimeout(resolve,800));
     await page.click('#openGithub');
     await page.waitForFunction(() => document.body.classList.contains('github-open'));
     await page.waitForSelector('.github-repo', {timeout:10000});
