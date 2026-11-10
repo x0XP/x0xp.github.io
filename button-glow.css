@@ -1,5 +1,58 @@
-/* Shared pointer-following gold glow.
-   Home project cards keep their own SVG highlight. */
+/* Shared cursor-following gold glow. Match the homepage card's 250ms
+   opacity fade; never replace the button's background or positioning.
+   The homepage project cards keep their existing SVG glow. */
+:where(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+) {
+  position: relative;
+  isolation: isolate;
+}
+:where(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    190px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    #e4ac5152 0%,
+    #b77b2726 48%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+:is(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+).pointer-lit:hover::before,
+:is(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+):focus-visible::before {
+  opacity: 1;
+}
 :is(
   button:not(.project-link),
   a.ui-button,
@@ -16,20 +69,12 @@
   a.wiki-btn,
   a.share-btn
 ):focus-visible {
-  background-image: radial-gradient(
-    190px circle at var(--glow-x, 50%) var(--glow-y, 50%),
-    #e4ac5152 0%,
-    #b77b2726 48%,
-    transparent 100%
-  );
-  background-repeat: no-repeat;
   border-color: #ebc683;
   box-shadow: 0 0 24px -9px #d8983640;
 }
 
-/* Close All previously had a red glow. Keep the standard gold hover
-   even when someone hovers without moving the pointer. Do not alter
-   this fixed button's positioning or view transition. */
+/* Keep Close All's standard gold hover; its fixed position and slide
+   transition remain in the existing Price Checker styles. */
 #clearAllFloating:hover,
 #clearAllFloating:focus-visible {
   color: #f2e7d1;
@@ -38,8 +83,7 @@
   box-shadow: 0 0 24px -9px #d8983640;
 }
 
-/* Keyboard focus gets a centred highlight rather than the last cursor
-   position; mouse/pencil pointers use the coordinates tracked in hub.js. */
+/* Keyboard focus centres the glow instead of reusing cursor coordinates. */
 :is(
   button:not(.project-link),
   a.ui-button,
@@ -51,15 +95,26 @@
   --glow-x: 50%;
   --glow-y: 50%;
 }
+
 @media (prefers-reduced-motion: reduce) {
-  :is(
-    button:not(.project-link),
-    a.ui-button,
-    a.ui-list-row,
-    a.btn,
-    a.wiki-btn,
-    a.share-btn
-  ) {
+  :where(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+)::before {
+    transition: none;
+  }
+  :where(
+  button:not(.project-link),
+  a.ui-button,
+  a.ui-list-row,
+  a.btn,
+  a.wiki-btn,
+  a.share-btn
+) {
     transition: none;
   }
 }
