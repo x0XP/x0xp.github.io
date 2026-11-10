@@ -149,6 +149,8 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
   try {
     await page.click('#openChecker');
     await page.waitForFunction(() => document.body.classList.contains('checker-open'));
+    // Hover geometry must settle after the 650ms page-slide animation.
+    await new Promise(resolve=>setTimeout(resolve,800));
     await page.evaluate(() => getPrice('Abyssal whip'));
     await page.waitForSelector('#priceDisplay .price-actions a.icon-btn',
       {visible:true,timeout:10000});
@@ -167,8 +169,8 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
       assert.equal(item.style,null);
       assert.equal(item.over,null);
       assert.equal(item.out,null);
-      // Flex items are blockified by the layout engine (inline-flex becomes flex).
-    assert.ok(['flex','inline-flex'].includes(item.display));
+      // Flex items are blockified (inline-flex computes to flex).
+      assert.ok(['flex','inline-flex'].includes(item.display));
     }
     assert.match(controls.find(x=>x.tag==='A').link,/^https:\/\/oldschool\.runescape\.wiki\/w\//);
     await page.evaluate(() => {
@@ -179,6 +181,12 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
     assert.match(await page.evaluate(() => window.__copiedShareURL),
       /^https:\/\/embed\.x0xp\.workers\.dev/);
     await page.hover('#priceDisplay .price-actions a.icon-btn');
+    const hit = await page.$eval('#priceDisplay .price-actions a.icon-btn', e => {
+      const box = e.getBoundingClientRect();
+      const target = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      return {hovered: e.matches(':hover'), hitsLink: !!target?.closest('a.icon-btn')};
+    });
+    assert.ok(hit.hitsLink, 'Wiki icon is obstructed by another element: '+JSON.stringify(hit));
     await page.waitForFunction(() => document.querySelector('#priceDisplay .price-actions a.icon-btn').classList.contains('pointer-lit'), {timeout:4000});
     await new Promise(resolve=>setTimeout(resolve,320));
     const glow = await page.$eval('#priceDisplay .price-actions a.icon-btn', e => ({
