@@ -1,4 +1,4 @@
-/* Shared cursor-following gold glow. Match the homepage card's 250ms
+/* Shared cursor-following gold glow for all website controls. Match the homepage card's 250ms
    opacity fade; never replace the button's background or positioning.
    The homepage project cards keep their existing SVG glow. */
 :where(

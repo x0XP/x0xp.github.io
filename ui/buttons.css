@@ -1,0 +1,53 @@
+/* Shared action and interactive-row appearance.
+   Keep feature-specific spacing/sizing in its view stylesheet.
+   Tokens and shared surfaces remain in components.css. */
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: #10151ad9;
+  color: var(--ui-text);
+  font: 400 12px/1.4 Arial, Helvetica, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--ui-speed-normal) ease,
+    border-color var(--ui-speed-normal) ease,
+    color var(--ui-speed-normal) ease,
+    box-shadow var(--ui-speed-normal) ease;
+}
+.ui-button:hover,
+.ui-button:focus-visible {
+  background: var(--ui-hover-bg);
+  color: var(--ui-text);
+  border-color: var(--ui-gold);
+}
+.ui-button i { color: var(--ui-gold); font-size: 11px; }
+.ui-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 13px 18px;
+  border: 1px solid #b798643d;
+  border-radius: 9px;
+  background: #13192091;
+  color: var(--ui-text);
+  text-decoration: none;
+  transition: background-color var(--ui-speed-fast) ease,
+    border-color var(--ui-speed-fast) ease;
+}
+.ui-list-row:hover,
+.ui-list-row:focus-visible {
+  background: var(--ui-hover-bg);
+  border-color: #d9ac5980;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-button, .ui-list-row { transition: none; }
+}

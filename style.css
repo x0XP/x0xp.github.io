@@ -721,12 +721,6 @@ body::before {
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
-.clear-all-float-btn:hover {
-    background: rgba(255, 80, 80, 0.2);
-    color: #ff5555;
-    border-color: #ff5555;
-    box-shadow: 0 4px 16px rgba(255, 80, 80, 0.3);
-}
 
 @media (pointer: coarse) and (max-width: 767px) {
     .drag-grip,
