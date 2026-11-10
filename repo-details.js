@@ -37,7 +37,7 @@
       : 'Unknown';
   }
   function metric(label, value) {
-    const card = element('div', 'repo-detail-stat');
+    const card = element('div', 'repo-detail-stat ui-inset-panel ui-inset-panel--filled');
     card.append(element('span', 'repo-detail-stat-label', label),
       element('strong', 'repo-detail-stat-value', value));
     return card;
@@ -169,7 +169,7 @@
 
     const readmeSection = element('section', 'repo-detail-section');
     readmeSection.append(element('h3', 'ui-section-heading', 'README'));
-    const readmeBox = element('div', 'repo-detail-readme');
+    const readmeBox = element('div', 'repo-detail-readme ui-inset-panel ui-inset-panel--filled');
     const blocks = readmePreview(markdown || '');
     if (blocks.length) {
       for (const block of blocks) readmeBox.append(element(block.tag, '', block.text));

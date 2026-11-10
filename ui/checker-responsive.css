@@ -1,0 +1,31 @@
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 5px; }
+@media (max-width: 600px) {
+  #floatingContainer, #clearAllFloating { display: none !important; }
+  #username { font-size: 22px; }
+  #username img { width: 125px; height: 43px; }
+  .project-list { width: calc(100vw - 2 * var(--edge)); }
+  .project-link { min-height: 62px; font-size: 16px; }
+  .project-link { height: 64px; padding: 12px 22px; gap: 18px; }
+  .project-link img, .project-link i { width: 32px; height: 32px; font-size: 32px; }
+  .checker-view { padding-top: 145px; padding-bottom: 145px; }
+  .checker-view .card { width: 100%; padding: 20px; }
+  .checker-heading h2 { font-size: 16px; }
+  .price-grid .price-buy, .price-grid .price-sell { font-size: 18px; }
+  .price-grid > div + div { padding-left: 12px; }
+}
+@media (max-width: 360px) {
+  .checker-heading { gap: 10px; }
+  .checker-heading img { width: 28px; height: 28px; }
+  .checker-heading h2 { font-size: 15px; }
+  .checker-heading .icon-button { padding: 4px; }
+  .price-grid .price-buy, .price-grid .price-sell { font-size: 16px; }
+  .price-grid small { display: block; margin: 5px 0 0; }
+}
+@media (min-width: 601px) and (max-width: 850px) {
+  .checker-view { padding-top: 145px; padding-bottom: 145px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .view, #floatingContainer, #clearAllFloating, .project-link::after, .back-home, .back-home span, .clear-all-float-btn, .clear-all-float-btn::before, .clear-all-float-btn::after { transition: none; }
+  body.checker-open #clearAllFloating.has-floating-windows { animation: none; }
+}
+

@@ -5,7 +5,7 @@ body.sol-trainer-open .checker-view,
 body.sol-trainer-open .github-view,
 body.sol-trainer-open .repo-detail-view { transform:translateX(-100%); opacity:0; }
 body.sol-trainer-open .sol-trainer-view { transform:translateX(0); opacity:1; }
-.sol-trainer-card { box-sizing:border-box; width:min(1240px,100%); min-width:0; flex-shrink:0; margin:auto; padding:25px; }
+.sol-trainer-card { width:min(1240px,100%); min-width:0; padding:25px; }
 .sol-trainer-heading { padding-bottom:17px; }
 .sol-trainer-heading > i { width:34px; flex:0 0 34px; color:var(--ui-gold); font-size:28px; text-align:center; }
 .sol-trainer-fullscreen { flex-shrink:0; }

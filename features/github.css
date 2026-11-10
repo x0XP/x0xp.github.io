@@ -1,0 +1,131 @@
+/* GitHub panel: retain the Price Checker's card and slide design. */
+.github-view {
+  display: flex;
+  overflow-y: auto;
+  padding: var(--edge);
+  transform: translateX(100%);
+  opacity: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #796341 #0d131c;
+}
+body.github-open .hub-view { transform: translateX(-100%); opacity: 0; }
+body.github-open .github-view { transform: translateX(0); opacity: 1; }
+.github-view .ui-card { width: 820px; }
+.github-heading > i { color: #e5d1b1; font-size: 32px; width: 34px; text-align: center; }
+
+/* Profile and its only action share one compact row. */
+.github-profile {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  margin-top: 22px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #29262288, #1119239c);
+}
+.github-profile > img {
+  display: block;
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #b7986470;
+  background: #10151a;
+}
+.github-profile-detail { min-width: 0; }
+.github-profile-detail strong {
+  display: block;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--ivory);
+  overflow-wrap: anywhere;
+}
+.github-profile-detail > span { display: block; font-size: 12px; color: #b69b6c; margin-top: 3px; }
+.github-profile-detail p {
+  margin: 8px 0 0;
+  color: #c6c0b4;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.github-profile-detail p:empty { display: none; }
+.github-profile-button { white-space: nowrap; }
+
+/* No filters or secondary scrolling: six repository rows fit naturally. */
+.github-repos-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 18px;
+  margin-top: 29px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #d9ac5925;
+}
+.github-repos-heading h3 { margin: 0; font-size: 17px; font-weight: 500; color: var(--ivory); }
+.github-repos-heading span { font-size: 11px; color: #bba67e; }
+.github-status { padding: 18px 2px; color: #b5aa99; font-size: 12px; line-height: 1.5; }
+.github-status[hidden] { display: none; }
+.github-repos {
+  display: grid;
+  gap: 10px;
+  margin-top: 15px;
+}
+.github-repo { min-height: 61px; }
+.github-repo-main { display: block; min-width: 0; flex: 1 1 auto; }
+.github-repo-name {
+  display: block;
+  color: #e2dccf;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.github-repo-description {
+  display: block;
+  margin-top: 5px;
+  color: #b5aa99;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.github-repo-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 17px;
+  flex: 0 0 auto;
+}
+.github-repo-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #c6b89e;
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+.github-repo-external { color: #b69b6c; font-size: 12px; }
+.github-repo:hover .github-repo-external { color: var(--gold); }
+.github-retry { margin-top: 10px; }
+@media (max-width: 700px) {
+  .github-profile { grid-template-columns: 64px minmax(0, 1fr); gap: 14px; padding: 15px; }
+  .github-profile > img { width: 64px; height: 64px; }
+  .github-profile-button { grid-column: 1 / -1; justify-self: stretch; }
+  .github-repo { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+  .github-repo-meta { flex-basis: 100%; justify-content: space-between; }
+}
+@media (max-width: 600px) {
+  .github-view { padding-top: 145px; padding-bottom: 100px; }
+  .github-view .github-card { width: 100%; padding: 20px; }
+  .github-heading h2 { font-size: 16px; }
+  .github-profile-detail strong { font-size: 16px; }
+  .github-profile-detail p { font-size: 11px; }
+  .github-repos-heading h3 { font-size: 15px; }
+  .github-repo { padding: 12px 14px; }
+}
+@media (min-width: 601px) and (max-width: 850px) {
+  .github-view { padding-top: 145px; padding-bottom: 100px; }
+}
+
+

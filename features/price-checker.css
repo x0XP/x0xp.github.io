@@ -1,0 +1,97 @@
+.checker-view { transform: translateX(100%); opacity: 0; overflow-y: auto; padding: var(--edge); display: flex; }
+.checker-view { scrollbar-width: thin; scrollbar-color: #796341 #0d131c; }
+body.checker-open .hub-view { transform: translateX(-100%); opacity: 0; }
+body.checker-open .checker-view { transform: translateX(0); opacity: 1; }
+.checker-view .ui-card { width: 500px; }
+.checker-heading img { image-rendering: pixelated; }
+.icon-button, #infoIcon { border: 0; background: none; color: #c7b99f; cursor: pointer; padding: 6px; }
+.ge-tracker { margin-top: 20px; }
+#itemSearch { padding: 14px 38px 14px 14px; background: #090d14b3; border-color: #c6a16b45; color: var(--ivory); font-size: 14px; }
+#itemSearch:focus { border-color: var(--gold); box-shadow: 0 0 16px #d9ac5918; }
+#itemSearch { padding-left: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%239c998f' stroke-width='1.5'%3E%3Ccircle cx='7.5' cy='7.5' r='5'/%3E%3Cpath d='m11 11 4 4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 13px center; }
+/* Search suggestions share the boss-unique list typography and understated row highlight. */
+#itemSearch { border-radius: 8px; }
+#itemSearch.has-suggestions { border-radius: 8px 8px 0 0; border-bottom-color: #b7986433; }
+.results-list {
+  background: #10151af8;
+  border: 1px solid #b7986480;
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 16px 35px #0007;
+  max-height: min(228px, 44dvh);
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #a38a55 transparent;
+}
+.results-list::-webkit-scrollbar { width: 2px; }
+.results-list::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.results-list::-webkit-scrollbar-track { background: transparent; }
+.results-list::-webkit-scrollbar-thumb,
+.results-list::-webkit-scrollbar-thumb:hover { background: #a38a55; border-radius: 0; box-shadow: none; }
+.results-list:hover { scrollbar-color: #a38a55 transparent; }
+.results-list .suggested-item {
+  min-height: 43px;
+  padding: 8px 12px;
+  gap: 10px;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  border-left: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .05);
+  background: transparent;
+  transform: none;
+  transition: background-color .15s ease;
+}
+.results-list .suggested-item:last-child { border-bottom: 0; }
+.results-list .suggested-item:hover,
+.results-list .suggested-item.is-selected,
+.scrollable-list .suggested-item:hover,
+.floating-content .suggested-item:hover {
+  background: var(--list-highlight);
+  border-left-color: transparent;
+  transform: none;
+}
+/* Use the same typeface and warm gold as the boss drops and their prices. */
+.scrollable-list .suggested-item,
+.floating-content .suggested-item { font-family: Arial, Helvetica, sans-serif; }
+.results-list .suggested-item .suggest-icon { width: 20px; height: 20px; }
+.suggestion-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-match { color: var(--list-gold); font-weight: 400; }
+.suggestion-type { color: #bba67e; flex-shrink: 0; max-width: 43%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.results-list .suggestion-empty { justify-content: center; color: #b5aa99; cursor: default; border-left: 0; }
+.results-list .suggestion-empty:hover { background: transparent; border-left-color: transparent; }
+.price-box { margin-top: 24px; padding: 0; background: transparent; border: 0; border-radius: 0; backdrop-filter: none; }
+.item-name { color: var(--ivory); font-size: 16px; }
+.timestamp { color: #a8a397; }
+.history-list, .pinned-list { margin-top: 12px; }
+.item-summary { display: flex; align-items: center; gap: 14px; padding: 8px 0 20px; }
+.item-summary strong { font-size: 18px; color: var(--ivory); font-weight: 500; }
+.item-summary { min-width: 0; }
+.item-summary strong { overflow-wrap: anywhere; }
+.item-summary img { flex-shrink: 0; }
+.price-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #b7986428; border-bottom: 1px solid #b7986428; padding: 22px 0; }
+.price-grid > div + div { border-left: 1px solid #b7986428; padding-left: 24px; }
+.price-grid > div { min-width: 0; }
+.price-label { display: block; font-size: 11px; color: #a9aaa6; letter-spacing: .06em; margin-bottom: 9px; }
+.price-grid .price-buy, .price-grid .price-sell { font-size: 22px; font-variant-numeric: tabular-nums; color: #e9d3a9; }
+.price-grid small { font-size: 11px; color: #9c998f; margin-left: 5px; }
+.price-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 16px; }
+.price-time { font-size: 11px; color: #9c998f; }
+.price-actions { display: flex; gap: 12px; }
+.hist-btn { border-color: #b798642b; border-radius: 4px; color: #c6c0b4; background: #141920; padding: 7px 10px; }
+.hist-btn:hover { background: #d9ac591a; }
+.hist-btn.pinned-item { color: var(--gold) !important; border-color: #b7986450; }
+.history-list, .pinned-list { justify-content: flex-start; gap: 7px; }
+.hist-btn { font-size: 11px; }
+.drag-grip { height: 12px; top: -14px; }
+.drag-grip::after { content: ''; display: block; width: 28px; height: 2px; border-radius: 2px; margin: 4px auto; background: #c3a56e50; transition: background .2s; }
+.drag-grip:hover::after { background: var(--gold); }
+.price-actions .icon-btn { color: #c5baa5 !important; }
+.price-actions .icon-btn:hover { color: var(--gold) !important; }
+.price-actions .icon-btn:focus-visible { outline-offset: 4px; }
+.scrollable-list { background: transparent; }
+.scrollable-list .suggested-item { border-left: 0; }

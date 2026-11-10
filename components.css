@@ -1,6 +1,6 @@
 /* x0XP shared design system
-   One source for surfaces, actions, typography and transitions.
-   Feature-specific sizing and layouts remain in their own stylesheets. */
+   Design tokens and view transitions. Reusable surfaces and typography
+   live in ui/surfaces.css and ui/typography.css. */
 :root {
   --ui-text: #f2e7d1;
   --ui-muted: #b5aa99;
@@ -8,6 +8,10 @@
   --ui-border: #b7986480;
   --ui-hover-bg: #292622;
   --ui-rule: #d9ac5925;
+  --ui-font: Arial, Helvetica, sans-serif;
+  --ui-inset-border: #b7986440;
+  --ui-inset-bg: #131920a6;
+  --ui-card-padding: 30px;
   --ui-surface-bg: linear-gradient(120deg, #292014ed, #0c1118f0 55%);
   --ui-surface-frame: #9f835080;
   --ui-surface-radius: 10px;
@@ -17,121 +21,9 @@
   --ui-slide: .65s cubic-bezier(.22,.8,.25,1);
   --ui-fade: .45s ease;
 }
-.ui-surface {
-  isolation: isolate;
-  background: none;
-  border: 0;
-  border-radius: 0;
-  backdrop-filter: none;
-  box-shadow: var(--ui-surface-shadow);
-}
-.ui-surface:hover { box-shadow: var(--ui-surface-shadow); }
-.ui-surface::before,
-.ui-surface::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-  border-radius: var(--ui-surface-radius);
-}
-.ui-surface::before { inset: 0; z-index: -2; background: var(--ui-surface-frame); }
-.ui-surface::after {
-  inset: 1px;
-  z-index: -1;
-  background: var(--ui-surface-bg);
-  backdrop-filter: blur(18px);
-}
-.ui-card {
-  position: relative;
-  z-index: 3;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  max-width: 100%;
-  color: var(--ui-text);
-  text-align: left;
-}
-.ui-card-heading {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--ui-rule);
-}
-.ui-card-heading h2 {
-  flex: 1;
-  margin: 0;
-  font: 500 21px/1.35 Arial, Helvetica, sans-serif;
-  color: var(--ui-text);
-  overflow-wrap: anywhere;
-}
-.ui-card-heading > img {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
-}
-.ui-section-heading {
-  margin: 0;
-  font: 500 17px/1.4 Arial, Helvetica, sans-serif;
-  color: var(--ui-text);
-}
-.ui-muted {
-  color: var(--ui-muted);
-  font: 400 12px/1.55 Arial, Helvetica, sans-serif;
-}
-.ui-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 40px;
-  padding: 9px 15px;
-  border: 1px solid var(--ui-border);
-  border-radius: 6px;
-  background: #10151ad9;
-  color: var(--ui-text);
-  font: 400 12px/1.4 Arial, Helvetica, sans-serif;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color var(--ui-speed-normal) ease,
-    border-color var(--ui-speed-normal) ease,
-    color var(--ui-speed-normal) ease,
-    box-shadow var(--ui-speed-normal) ease;
-}
-.ui-button:hover,
-.ui-button:focus-visible {
-  background: var(--ui-hover-bg);
-  color: var(--ui-text);
-  border-color: var(--ui-gold);
-}
-.ui-button i { color: var(--ui-gold); font-size: 11px; }
-.ui-list-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  min-width: 0;
-  padding: 13px 18px;
-  border: 1px solid #b798643d;
-  border-radius: 9px;
-  background: #13192091;
-  color: var(--ui-text);
-  text-decoration: none;
-  transition: background-color var(--ui-speed-fast) ease,
-    border-color var(--ui-speed-fast) ease;
-}
-.ui-list-row:hover,
-.ui-list-row:focus-visible {
-  background: var(--ui-hover-bg);
-  border-color: #d9ac5980;
-}
 .ui-slide-view {
   transition: transform var(--ui-slide), opacity var(--ui-fade);
 }
-@media (max-width: 600px) {
-  .ui-card-heading h2 { font-size: 16px; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .ui-slide-view, .ui-button, .ui-list-row { transition: none; }
+  .ui-slide-view { transition: none; }
 }
