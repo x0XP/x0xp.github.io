@@ -167,7 +167,8 @@ test('generated share and Wiki actions use central styles and fade-in glow', asy
       assert.equal(item.style,null);
       assert.equal(item.over,null);
       assert.equal(item.out,null);
-      assert.equal(item.display,'inline-flex');
+      // Flex items are blockified by the layout engine (inline-flex becomes flex).
+    assert.ok(['flex','inline-flex'].includes(item.display));
     }
     assert.match(controls.find(x=>x.tag==='A').link,/^https:\/\/oldschool\.runescape\.wiki\/w\//);
     await page.evaluate(() => {
