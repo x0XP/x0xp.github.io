@@ -41,9 +41,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Check out main for visual comparison
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: baseline-site
       - name: Install headless browser driver
-        run: npm install --no-save --no-package-lock puppeteer-core@24
+        run: npm install --no-save --no-package-lock puppeteer-core@24 pngjs@7
       - name: Locate Chrome
         run: echo "CHROME_BIN=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
       - name: Test homepage, search, Updates and floating windows
         run: node --test tests/browser-smoke.test.cjs
+      - name: Compare desktop and mobile views with main
+        run: node --test tests/visual-parity.test.cjs
