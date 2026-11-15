@@ -229,6 +229,10 @@ test('right-click pinning, reload persistence and unpinning retain search histor
   const {page,errors}=await openPage();
   try {
     await page.click('#openChecker');
+    await page.waitForFunction(() => document.body.classList.contains('checker-open'));
+    // The checker panel slides into position; do not right-click an element
+    // while its clickable point is still moving underneath the cursor.
+    await new Promise(resolve => setTimeout(resolve, 750));
     await page.evaluate(()=>getPrice('Abyssal whip'));
     await page.waitForSelector('#history .hist-btn',{visible:true,timeout:10000});
     await page.click('#history .hist-btn',{button:'right'});
@@ -238,6 +242,8 @@ test('right-click pinning, reload persistence and unpinning retain search histor
       ['Abyssal whip']);
     await page.reload({waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.documentElement.classList.contains('site-ready'),{timeout:25000});
+    await page.waitForFunction(() => document.body.classList.contains('checker-open'));
+    await new Promise(resolve => setTimeout(resolve, 750));
     await page.waitForSelector('#pinned .hist-btn',{visible:true,timeout:10000});
     await page.click('#pinned .hist-btn',{button:'right'});
     await page.waitForFunction(()=>document.querySelectorAll('#history .hist-btn').length>0,
