@@ -13,6 +13,7 @@ const typography = read('ui/typography.css');
 const repoCSS = read('repo-detail.css');
 const repoJS = read('repo-details.js');
 const trainerCSS = read('sol-trainer.css');
+const ocellusCSS = read('ocellus-trainer.css');
 const effects = read('ui/effects.css');
 const interactions = read('ui/interactions.js');
 const hub = read('hub.js');
@@ -70,8 +71,8 @@ test('shared surfaces and typography load before page styles', () => {
   assert.ok(typography.includes('@media (max-width: 600px)'));
 });
 
-test('all four cards share a shell, preserving page dimensions and mobile rules', () => {
-  assert.equal((html.match(/ui-view-card/g) || []).length, 4);
+test('all five cards share a shell, preserving page dimensions and mobile rules', () => {
+  assert.equal((html.match(/ui-view-card/g) || []).length, 5);
   assert.ok(surfaces.includes('padding: var(--ui-card-padding);'));
   assert.ok(checkerCSS.includes('.checker-view .ui-card { width: 500px; }'));
   assert.ok(githubCSS.includes('.github-view .ui-card { width: 820px; }'));
@@ -79,6 +80,11 @@ test('all four cards share a shell, preserving page dimensions and mobile rules'
   assert.ok(trainerCSS.includes('.sol-trainer-card { width:100%; padding:20px; }'));
   assert.ok(responsiveCSS.includes('.checker-view .card { width: 100%; padding: 20px; }'));
   assert.ok(trainerCSS.includes('width:min(1240px,100%); min-width:0; padding:25px;'));
+  assert.ok(ocellusCSS.includes('.ocellus-trainer-card { width:100%; padding:20px; }'));
+  assert.ok(ocellusCSS.includes('width:min(1240px,100%); min-width:0; padding:25px;'));
+  assert.ok(html.includes('id="openOcellusTrainer"'));
+  assert.ok(html.includes('id="ocellusTrainerFrame"'));
+  assert.ok(html.includes("'ocellus-trainer.css'"));
 });
 
 test('profile and dynamic GitHub inset panels reuse shared border styles', () => {
@@ -101,4 +107,14 @@ test('feature boundaries preserve Price Checker, history, floating and GitHub ru
   assert.ok(githubCSS.includes('.github-view {'));
   assert.ok(layoutCSS.includes('.scroll-card-edge {'));
   assert.ok(responsiveCSS.includes('@media (prefers-reduced-motion: reduce)'));
+});
+
+test('Ocellus routing and embed are isolated from Sol and share the same presentation', () => {
+  assert.ok(hub.includes("const independentOcellusURL = 'https://x0xp.github.io/ColosseumTrainer/ocellus/';"));
+  assert.ok(hub.includes("route === '#ocellus-trainer'"));
+  assert.ok(hub.includes("function stopOcellusFrame()"));
+  assert.ok(hub.includes("document.body.classList.toggle('ocellus-trainer-open', isOcellusTrainer)"));
+  assert.ok(ocellusCSS.includes('.ocellus-trainer-panel {'));
+  assert.ok(!ocellusCSS.includes('.sol-trainer-panel {'));
+  assert.ok(html.includes('id="solTrainerFrame"'));
 });
