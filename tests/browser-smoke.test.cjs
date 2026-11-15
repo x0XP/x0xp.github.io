@@ -299,3 +299,25 @@ test('embedded trainer loads from its standalone URL and resets on leaving', asy
     assert.deepEqual(errors,[]);
   }finally{await page.close();}
 });
+
+test('Ocellus trainer embeds its separate live URL and unloads on leaving', async () => {
+  const {page,errors}=await openPage();
+  try {
+    await page.click('#openOcellusTrainer');
+    await page.waitForFunction(()=>document.body.classList.contains('ocellus-trainer-open'),{timeout:5000});
+    const trainer=await page.evaluate(()=>({
+      source:document.getElementById('ocellusTrainerFrame').getAttribute('src'),
+      external:document.getElementById('ocellusTrainerFullscreen').href,
+      viewInert:document.getElementById('ocellusTrainerView').inert,
+      solInert:document.getElementById('solTrainerView').inert
+    }));
+    assert.equal(trainer.source,'https://x0xp.github.io/ColosseumTrainer/ocellus/');
+    assert.equal(trainer.external,trainer.source);
+    assert.equal(trainer.viewInert,false);
+    assert.equal(trainer.solInert,true);
+    await page.click('#backHome');
+    await page.waitForFunction(()=>!document.body.classList.contains('ocellus-trainer-open'),{timeout:5000});
+    assert.equal(await page.$eval('#ocellusTrainerFrame',frame=>frame.getAttribute('src')),'about:blank');
+    assert.deepEqual(errors,[]);
+  }finally{await page.close();}
+});

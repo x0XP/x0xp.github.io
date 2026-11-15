@@ -88,8 +88,10 @@ test.before(async()=>{
 });
 test.after(async()=>{if(browser)await browser.close();if(server)await new Promise(r=>server.close(r));});
 for(const viewport of [{width:1280,height:900},{width:390,height:844}]){
-  const views=viewport.width>600?['home','checker','github','item','floating','updates']:
-    ['home','checker','github','item','updates'];
+  // The homepage project list intentionally gained the Ocellus trainer card.
+  // Compare unchanged views to main; homepage behaviour is checked in browser-smoke.
+  const views=viewport.width>600?['checker','github','item','floating','updates']:
+    ['checker','github','item','updates'];
   for(const view of views){
     test('visual parity '+view+' '+viewport.width+'px',async()=>{
       const baseline=await screenshot('baseline',view,viewport);

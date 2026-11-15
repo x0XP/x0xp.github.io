@@ -10,6 +10,13 @@
   const solPlaceholder = document.getElementById('solTrainerPlaceholder');
   const solStatus = document.getElementById('solTrainerStatus');
   const solFullscreen = document.getElementById('solTrainerFullscreen');
+  const ocellusTrainer = document.getElementById('ocellusTrainerView');
+  const openOcellusTrainer = document.getElementById('openOcellusTrainer');
+  const ocellusFrame = document.getElementById('ocellusTrainerFrame');
+  const ocellusPanel = document.getElementById('ocellusTrainerPanel');
+  const ocellusPlaceholder = document.getElementById('ocellusTrainerPlaceholder');
+  const ocellusStatus = document.getElementById('ocellusTrainerStatus');
+  const ocellusFullscreen = document.getElementById('ocellusTrainerFullscreen');
   const openChecker = document.getElementById('openChecker');
   const openGithub = document.getElementById('openGithub');
   const back = document.getElementById('backHome');
@@ -22,6 +29,7 @@
   // embedded and full-screen play rather than occasionally selecting an older
   // copy when a manifest probe fails or times out.
   const independentTrainerURL = 'https://x0xp.github.io/ColosseumTrainer/';
+  const independentOcellusURL = 'https://x0xp.github.io/ColosseumTrainer/ocellus/';
 
   function openTrainerFrame() {
     solPanel.dataset.state = 'loading';
@@ -55,6 +63,38 @@
     }
   });
 
+  function openOcellusFrame() {
+    ocellusPanel.dataset.state = 'loading';
+    ocellusPlaceholder.hidden = false;
+    ocellusStatus.textContent = 'Loading the Ocellus trainer…';
+    ocellusFullscreen.href = independentOcellusURL;
+    ocellusFrame.src = independentOcellusURL;
+  }
+
+  function stopOcellusFrame() {
+    if (ocellusFrame.getAttribute('src') !== 'about:blank') {
+      ocellusFrame.setAttribute('src', 'about:blank');
+    }
+    ocellusPanel.dataset.state = 'idle';
+    ocellusPlaceholder.hidden = false;
+  }
+
+  ocellusFrame.addEventListener('load', () => {
+    if (document.body.classList.contains('ocellus-trainer-open') &&
+        ocellusFrame.getAttribute('src') !== 'about:blank') {
+      ocellusPanel.dataset.state = 'ready';
+      ocellusPlaceholder.hidden = true;
+    }
+  });
+
+  ocellusFrame.addEventListener('error', () => {
+    if (document.body.classList.contains('ocellus-trainer-open')) {
+      ocellusPanel.dataset.state = 'error';
+      ocellusStatus.textContent = 'The trainer could not load. Try Full screen.';
+      ocellusPlaceholder.hidden = false;
+    }
+  });
+
   // Avoid CSS masks on elements with backdrop-filter: iOS Safari can
   // change the entire wallpaper's brightness when the mask is toggled.
   // Draw a 12px translucent edge strictly within the visible card bounds.
@@ -62,7 +102,8 @@
     [checker, '.card', 'checker-open'],
     [github, '.github-card', 'github-open'],
     [repoDetail, '.repo-detail-card', 'repo-detail-open'],
-    [solTrainer, '.sol-trainer-card', 'sol-trainer-open']
+    [solTrainer, '.sol-trainer-card', 'sol-trainer-open'],
+    [ocellusTrainer, '.ocellus-trainer-card', 'ocellus-trainer-open']
   ]) {
     const card = panel.querySelector(selector);
     if (!card) continue;
@@ -111,13 +152,17 @@
     const isGithub = view === 'github';
     const isRepoDetail = view === 'repo-detail';
     const isSolTrainer = view === 'sol-trainer';
+    const isOcellusTrainer = view === 'ocellus-trainer';
     if (!isSolTrainer && document.body.classList.contains('sol-trainer-open')) stopTrainerFrame();
+    if (!isOcellusTrainer && document.body.classList.contains('ocellus-trainer-open')) stopOcellusFrame();
     document.body.classList.toggle('sol-trainer-open', isSolTrainer);
+    document.body.classList.toggle('ocellus-trainer-open', isOcellusTrainer);
     document.body.classList.toggle('checker-open', isChecker);
     document.body.classList.toggle('github-open', isGithub);
     document.body.classList.toggle('repo-detail-open', isRepoDetail);
     for (const [element, active] of [[hub, view === 'home'], [checker, isChecker],
-      [github, isGithub], [repoDetail, isRepoDetail], [solTrainer, isSolTrainer]]) {
+      [github, isGithub], [repoDetail, isRepoDetail],
+      [solTrainer, isSolTrainer], [ocellusTrainer, isOcellusTrainer]]) {
       element.inert = !active;
       element.setAttribute('aria-hidden', String(!active));
     }
@@ -128,6 +173,7 @@
     document.title = isChecker ? 'OSRS Price Checker · x0XP'
       : isRepoDetail ? 'Repository · x0XP'
       : isSolTrainer ? 'Sol Heredit Trainer · x0XP'
+      : isOcellusTrainer ? 'Ocellus Trainer · x0XP'
       : isGithub ? 'GitHub · x0XP' : 'x0XP';
     document.querySelectorAll('.help-box').forEach(panel => panel.classList.remove('visible'));
     helpVisible = false;
@@ -136,7 +182,8 @@
       const target = isChecker ? document.getElementById('itemSearch')
         : isRepoDetail ? document.getElementById('repoDetailTitle')
         : isGithub ? document.getElementById('githubTitle')
-        : isSolTrainer ? document.getElementById('solTrainerTitle') : lastHomeTrigger;
+        : isSolTrainer ? document.getElementById('solTrainerTitle')
+        : isOcellusTrainer ? document.getElementById('ocellusTrainerTitle') : lastHomeTrigger;
       focusTimer = setTimeout(() => target.focus({preventScroll: true}), 650);
     }
   }
@@ -282,10 +329,15 @@
     const view = repoMatch ? 'repo-detail' :
       /^#(?:checker|item=|boss=)/.test(route) ? 'checker' :
       route === '#github' ? 'github' :
-      route === '#sol-trainer' ? 'sol-trainer' : 'home';
+      route === '#sol-trainer' ? 'sol-trainer' :
+       route === '#ocellus-trainer' ? 'ocellus-trainer' : 'home';
     showView(view, focus);
     if (view === 'sol-trainer') {
       openTrainerFrame();
+      return;
+    }
+    if (view === 'ocellus-trainer') {
+      openOcellusFrame();
       return;
     }
     if (view === 'repo-detail') {
@@ -322,6 +374,12 @@
     history.pushState({trainer: true}, '', '#sol-trainer');
     showView('sol-trainer');
     openTrainerFrame();
+  });
+  openOcellusTrainer.addEventListener('click', () => {
+    lastHomeTrigger = openOcellusTrainer;
+    history.pushState({ocellus: true}, '', '#ocellus-trainer');
+    showView('ocellus-trainer');
+    openOcellusFrame();
   });
   back.addEventListener('click', () => {
     if (document.body.classList.contains('repo-detail-open')) {
